@@ -8,14 +8,21 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"os/signal"
 	"strings"
+	"syscall"
+
+	"github.com/robfig/cron/v3"
 )
 
 type Client struct {
 	config  Config
 	baseURL string
 	client  *http.Client
+	cron    *cron.Cron
 	items   *Items
+	rules   []*Rule
 }
 
 func NewClient(config Config) *Client {
@@ -37,6 +44,10 @@ func NewClient(config Config) *Client {
 		config:  config,
 		baseURL: baseURL,
 		client:  httpClient,
+		cron: cron.New(
+			cron.WithParser(
+				cron.NewParser(
+					cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor))),
 	}
 	client.items = newItems(client)
 	return client
@@ -141,4 +152,38 @@ func (c *Client) Subscribe(topic string) error {
 		return err
 	}
 	return nil
+}
+
+func (c *Client) AddRule(config RuleConfig, run func(), triggers ...Trigger) error {
+	rule := NewRule(config, run, triggers)
+	c.rules = append(c.rules, rule)
+	return nil
+}
+
+// Start the handling of the defined rules.
+// The function will return after the process received a Terminate, Abort or Interrupt signal,
+// and after all the currently running rules have finished
+func (c *Client) Start() {
+	for _, rule := range c.rules {
+		err := rule.activate(c)
+		if err != nil {
+			ruleName := rule.String()
+			if ruleName != "" {
+				ruleName = " \"" + ruleName + "\""
+			}
+			log.Printf("error activating rule%s: %s", ruleName, err)
+		}
+	}
+	c.cron.Start()
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGABRT, syscall.SIGTERM)
+
+	// Wait until we're politely asked to leave
+	<-stop
+
+	log.Printf("shutting down...")
+	ctx := c.cron.Stop()
+	// Wait until all the cron tasks finished running
+	<-ctx.Done()
 }
