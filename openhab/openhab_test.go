@@ -1,7 +1,6 @@
 package openhab
 
 import (
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -32,7 +31,7 @@ data: {"topic":"smarthome/items/TestSwitch/statechanged","payload":"{\"type\":\"
 		if req.Method == http.MethodGet && req.URL.Path == "/rest/events" {
 			for _, event := range events {
 				w.Write([]byte(event + "\n\n"))
-				time.Sleep(300 * time.Millisecond)
+				time.Sleep(100 * time.Millisecond)
 			}
 			return
 		}

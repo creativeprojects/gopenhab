@@ -1,4 +1,4 @@
-package api
+package openhab
 
 type StateValue interface {
 	String() string
@@ -23,3 +23,9 @@ const (
 	StateOFF  = "OFF"
 	StateON   = "ON"
 )
+
+type StringState string
+
+func (s StringState) String() string {
+	return string(s)
+}

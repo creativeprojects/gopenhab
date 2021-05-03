@@ -8,9 +8,11 @@ import (
 )
 
 type Item struct {
-	name   string
-	data   api.Item
-	client *Client
+	name     string
+	data     api.Item
+	mainType ItemType
+	subType  string
+	client   *Client
 }
 
 func newItem(client *Client, name string) *Item {
@@ -22,6 +24,7 @@ func newItem(client *Client, name string) *Item {
 
 func (i *Item) set(data api.Item) *Item {
 	i.data = data
+	i.mainType, i.subType = getItemType(i.data.Type)
 	return i
 }
 
@@ -34,7 +37,7 @@ func (i *Item) load() error {
 	if err != nil {
 		return err
 	}
-	i.data = data
+	i.set(data)
 	return nil
 }
 
@@ -53,28 +56,36 @@ func (i *Item) Name() string {
 	return i.name
 }
 
-func (i *Item) Type() api.ItemType {
-	itemType, _ := api.GetItemType(i.getData().Type)
-	return itemType
+func (i *Item) Type() ItemType {
+	return i.mainType
+}
+
+func (i *Item) stateFromString(state string) StateValue {
+	switch i.mainType {
+	default:
+		return StringState(state)
+	case ItemTypeSwitch:
+		return SwitchState(state)
+	}
 }
 
 // State always calls the api to return a fresh value from openHAB
-func (i *Item) State() (string, error) {
+func (i *Item) State() (StateValue, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	state, err := i.client.getString(ctx, "items/"+i.name+"/state")
 	if err != nil {
-		return "", err
+		return i.stateFromString(""), err
 	}
-	return state, nil
+	return i.stateFromString(state), nil
 }
 
-func (i *Item) SendCommand(command string) error {
+func (i *Item) SendCommand(command StateValue) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	err := i.client.postString(ctx, "items/"+i.name, command)
+	err := i.client.postString(ctx, "items/"+i.name, command.String())
 	if err != nil {
 		return err
 	}

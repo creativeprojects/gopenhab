@@ -34,5 +34,8 @@ func (items *Items) GetItem(name string) (*Item, error) {
 			items.cache[item.Name] = newItem(items.client, item.Name).set(item)
 		}
 	}
-	return items.cache[name], nil
+	if item, ok := items.cache[name]; ok {
+		return item, nil
+	}
+	return nil, ErrorNotFound
 }

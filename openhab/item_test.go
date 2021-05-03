@@ -75,7 +75,7 @@ func TestGetItemAPI(t *testing.T) {
 		err := item.load()
 		assert.NoError(t, err)
 		assert.Equal(t, "TestSwitch", item.Name())
-		assert.Equal(t, api.ItemTypeSwitch, item.Type())
+		assert.Equal(t, ItemTypeSwitch, item.Type())
 	})
 
 	t.Run("TestGetItemStateNotFound", func(t *testing.T) {
@@ -85,27 +85,37 @@ func TestGetItemAPI(t *testing.T) {
 	})
 
 	t.Run("TestGetItemState", func(t *testing.T) {
-		item := newItem(client, "TestSwitch")
+		item := newSwitchItem(client, "TestSwitch")
+		assert.Equal(t, ItemTypeSwitch, item.Type())
 		state, err := item.State()
 		assert.NoError(t, err)
-		assert.Equal(t, "OFF", state)
+		assert.Equal(t, SwitchOFF, state)
 	})
 
 	t.Run("TestSendCommand", func(t *testing.T) {
-		item := newItem(client, "TestSwitch")
-		err := item.SendCommand("ON")
+		item := newSwitchItem(client, "TestSwitch")
+		assert.Equal(t, ItemTypeSwitch, item.Type())
+
+		err := item.SendCommand(SwitchON)
 		assert.NoError(t, err)
 
 		state, err := item.State()
 		assert.NoError(t, err)
-		assert.Equal(t, "ON", state)
+		assert.Equal(t, SwitchON, state)
 
 		// reset to OFF
-		err = item.SendCommand("OFF")
+		err = item.SendCommand(SwitchOFF)
 		assert.NoError(t, err)
 
 		state, err = item.State()
 		assert.NoError(t, err)
-		assert.Equal(t, "OFF", state)
+		assert.Equal(t, SwitchOFF, state)
 	})
+}
+
+func newSwitchItem(client *Client, name string) *Item {
+	item := newItem(client, "TestSwitch")
+	// the item needs a type so it can work properly
+	item.set(api.Item{Type: "Switch"})
+	return item
 }

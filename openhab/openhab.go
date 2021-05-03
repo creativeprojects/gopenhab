@@ -47,6 +47,7 @@ func (c *Client) Items() *Items {
 }
 
 func (c *Client) get(ctx context.Context, URL string) (*http.Response, error) {
+	log.Printf("GET: %s", c.baseURL+URL)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+URL, nil)
 	if err != nil {
 		return nil, err

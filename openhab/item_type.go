@@ -1,7 +1,6 @@
-package api
+package openhab
 
 import (
-	"log"
 	"strings"
 )
 
@@ -26,7 +25,7 @@ const (
 	ItemTypeSwitch        ItemType = "Switch"
 )
 
-func GetItemType(s string) (ItemType, string) {
+func getItemType(s string) (ItemType, string) {
 	// Special case of Number that can have a subtype (which is not kept anywhere, or at least for now)
 	if strings.HasPrefix(s, itemTypeNumberWithSubtype) {
 		return ItemTypeNumber, strings.TrimPrefix(s, itemTypeNumberWithSubtype)
@@ -34,7 +33,7 @@ func GetItemType(s string) (ItemType, string) {
 
 	switch s {
 	default:
-		log.Printf("unknown type: %s", s)
+		log.Printf("unknown item type: %s", s)
 		return ItemTypeUnknown, s
 	case string(ItemTypeColor):
 		return ItemTypeColor, ""
