@@ -1,4 +1,4 @@
-module github.com/creativeprojects/gopenHAB
+module github.com/creativeprojects/gopenhab
 
 go 1.16
 

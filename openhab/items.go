@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/creativeprojects/gopenHAB/api"
+	"github.com/creativeprojects/gopenhab/api"
 )
 
 type Items struct {

@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/creativeprojects/gopenHAB/api"
+	"github.com/creativeprojects/gopenhab/api"
 	"github.com/stretchr/testify/assert"
 )
 
