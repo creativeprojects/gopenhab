@@ -5,24 +5,36 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
+	"github.com/creativeprojects/gopenhab/api"
+	"github.com/creativeprojects/gopenhab/event"
 	"github.com/robfig/cron/v3"
 )
 
+const (
+	eventStateWaiting  = 0
+	eventStateBanner   = 1
+	eventStateData     = 2
+	eventStateFinished = 3
+	eventHeader        = "event: "
+	eventData          = "data: "
+)
+
 type Client struct {
-	config  Config
-	baseURL string
-	client  *http.Client
-	cron    *cron.Cron
-	items   *Items
-	rules   []*Rule
+	config   Config
+	baseURL  string
+	client   *http.Client
+	cron     *cron.Cron
+	items    *Items
+	rules    []*Rule
+	eventBus eventBus
 }
 
 func NewClient(config Config) *Client {
@@ -48,6 +60,7 @@ func NewClient(config Config) *Client {
 			cron.WithParser(
 				cron.NewParser(
 					cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor))),
+		eventBus: newEventBus(),
 	}
 	client.items = newItems(client)
 	return client
@@ -135,7 +148,9 @@ func (c *Client) postString(ctx context.Context, URL string, value string) error
 	return nil
 }
 
-func (c *Client) Subscribe(topic string) error {
+// listenEvents listen to the events from the REST api and send them to the event bus.
+// the method returns after the HTTP connection dropped
+func (c *Client) listenEvents() error {
 	resp, err := c.get(context.Background(), "events")
 	if resp != nil {
 		defer resp.Body.Close()
@@ -143,9 +158,46 @@ func (c *Client) Subscribe(topic string) error {
 	if err != nil {
 		return err
 	}
+	// send connect event
+	c.eventBus.publish(event.NewSystemEvent(event.ClientConnected))
+	defer func() {
+		// send disconnect event
+		c.eventBus.publish(event.NewSystemEvent(event.ClientDisconnected))
+	}()
+
+	state := 0
 	scanner := bufio.NewScanner(resp.Body)
 	for scanner.Scan() {
-		fmt.Printf("%s\n", scanner.Text())
+		state++
+		line := scanner.Text()
+		if line == "" {
+			// Move back to waiting state
+			if state != eventStateFinished {
+				log.Printf("unexpected end of event data on state %d", state)
+			}
+			state = eventStateWaiting
+			continue
+		}
+		if state == eventStateBanner {
+			if !strings.HasPrefix(line, eventHeader) {
+				log.Printf("unexpected start of event: %q", line)
+			}
+			event := strings.TrimPrefix(line, eventHeader)
+			if event != "message" {
+				log.Printf("unexpected event: %q", event)
+			}
+			continue
+		}
+		if state == eventStateData {
+			if !strings.HasPrefix(line, eventData) {
+				log.Printf("unexpected event data: %q", line)
+			}
+			data := strings.TrimPrefix(line, eventData)
+			if data != "" {
+				c.dispatchRawEvent(data)
+			}
+			continue
+		}
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -154,8 +206,45 @@ func (c *Client) Subscribe(topic string) error {
 	return nil
 }
 
-func (c *Client) AddRule(config RuleConfig, run func(), triggers ...Trigger) error {
-	rule := NewRule(config, run, triggers)
+func (c *Client) dispatchRawEvent(data string) {
+	decoder := json.NewDecoder(strings.NewReader(data))
+	message := api.EventMessage{}
+	err := decoder.Decode(&message)
+	if err != nil {
+		log.Printf("invalid event data: %s", err)
+		return
+	}
+	switch message.Type {
+	case api.EventItemCommand:
+		e, err := event.NewItemReceivedCommand(message.Topic, message.Payload)
+		if err != nil {
+			log.Printf("error decoding message: %s", err)
+			break
+		}
+		c.eventBus.publish(e)
+	default:
+		log.Printf("EVENT: %s on %s", message.Type, message.Topic)
+	}
+}
+
+// eventLoop listen to the events from the REST api and send them to the event bus.
+// the method never returns: if the connection drops it tries to reconnect in a loop
+func (c *Client) eventLoop() {
+	for {
+		err := c.listenEvents()
+		if err != nil {
+			log.Printf("error listening to openhab events: %s", err)
+		}
+		time.Sleep(1 * time.Second)
+	}
+}
+
+// func (c *Client) Subscribe(eventType event.Type, topic string, callback func(e event.Event)) {
+// 	c.eventBus.subscribe(topic, eventType, callback)
+// }
+
+func (c *Client) AddRule(ruleData RuleData, run Runner, triggers ...Trigger) error {
+	rule := newRule(c, ruleData, run, triggers)
 	c.rules = append(c.rules, rule)
 	return nil
 }
@@ -175,6 +264,9 @@ func (c *Client) Start() {
 		}
 	}
 	c.cron.Start()
+
+	// start the event bus
+	go c.eventLoop()
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGABRT, syscall.SIGTERM)

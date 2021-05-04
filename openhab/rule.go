@@ -1,35 +1,56 @@
 package openhab
 
+import (
+	"github.com/creativeprojects/gopenhab/event"
+	"github.com/segmentio/ksuid"
+)
+
+type Runner func(client *Client, ruleData RuleData, e event.Event)
+
 type Rule struct {
-	config   RuleConfig
-	run      func()
+	ruleData RuleData
+	client   *Client
+	runner   Runner
 	triggers []Trigger
 }
 
-func NewRule(config RuleConfig, run func(), triggers []Trigger) *Rule {
+func newRule(client *Client, ruleData RuleData, runner Runner, triggers []Trigger) *Rule {
+	if ruleData.ID == "" {
+		gen := ksuid.New()
+		ruleData.ID = gen.String()
+	}
 	return &Rule{
-		config:   config,
-		run:      run,
+		ruleData: ruleData,
+		client:   client,
+		runner:   runner,
 		triggers: triggers,
 	}
 }
 
 func (r Rule) String() string {
-	if r.config.Name != "" {
-		return r.config.Name
+	if r.ruleData.Name != "" {
+		return r.ruleData.Name
 	}
-	if r.config.ID != "" {
-		return "ID " + r.config.ID
+	if r.ruleData.ID != "" {
+		return "ID " + r.ruleData.ID
 	}
 	return ""
 }
 
-func (r Rule) activate(client *Client) error {
+func (r *Rule) activate(client *Client) error {
 	for _, trigger := range r.triggers {
-		err := trigger.activate(client, r.run)
+		if trigger == nil {
+			log.Printf("nil trigger encountered")
+			continue
+		}
+		err := trigger.activate(client, r.run, r.ruleData)
 		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func (r *Rule) run(e event.Event) {
+	r.runner(r.client, r.ruleData, e)
 }

@@ -2,7 +2,7 @@ package api
 
 type EventMessage struct {
 	Topic   string `json:"topic"`
-	Payload []byte `json:"payload"`
+	Payload string `json:"payload"`
 	Type    string `json:"type"`
 }
 
@@ -26,7 +26,7 @@ type EventStateChanged struct {
 type EventStatePredicted struct {
 	PredictedType  string `json:"predictedType"`
 	PredictedValue string `json:"predictedValue"`
-	IConfirmation  bool   `json:"isConfirmation"`
+	IsConfirmation bool   `json:"isConfirmation"`
 }
 
 type EventStatus struct {

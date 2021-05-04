@@ -42,6 +42,6 @@ data: {"topic":"smarthome/items/TestSwitch/statechanged","payload":"{\"type\":\"
 	client := NewClient(Config{
 		URL: server.URL,
 	})
-	err := client.Subscribe("")
+	err := client.listenEvents()
 	assert.NoError(t, err)
 }
