@@ -1,7 +1,6 @@
 package openhab
 
 import (
-	"strings"
 	"sync"
 
 	"github.com/creativeprojects/gopenhab/event"
@@ -75,9 +74,13 @@ func (b *eventBus) publish(e event.Event) {
 		if sub.eventType != e.Type() {
 			continue
 		}
-		if e.Topic() == "" || strings.HasPrefix(e.Topic(), sub.topic) {
+		// if e.Topic() == "" || strings.HasPrefix(e.Topic(), sub.topic) {
+		if e.Topic() == "" || e.Topic() == sub.topic {
 			// run the callback in a goroutine
-			go sub.callback(e)
+			go func(sub subscription, e event.Event) {
+				defer preventPanic()
+				sub.callback(e)
+			}(sub, e)
 		}
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -222,6 +223,23 @@ func (c *Client) dispatchRawEvent(data string) {
 			break
 		}
 		c.eventBus.publish(e)
+
+	case api.EventItemState:
+		e, err := event.NewItemReceivedState(message.Topic, message.Payload)
+		if err != nil {
+			log.Printf("error decoding message: %s", err)
+			break
+		}
+		c.eventBus.publish(e)
+
+	case api.EventItemStateChanged:
+		e, err := event.NewItemChanged(message.Topic, message.Payload)
+		if err != nil {
+			log.Printf("error decoding message: %s", err)
+			break
+		}
+		c.eventBus.publish(e)
+
 	default:
 		log.Printf("EVENT: %s on %s", message.Type, message.Topic)
 	}
@@ -278,4 +296,12 @@ func (c *Client) Start() {
 	ctx := c.cron.Stop()
 	// Wait until all the cron tasks finished running
 	<-ctx.Done()
+}
+
+func (c *Client) Subscribers() []string {
+	subs := make([]string, len(c.eventBus.subs))
+	for i, sub := range c.eventBus.subs {
+		subs[i] = fmt.Sprintf("id=%d; topic=%q", sub.id, sub.topic)
+	}
+	return subs
 }

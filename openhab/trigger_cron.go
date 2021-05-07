@@ -25,6 +25,8 @@ func OnTimeCron(spec string) *TimeCronTrigger {
 // activate schedules the run function in the context of a *Client
 func (c *TimeCronTrigger) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
 	entryID, err := client.cron.AddFunc(c.spec, func() {
+		defer preventPanic()
+
 		run(event.NewSystemEvent(event.TimeCron))
 	})
 	if err != nil {

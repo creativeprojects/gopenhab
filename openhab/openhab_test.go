@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/creativeprojects/gopenhab/event"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -44,4 +45,21 @@ data: {"topic":"smarthome/items/TestSwitch/statechanged","payload":"{\"type\":\"
 	})
 	err := client.listenEvents()
 	assert.NoError(t, err)
+}
+
+func TestDispatchEvents(t *testing.T) {
+	testData := []struct {
+		source string
+		event  event.Event
+	}{
+		{"", event.ItemReceivedCommand{}},
+	}
+
+	client := NewClient(Config{URL: "http://localhost:8080"})
+
+	for _, testItem := range testData {
+		t.Run("", func(t *testing.T) {
+			client.dispatchRawEvent(testItem.source)
+		})
+	}
 }
