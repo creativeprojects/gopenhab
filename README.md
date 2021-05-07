@@ -19,17 +19,43 @@ func main() {
 	client := openhab.NewClient(openhab.Config{
 		URL: "http://localhost:8080",
 	})
-	item, err := client.Items().GetItem("Back_Garden_Lighting_Switch")
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	client.AddRule(
-		openhab.RuleConfig{
+		openhab.RuleData{Name: "Connected to openHAB events"},
+		func(client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
+			log.Printf("EVENT: client connected")
+		},
+		openhab.OnConnect(),
+	)
+
+	client.AddRule(
+		openhab.RuleData{Name: "Disconnected from openHAB events"},
+		func(client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
+			log.Print("EVENT: client disconnected")
+		},
+		openhab.OnDisconnect(),
+	)
+
+	client.AddRule(
+		openhab.RuleData{Name: "Receiving item command"},
+		func(client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
+			if ev, ok := e.(*event.ItemReceivedCommand); ok {
+				log.Printf("EVENT: Back_Garden_Lighting_Switch received command %+v", ev.Command)
+			}
+		},
+		openhab.OnItemReceivedCommand("Back_Garden_Lighting_Switch", nil),
+	)
+
+	client.AddRule(
+		openhab.RuleData{
 			Name: "Test rule",
 		},
-		func() {
-			err := item.SendCommand(openhab.SwitchON)
+		func(client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
+			item, err := client.Items().GetItem("Back_Garden_Lighting_Switch")
+			if err != nil {
+				log.Print(err)
+			}
+			err = item.SendCommand(openhab.SwitchON)
 			if err != nil {
 				log.Printf("sending command: %s", err)
 			}
@@ -54,7 +80,7 @@ func main() {
 
 			log.Printf("switched %s", state)
 		},
-		openhab.NewCron("*/10 * * ? * *"),
+		openhab.OnTimeCron("*/10 * * ? * *"),
 	)
 	client.Start()
 }

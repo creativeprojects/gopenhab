@@ -13,13 +13,13 @@ type ItemReceivedCommand struct {
 	Command     string
 }
 
-func NewItemReceivedCommand(topic, payload string) (*ItemReceivedCommand, error) {
+func NewItemReceivedCommand(topic, payload string) (ItemReceivedCommand, error) {
 	data := api.EventCommand{}
 	err := json.Unmarshal([]byte(payload), &data)
 	if err != nil {
-		return nil, err
+		return ItemReceivedCommand{}, err
 	}
-	return &ItemReceivedCommand{
+	return ItemReceivedCommand{
 		topic:       topic,
 		payload:     payload,
 		CommandType: data.Type,

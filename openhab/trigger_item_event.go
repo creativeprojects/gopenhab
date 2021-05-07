@@ -25,6 +25,15 @@ func (c *ItemReceivedCommandTrigger) activate(client *Client, run func(ev event.
 		if run == nil {
 			return
 		}
+		if c.state != nil && c.state.String() != "" {
+			// check for the desired state
+			if ev, ok := e.(event.ItemReceivedCommand); ok {
+				if ev.Command != c.state.String() {
+					// not the value we wanted
+					return
+				}
+			}
+		}
 		run(e)
 	})
 	return nil
