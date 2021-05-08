@@ -21,7 +21,7 @@ func OnDisconnect() *SystemEventTrigger {
 
 // activate subscribes to the corresponding event
 func (c *SystemEventTrigger) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
-	c.subId = client.eventBus.subscribe("", c.eventType, func(e event.Event) {
+	c.subId = client.subscribe("", c.eventType, func(e event.Event) {
 		if run == nil {
 			return
 		}
@@ -32,7 +32,7 @@ func (c *SystemEventTrigger) activate(client *Client, run func(ev event.Event), 
 
 func (c *SystemEventTrigger) deactivate(client *Client) {
 	if c.subId > 0 {
-		client.eventBus.unsubscribe(c.subId)
+		client.unsubscribe(c.subId)
 		c.subId = 0
 	}
 }

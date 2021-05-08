@@ -1,33 +1,30 @@
-package openhab
+package event
 
 import (
 	"sync"
-
-	"github.com/creativeprojects/gopenhab/event"
 )
 
-type subscription struct {
-	id        int
-	topic     string
-	eventType event.Type
-	callback  func(e event.Event)
+type PubSub interface {
+	Subscribe(topic string, eventType Type, callback func(e Event)) int
+	Unsubscribe(subId int)
+	Publish(e Event)
 }
 
-type eventBus struct {
+type EventBus struct {
 	subs       []subscription
 	subLock    sync.Locker
 	subIdCount int
 }
 
-func newEventBus() eventBus {
-	return eventBus{
+func NewEventBus() *EventBus {
+	return &EventBus{
 		subs:    make([]subscription, 0),
 		subLock: &sync.Mutex{},
 	}
 }
 
-// subscribe returns an id for when you need to un-subscribe
-func (b *eventBus) subscribe(topic string, eventType event.Type, callback func(e event.Event)) int {
+// Subscribe returns an id for when you need to un-subscribe
+func (b *EventBus) Subscribe(topic string, eventType Type, callback func(e Event)) int {
 	b.subLock.Lock()
 	defer b.subLock.Unlock()
 
@@ -42,9 +39,9 @@ func (b *eventBus) subscribe(topic string, eventType event.Type, callback func(e
 	return b.subIdCount
 }
 
-// unsubscribe keeps the order of the subscriptions.
+// Unsubscribe keeps the order of the subscriptions.
 // For that reason it is a relatively expensive operation
-func (b *eventBus) unsubscribe(subId int) {
+func (b *EventBus) Unsubscribe(subId int) {
 	b.subLock.Lock()
 	defer b.subLock.Unlock()
 
@@ -56,7 +53,7 @@ func (b *eventBus) unsubscribe(subId int) {
 
 // findID returns the index in the slice where the sub ID is found,
 // it returns -1 if not found
-func (b *eventBus) findID(id int) int {
+func (b *EventBus) findID(id int) int {
 	for index, sub := range b.subs {
 		if sub.id == id {
 			return index
@@ -65,8 +62,8 @@ func (b *eventBus) findID(id int) int {
 	return -1
 }
 
-// publish event
-func (b *eventBus) publish(e event.Event) {
+// Publish event
+func (b *EventBus) Publish(e Event) {
 	b.subLock.Lock()
 	defer b.subLock.Unlock()
 
@@ -74,13 +71,12 @@ func (b *eventBus) publish(e event.Event) {
 		if sub.eventType != e.Type() {
 			continue
 		}
-		// if e.Topic() == "" || strings.HasPrefix(e.Topic(), sub.topic) {
-		if e.Topic() == "" || e.Topic() == sub.topic {
+		if sub.topic == "" || e.Topic() == sub.topic {
 			// run the callback in a goroutine
-			go func(sub subscription, e event.Event) {
-				defer preventPanic()
-				sub.callback(e)
-			}(sub, e)
+			go sub.callback(e)
 		}
 	}
 }
+
+// Verify interface
+var _ PubSub = &EventBus{}

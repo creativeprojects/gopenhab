@@ -23,7 +23,7 @@ func OnItemReceivedCommand(item string, state StateValue) *ItemReceivedCommandTr
 }
 
 func (c *ItemReceivedCommandTrigger) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
-	c.subId = client.eventBus.subscribe(c.topic, event.ItemCommand, func(e event.Event) {
+	c.subId = client.subscribe(c.topic, event.ItemCommand, func(e event.Event) {
 		if run == nil {
 			return
 		}
@@ -43,7 +43,7 @@ func (c *ItemReceivedCommandTrigger) activate(client *Client, run func(ev event.
 
 func (c *ItemReceivedCommandTrigger) deactivate(client *Client) {
 	if c.subId > 0 {
-		client.eventBus.unsubscribe(c.subId)
+		client.unsubscribe(c.subId)
 		c.subId = 0
 	}
 }
@@ -67,7 +67,7 @@ func OnItemReceivedState(item string, state StateValue) *ItemReceivedStateTrigge
 }
 
 func (c *ItemReceivedStateTrigger) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
-	c.subId = client.eventBus.subscribe(c.topic, event.ItemState, func(e event.Event) {
+	c.subId = client.subscribe(c.topic, event.ItemState, func(e event.Event) {
 		if run == nil {
 			return
 		}
@@ -87,7 +87,7 @@ func (c *ItemReceivedStateTrigger) activate(client *Client, run func(ev event.Ev
 
 func (c *ItemReceivedStateTrigger) deactivate(client *Client) {
 	if c.subId > 0 {
-		client.eventBus.unsubscribe(c.subId)
+		client.unsubscribe(c.subId)
 		c.subId = 0
 	}
 }
@@ -131,7 +131,7 @@ func OnItemChangedFromTo(item string, from, to StateValue) *ItemChangedTrigger {
 }
 
 func (c *ItemChangedTrigger) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
-	c.subId = client.eventBus.subscribe(c.topic, event.ItemStateChanged, func(e event.Event) {
+	c.subId = client.subscribe(c.topic, event.ItemStateChanged, func(e event.Event) {
 		if run == nil {
 			return
 		}
@@ -160,7 +160,7 @@ func (c *ItemChangedTrigger) activate(client *Client, run func(ev event.Event), 
 
 func (c *ItemChangedTrigger) deactivate(client *Client) {
 	if c.subId > 0 {
-		client.eventBus.unsubscribe(c.subId)
+		client.unsubscribe(c.subId)
 		c.subId = 0
 	}
 }

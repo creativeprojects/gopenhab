@@ -35,7 +35,7 @@ type Client struct {
 	cron     *cron.Cron
 	items    *Items
 	rules    []*Rule
-	eventBus eventBus
+	eventBus event.PubSub
 }
 
 func NewClient(config Config) *Client {
@@ -61,7 +61,7 @@ func NewClient(config Config) *Client {
 			cron.WithParser(
 				cron.NewParser(
 					cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor))),
-		eventBus: newEventBus(),
+		eventBus: event.NewEventBus(),
 	}
 	client.items = newItems(client)
 	return client
@@ -160,10 +160,10 @@ func (c *Client) listenEvents() error {
 		return err
 	}
 	// send connect event
-	c.eventBus.publish(event.NewSystemEvent(event.ClientConnected))
+	c.eventBus.Publish(event.NewSystemEvent(event.ClientConnected))
 	defer func() {
 		// send disconnect event
-		c.eventBus.publish(event.NewSystemEvent(event.ClientDisconnected))
+		c.eventBus.Publish(event.NewSystemEvent(event.ClientDisconnected))
 	}()
 
 	state := 0
@@ -222,7 +222,7 @@ func (c *Client) dispatchRawEvent(data string) {
 			log.Printf("error decoding message: %w", err)
 			break
 		}
-		c.eventBus.publish(e)
+		c.eventBus.Publish(e)
 
 	case api.EventItemState:
 		e, err := event.NewItemReceivedState(message.Topic, message.Payload)
@@ -230,7 +230,7 @@ func (c *Client) dispatchRawEvent(data string) {
 			log.Printf("error decoding message: %w", err)
 			break
 		}
-		c.eventBus.publish(e)
+		c.eventBus.Publish(e)
 
 	case api.EventItemStateChanged:
 		e, err := event.NewItemChanged(message.Topic, message.Payload)
@@ -238,7 +238,7 @@ func (c *Client) dispatchRawEvent(data string) {
 			log.Printf("error decoding message: %w", err)
 			break
 		}
-		c.eventBus.publish(e)
+		c.eventBus.Publish(e)
 
 	default:
 		log.Printf("EVENT: %s on %s", message.Type, message.Topic)
@@ -291,9 +291,16 @@ func (c *Client) eventLoop() {
 	}
 }
 
-// func (c *Client) Subscribe(eventType event.Type, topic string, callback func(e event.Event)) {
-// 	c.eventBus.subscribe(topic, eventType, callback)
-// }
+func (c *Client) subscribe(topic string, eventType event.Type, callback func(e event.Event)) int {
+	return c.eventBus.Subscribe(topic, eventType, func(e event.Event) {
+		defer preventPanic()
+		callback(e)
+	})
+}
+
+func (c *Client) unsubscribe(subID int) {
+	c.eventBus.Unsubscribe(subID)
+}
 
 func (c *Client) AddRule(ruleData RuleData, run Runner, triggers ...Trigger) error {
 	rule := newRule(c, ruleData, run, triggers)
@@ -330,12 +337,4 @@ func (c *Client) Start() {
 	ctx := c.cron.Stop()
 	// Wait until all the cron tasks finished running
 	<-ctx.Done()
-}
-
-func (c *Client) Subscribers() []string {
-	subs := make([]string, len(c.eventBus.subs))
-	for i, sub := range c.eventBus.subs {
-		subs[i] = fmt.Sprintf("id=%d; topic=%q", sub.id, sub.topic)
-	}
-	return subs
 }
