@@ -33,7 +33,7 @@ func getItemType(s string) (ItemType, string) {
 
 	switch s {
 	default:
-		log.Printf("unknown item type: %s", s)
+		errorlog.Printf("unknown item type: %s", s)
 		return ItemTypeUnknown, s
 	case string(ItemTypeColor):
 		return ItemTypeColor, ""

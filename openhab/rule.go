@@ -40,7 +40,7 @@ func (r Rule) String() string {
 func (r *Rule) activate(client *Client) error {
 	for _, trigger := range r.triggers {
 		if trigger == nil {
-			log.Printf("nil trigger encountered")
+			errorlog.Printf("nil trigger encountered")
 			continue
 		}
 		err := trigger.activate(client, r.run, r.ruleData)

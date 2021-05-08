@@ -1,3 +1,4 @@
 /examples
 /openhab30_*
 /main.go
+/coverage.out

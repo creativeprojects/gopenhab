@@ -36,7 +36,7 @@ data: {"topic":"smarthome/items/TestSwitch/statechanged","payload":"{\"type\":\"
 			}
 			return
 		}
-		log.Printf("not found: %s\n", req.URL)
+		t.Logf("not found: %s\n", req.URL)
 		http.NotFound(w, req)
 	}))
 

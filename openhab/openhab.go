@@ -72,7 +72,7 @@ func (c *Client) Items() *Items {
 }
 
 func (c *Client) get(ctx context.Context, URL string) (*http.Response, error) {
-	log.Printf("GET: %s", c.baseURL+URL)
+	debuglog.Printf("GET: %s", c.baseURL+URL)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+URL, nil)
 	if err != nil {
 		return nil, err
@@ -174,24 +174,24 @@ func (c *Client) listenEvents() error {
 		if line == "" {
 			// Move back to waiting state
 			if state != eventStateFinished {
-				log.Printf("unexpected end of event data on state %d", state)
+				errorlog.Printf("unexpected end of event data on state %d", state)
 			}
 			state = eventStateWaiting
 			continue
 		}
 		if state == eventStateBanner {
 			if !strings.HasPrefix(line, eventHeader) {
-				log.Printf("unexpected start of event: %q", line)
+				errorlog.Printf("unexpected start of event: %q", line)
 			}
 			event := strings.TrimPrefix(line, eventHeader)
 			if event != "message" {
-				log.Printf("unexpected event: %q", event)
+				errorlog.Printf("unexpected event: %q", event)
 			}
 			continue
 		}
 		if state == eventStateData {
 			if !strings.HasPrefix(line, eventData) {
-				log.Printf("unexpected event data: %q", line)
+				errorlog.Printf("unexpected event data: %q", line)
 			}
 			data := strings.TrimPrefix(line, eventData)
 			if data != "" {
@@ -212,14 +212,14 @@ func (c *Client) dispatchRawEvent(data string) {
 	message := api.EventMessage{}
 	err := decoder.Decode(&message)
 	if err != nil {
-		log.Printf("invalid event data: %s", err)
+		errorlog.Printf("invalid event data: %s", err)
 		return
 	}
 	switch message.Type {
 	case api.EventItemCommand:
 		e, err := event.NewItemReceivedCommand(message.Topic, message.Payload)
 		if err != nil {
-			log.Printf("error decoding message: %w", err)
+			errorlog.Printf("error decoding message: %w", err)
 			break
 		}
 		c.eventBus.Publish(e)
@@ -227,7 +227,7 @@ func (c *Client) dispatchRawEvent(data string) {
 	case api.EventItemState:
 		e, err := event.NewItemReceivedState(message.Topic, message.Payload)
 		if err != nil {
-			log.Printf("error decoding message: %w", err)
+			errorlog.Printf("error decoding message: %w", err)
 			break
 		}
 		c.eventBus.Publish(e)
@@ -235,13 +235,13 @@ func (c *Client) dispatchRawEvent(data string) {
 	case api.EventItemStateChanged:
 		e, err := event.NewItemChanged(message.Topic, message.Payload)
 		if err != nil {
-			log.Printf("error decoding message: %w", err)
+			errorlog.Printf("error decoding message: %w", err)
 			break
 		}
 		c.eventBus.Publish(e)
 
 	default:
-		log.Printf("EVENT: %s on %s", message.Type, message.Topic)
+		debuglog.Printf("EVENT: %s on %s", message.Type, message.Topic)
 	}
 }
 
@@ -274,7 +274,7 @@ func loadEvent(data string) (event.Event, error) {
 		return e, nil
 
 	default:
-		log.Printf("EVENT: %s on %s", message.Type, message.Topic)
+		debuglog.Printf("EVENT: %s on %s", message.Type, message.Topic)
 		return event.NewGenericEvent(message.Type, message.Topic, message.Payload), nil
 	}
 }
@@ -285,7 +285,7 @@ func (c *Client) eventLoop() {
 	for {
 		err := c.listenEvents()
 		if err != nil {
-			log.Printf("error listening to openhab events: %s", err)
+			errorlog.Printf("error listening to openhab events: %s", err)
 		}
 		time.Sleep(1 * time.Second)
 	}
@@ -319,7 +319,7 @@ func (c *Client) Start() {
 			if ruleName != "" {
 				ruleName = " \"" + ruleName + "\""
 			}
-			log.Printf("error activating rule%s: %s", ruleName, err)
+			errorlog.Printf("error activating rule%s: %s", ruleName, err)
 		}
 	}
 	c.cron.Start()
@@ -333,7 +333,7 @@ func (c *Client) Start() {
 	// Wait until we're politely asked to leave
 	<-stop
 
-	log.Printf("shutting down...")
+	debuglog.Printf("shutting down...")
 	ctx := c.cron.Stop()
 	// Wait until all the cron tasks finished running
 	<-ctx.Done()
