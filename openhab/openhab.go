@@ -219,7 +219,7 @@ func (c *Client) dispatchRawEvent(data string) {
 	case api.EventItemCommand:
 		e, err := event.NewItemReceivedCommand(message.Topic, message.Payload)
 		if err != nil {
-			log.Printf("error decoding message: %s", err)
+			log.Printf("error decoding message: %w", err)
 			break
 		}
 		c.eventBus.publish(e)
@@ -227,7 +227,7 @@ func (c *Client) dispatchRawEvent(data string) {
 	case api.EventItemState:
 		e, err := event.NewItemReceivedState(message.Topic, message.Payload)
 		if err != nil {
-			log.Printf("error decoding message: %s", err)
+			log.Printf("error decoding message: %w", err)
 			break
 		}
 		c.eventBus.publish(e)
@@ -235,13 +235,47 @@ func (c *Client) dispatchRawEvent(data string) {
 	case api.EventItemStateChanged:
 		e, err := event.NewItemChanged(message.Topic, message.Payload)
 		if err != nil {
-			log.Printf("error decoding message: %s", err)
+			log.Printf("error decoding message: %w", err)
 			break
 		}
 		c.eventBus.publish(e)
 
 	default:
 		log.Printf("EVENT: %s on %s", message.Type, message.Topic)
+	}
+}
+
+func loadEvent(data string) (event.Event, error) {
+	message := api.EventMessage{}
+	err := json.Unmarshal([]byte(data), &message)
+	if err != nil {
+		return nil, fmt.Errorf("invalid event data: %s", err)
+	}
+	switch message.Type {
+	case api.EventItemCommand:
+		e, err := event.NewItemReceivedCommand(message.Topic, message.Payload)
+		if err != nil {
+			return nil, fmt.Errorf("error decoding message: %w", err)
+		}
+		return e, nil
+
+	case api.EventItemState:
+		e, err := event.NewItemReceivedState(message.Topic, message.Payload)
+		if err != nil {
+			return nil, fmt.Errorf("error decoding message: %w", err)
+		}
+		return e, nil
+
+	case api.EventItemStateChanged:
+		e, err := event.NewItemChanged(message.Topic, message.Payload)
+		if err != nil {
+			return nil, fmt.Errorf("error decoding message: %w", err)
+		}
+		return e, nil
+
+	default:
+		log.Printf("EVENT: %s on %s", message.Type, message.Topic)
+		return event.NewGenericEvent(message.Type, message.Topic, message.Payload), nil
 	}
 }
 

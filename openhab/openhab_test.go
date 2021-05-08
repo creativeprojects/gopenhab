@@ -8,6 +8,7 @@ import (
 
 	"github.com/creativeprojects/gopenhab/event"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestEventMessages(t *testing.T) {
@@ -45,6 +46,24 @@ data: {"topic":"smarthome/items/TestSwitch/statechanged","payload":"{\"type\":\"
 	})
 	err := client.listenEvents()
 	assert.NoError(t, err)
+}
+
+func TestLoadEvents(t *testing.T) {
+	testData := []struct {
+		source string
+		event  event.Event
+	}{
+		{`{"topic":"smarthome/items/TestSwitch/command","payload":"{\"type\":\"OnOff\",\"value\":\"OFF\"}","type":"ItemCommandEvent"}`,
+			event.ItemReceivedCommand{CommandType: "OnOff", Command: "OFF"}},
+	}
+
+	for _, testItem := range testData {
+		t.Run("", func(t *testing.T) {
+			e, err := loadEvent(testItem.source)
+			require.NoError(t, err)
+			assert.Equal(t, testItem.event, e)
+		})
+	}
 }
 
 func TestDispatchEvents(t *testing.T) {

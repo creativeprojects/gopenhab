@@ -3,7 +3,8 @@ package event
 type Type int
 
 const (
-	ClientConnected Type = iota
+	Unknown Type = iota
+	ClientConnected
 	ClientDisconnected
 	TimeCron
 	ItemAdded              // An item has been added to the item registry.
