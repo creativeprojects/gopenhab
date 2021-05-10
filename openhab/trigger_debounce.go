@@ -1,7 +1,6 @@
 package openhab
 
 import (
-	"log"
 	"sync"
 	"time"
 
@@ -35,7 +34,6 @@ func (c *TriggerDebounce) activate(client *Client, run func(ev event.Event), rul
 			c.timer.Stop()
 		}
 
-		log.Printf("Debounced")
 		c.timer = time.AfterFunc(c.after, func() {
 			run(ev)
 		})

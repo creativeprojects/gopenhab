@@ -7,14 +7,6 @@ type GenericEvent struct {
 	payload  string
 }
 
-func NewGenericEvent(typeName, topic, payload string) *GenericEvent {
-	return &GenericEvent{
-		typeName: typeName,
-		topic:    topic,
-		payload:  payload,
-	}
-}
-
 func (e GenericEvent) Topic() string {
 	return e.topic
 }

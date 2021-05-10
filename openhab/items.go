@@ -7,6 +7,7 @@ import (
 	"github.com/creativeprojects/gopenhab/api"
 )
 
+// Items represents the collection of items in openHAB
 type Items struct {
 	client *Client
 	cache  map[string]*Item

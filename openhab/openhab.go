@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -14,7 +13,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/creativeprojects/gopenhab/api"
 	"github.com/creativeprojects/gopenhab/event"
 	"github.com/robfig/cron/v3"
 )
@@ -208,75 +206,12 @@ func (c *Client) listenEvents() error {
 }
 
 func (c *Client) dispatchRawEvent(data string) {
-	decoder := json.NewDecoder(strings.NewReader(data))
-	message := api.EventMessage{}
-	err := decoder.Decode(&message)
+	e, err := event.New(data)
 	if err != nil {
-		errorlog.Printf("invalid event data: %s", err)
+		errorlog.Printf("event deleted: %s", err)
 		return
 	}
-	switch message.Type {
-	case api.EventItemCommand:
-		e, err := event.NewItemReceivedCommand(message.Topic, message.Payload)
-		if err != nil {
-			errorlog.Printf("error decoding message: %w", err)
-			break
-		}
-		c.eventBus.Publish(e)
-
-	case api.EventItemState:
-		e, err := event.NewItemReceivedState(message.Topic, message.Payload)
-		if err != nil {
-			errorlog.Printf("error decoding message: %w", err)
-			break
-		}
-		c.eventBus.Publish(e)
-
-	case api.EventItemStateChanged:
-		e, err := event.NewItemChanged(message.Topic, message.Payload)
-		if err != nil {
-			errorlog.Printf("error decoding message: %w", err)
-			break
-		}
-		c.eventBus.Publish(e)
-
-	default:
-		debuglog.Printf("EVENT: %s on %s", message.Type, message.Topic)
-	}
-}
-
-func loadEvent(data string) (event.Event, error) {
-	message := api.EventMessage{}
-	err := json.Unmarshal([]byte(data), &message)
-	if err != nil {
-		return nil, fmt.Errorf("invalid event data: %s", err)
-	}
-	switch message.Type {
-	case api.EventItemCommand:
-		e, err := event.NewItemReceivedCommand(message.Topic, message.Payload)
-		if err != nil {
-			return nil, fmt.Errorf("error decoding message: %w", err)
-		}
-		return e, nil
-
-	case api.EventItemState:
-		e, err := event.NewItemReceivedState(message.Topic, message.Payload)
-		if err != nil {
-			return nil, fmt.Errorf("error decoding message: %w", err)
-		}
-		return e, nil
-
-	case api.EventItemStateChanged:
-		e, err := event.NewItemChanged(message.Topic, message.Payload)
-		if err != nil {
-			return nil, fmt.Errorf("error decoding message: %w", err)
-		}
-		return e, nil
-
-	default:
-		debuglog.Printf("EVENT: %s on %s", message.Type, message.Topic)
-		return event.NewGenericEvent(message.Type, message.Topic, message.Payload), nil
-	}
+	c.eventBus.Publish(e)
 }
 
 // eventLoop listen to the events from the REST api and send them to the event bus.

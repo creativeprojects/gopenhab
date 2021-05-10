@@ -14,7 +14,7 @@ type ItemReceivedCommandTrigger struct {
 }
 
 // OnItemReceivedCommand triggers the rule when the item received a command equal to state.
-// pass nil to state to receive ANY command
+// Use a nil state to receive ANY command sent to the item
 func OnItemReceivedCommand(item string, state StateValue) *ItemReceivedCommandTrigger {
 	return &ItemReceivedCommandTrigger{
 		topic: itemTopicPrefix + item + "/" + api.TopicEventCommand,
