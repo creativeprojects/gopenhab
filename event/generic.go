@@ -12,7 +12,7 @@ func (e GenericEvent) Topic() string {
 }
 
 func (e GenericEvent) Type() Type {
-	return Unknown
+	return TypeUnknown
 }
 
 func (e GenericEvent) Payload() string {

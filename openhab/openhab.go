@@ -158,10 +158,10 @@ func (c *Client) listenEvents() error {
 		return err
 	}
 	// send connect event
-	c.eventBus.Publish(event.NewSystemEvent(event.ClientConnected))
+	c.eventBus.Publish(event.NewSystemEvent(event.TypeClientConnected))
 	defer func() {
 		// send disconnect event
-		c.eventBus.Publish(event.NewSystemEvent(event.ClientDisconnected))
+		c.eventBus.Publish(event.NewSystemEvent(event.TypeClientDisconnected))
 	}()
 
 	state := 0

@@ -1,30 +1,32 @@
 package event
 
+type Item struct {
+	Name             string
+	Label            string
+	Link             string
+	Type             string
+	State            string
+	TransformedState string
+	Editable         bool
+	Category         string
+	Tags             []string
+	GroupNames       []string
+	Members          []string
+	GroupType        string
+}
+
 type ItemReceivedCommand struct {
 	topic       string
 	CommandType string
 	Command     string
 }
 
-// func NewItemReceivedCommand(topic, payload string) (ItemReceivedCommand, error) {
-// 	data := api.EventCommand{}
-// 	err := json.Unmarshal([]byte(payload), &data)
-// 	if err != nil {
-// 		return ItemReceivedCommand{}, err
-// 	}
-// 	return ItemReceivedCommand{
-// 		topic:       topic,
-// 		CommandType: data.Type,
-// 		Command:     data.Value,
-// 	}, nil
-// }
-
 func (i ItemReceivedCommand) Topic() string {
 	return i.topic
 }
 
 func (i ItemReceivedCommand) Type() Type {
-	return ItemCommand
+	return TypeItemCommand
 }
 
 type ItemReceivedState struct {
@@ -33,28 +35,15 @@ type ItemReceivedState struct {
 	State     string
 }
 
-// func NewItemReceivedState(topic, payload string) (ItemReceivedState, error) {
-// 	data := api.EventState{}
-// 	err := json.Unmarshal([]byte(payload), &data)
-// 	if err != nil {
-// 		return ItemReceivedState{}, err
-// 	}
-// 	return ItemReceivedState{
-// 		topic:     topic,
-// 		StateType: data.Type,
-// 		State:     data.Value,
-// 	}, nil
-// }
-
 func (i ItemReceivedState) Topic() string {
 	return i.topic
 }
 
 func (i ItemReceivedState) Type() Type {
-	return ItemState
+	return TypeItemState
 }
 
-type ItemChanged struct {
+type ItemStateChanged struct {
 	topic        string
 	StateType    string
 	State        string
@@ -62,25 +51,50 @@ type ItemChanged struct {
 	OldState     string
 }
 
-// func NewItemChanged(topic, payload string) (ItemChanged, error) {
-// 	data := api.EventStateChanged{}
-// 	err := json.Unmarshal([]byte(payload), &data)
-// 	if err != nil {
-// 		return ItemChanged{}, err
-// 	}
-// 	return ItemChanged{
-// 		topic:        topic,
-// 		StateType:    data.Type,
-// 		State:        data.Value,
-// 		OldStateType: data.OldType,
-// 		OldState:     data.OldValue,
-// 	}, nil
-// }
-
-func (i ItemChanged) Topic() string {
+func (i ItemStateChanged) Topic() string {
 	return i.topic
 }
 
-func (i ItemChanged) Type() Type {
-	return ItemStateChanged
+func (i ItemStateChanged) Type() Type {
+	return TypeItemStateChanged
+}
+
+type ItemAdded struct {
+	topic string
+	Item
+}
+
+func (i ItemAdded) Topic() string {
+	return i.topic
+}
+
+func (i ItemAdded) Type() Type {
+	return TypeItemAdded
+}
+
+type ItemRemoved struct {
+	topic string
+	Item
+}
+
+func (i ItemRemoved) Topic() string {
+	return i.topic
+}
+
+func (i ItemRemoved) Type() Type {
+	return TypeItemRemoved
+}
+
+type ItemUpdated struct {
+	topic   string
+	OldItem Item
+	Item
+}
+
+func (i ItemUpdated) Topic() string {
+	return i.topic
+}
+
+func (i ItemUpdated) Type() Type {
+	return TypeItemUpdated
 }

@@ -27,7 +27,7 @@ func (c *TimeCronTrigger) activate(client *Client, run func(ev event.Event), rul
 	entryID, err := client.cron.AddFunc(c.spec, func() {
 		defer preventPanic()
 
-		run(event.NewSystemEvent(event.TimeCron))
+		run(event.NewSystemEvent(event.TypeTimeCron))
 	})
 	if err != nil {
 		return err

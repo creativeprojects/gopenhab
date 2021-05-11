@@ -17,14 +17,14 @@ type SystemEventTrigger struct {
 // during a restart
 func OnConnect() *SystemEventTrigger {
 	return &SystemEventTrigger{
-		eventType: event.ClientConnected,
+		eventType: event.TypeClientConnected,
 	}
 }
 
 // OnDisconnect is a trigger activated when the connection to openHAB is lost
 func OnDisconnect() *SystemEventTrigger {
 	return &SystemEventTrigger{
-		eventType: event.ClientDisconnected,
+		eventType: event.TypeClientDisconnected,
 	}
 }
 

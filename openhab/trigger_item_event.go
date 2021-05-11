@@ -23,7 +23,7 @@ func OnItemReceivedCommand(item string, state StateValue) *ItemReceivedCommandTr
 }
 
 func (c *ItemReceivedCommandTrigger) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
-	c.subId = client.subscribe(c.topic, event.ItemCommand, func(e event.Event) {
+	c.subId = client.subscribe(c.topic, event.TypeItemCommand, func(e event.Event) {
 		if run == nil {
 			return
 		}
@@ -67,7 +67,7 @@ func OnItemReceivedState(item string, state StateValue) *ItemReceivedStateTrigge
 }
 
 func (c *ItemReceivedStateTrigger) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
-	c.subId = client.subscribe(c.topic, event.ItemState, func(e event.Event) {
+	c.subId = client.subscribe(c.topic, event.TypeItemState, func(e event.Event) {
 		if run == nil {
 			return
 		}
@@ -131,13 +131,13 @@ func OnItemChangedFromTo(item string, from, to StateValue) *ItemChangedTrigger {
 }
 
 func (c *ItemChangedTrigger) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
-	c.subId = client.subscribe(c.topic, event.ItemStateChanged, func(e event.Event) {
+	c.subId = client.subscribe(c.topic, event.TypeItemStateChanged, func(e event.Event) {
 		if run == nil {
 			return
 		}
 		if c.from != nil && c.from.String() != "" {
 			// check for the desired state
-			if ev, ok := e.(event.ItemChanged); ok {
+			if ev, ok := e.(event.ItemStateChanged); ok {
 				if ev.OldState != c.from.String() {
 					// not the value we wanted
 					return
@@ -146,7 +146,7 @@ func (c *ItemChangedTrigger) activate(client *Client, run func(ev event.Event), 
 		}
 		if c.to != nil && c.to.String() != "" {
 			// check for the desired state
-			if ev, ok := e.(event.ItemChanged); ok {
+			if ev, ok := e.(event.ItemStateChanged); ok {
 				if ev.State != c.to.String() {
 					// not the value we wanted
 					return

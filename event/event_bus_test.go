@@ -11,14 +11,14 @@ func TestOneSubscriberNoTopic(t *testing.T) {
 	done := make(chan Event)
 	eventBus := NewEventBus()
 
-	eventBus.Subscribe("", ClientDisconnected, func(e Event) {
+	eventBus.Subscribe("", TypeClientDisconnected, func(e Event) {
 		panic("This function should not have been called!")
 	})
-	eventBus.Subscribe("", ClientConnected, func(e Event) {
+	eventBus.Subscribe("", TypeClientConnected, func(e Event) {
 		done <- e
 	})
 
-	eventBus.Publish(newMockEvent("", ClientConnected))
+	eventBus.Publish(newMockEvent("", TypeClientConnected))
 
 	select {
 	case e := <-done:
@@ -33,14 +33,14 @@ func TestOneSubscriberWithTopic(t *testing.T) {
 	done := make(chan Event, 1)
 	eventBus := NewEventBus()
 
-	eventBus.Subscribe("topic", ItemState, func(e Event) {
+	eventBus.Subscribe("topic", TypeItemState, func(e Event) {
 		panic("This function should not have been called!")
 	})
-	eventBus.Subscribe("topic2", ItemState, func(e Event) {
+	eventBus.Subscribe("topic2", TypeItemState, func(e Event) {
 		done <- e
 	})
 
-	eventBus.Publish(newMockEvent("topic2", ItemState))
+	eventBus.Publish(newMockEvent("topic2", TypeItemState))
 
 	select {
 	case e := <-done:
@@ -57,14 +57,14 @@ func TestTwoSubscribers(t *testing.T) {
 	done := make(chan Event, 2)
 	eventBus := NewEventBus()
 
-	eventBus.Subscribe("topic", ItemState, func(e Event) {
+	eventBus.Subscribe("topic", TypeItemState, func(e Event) {
 		if first {
 			t.Error("function called more than once")
 		}
 		first = true
 		done <- e
 	})
-	eventBus.Subscribe("", ItemState, func(e Event) {
+	eventBus.Subscribe("", TypeItemState, func(e Event) {
 		if second {
 			t.Error("function called more than once")
 		}
@@ -72,7 +72,7 @@ func TestTwoSubscribers(t *testing.T) {
 		done <- e
 	})
 
-	eventBus.Publish(newMockEvent("topic", ItemState))
+	eventBus.Publish(newMockEvent("topic", TypeItemState))
 
 	for {
 		select {
@@ -92,14 +92,14 @@ func TestUnsubscribe(t *testing.T) {
 	done := make(chan Event)
 	eventBus := NewEventBus()
 
-	eventBus.Subscribe("", ClientDisconnected, func(e Event) {
+	eventBus.Subscribe("", TypeClientDisconnected, func(e Event) {
 		panic("This function should not have been called!")
 	})
-	sub := eventBus.Subscribe("", ClientConnected, func(e Event) {
+	sub := eventBus.Subscribe("", TypeClientConnected, func(e Event) {
 		done <- e
 	})
 
-	eventBus.Publish(newMockEvent("", ClientConnected))
+	eventBus.Publish(newMockEvent("", TypeClientConnected))
 
 	select {
 	case e := <-done:
@@ -112,7 +112,7 @@ func TestUnsubscribe(t *testing.T) {
 	eventBus.Unsubscribe(sub)
 
 	// republish an event
-	eventBus.Publish(newMockEvent("", ClientConnected))
+	eventBus.Publish(newMockEvent("", TypeClientConnected))
 
 	select {
 	case <-done:
@@ -126,14 +126,14 @@ func TestUnsubscribeUnknownID(t *testing.T) {
 	done := make(chan Event)
 	eventBus := NewEventBus()
 
-	eventBus.Subscribe("", ClientDisconnected, func(e Event) {
+	eventBus.Subscribe("", TypeClientDisconnected, func(e Event) {
 		panic("This function should not have been called!")
 	})
-	sub := eventBus.Subscribe("", ClientConnected, func(e Event) {
+	sub := eventBus.Subscribe("", TypeClientConnected, func(e Event) {
 		done <- e
 	})
 
-	eventBus.Publish(newMockEvent("", ClientConnected))
+	eventBus.Publish(newMockEvent("", TypeClientConnected))
 
 	select {
 	case e := <-done:
@@ -146,7 +146,7 @@ func TestUnsubscribeUnknownID(t *testing.T) {
 	eventBus.Unsubscribe(sub + 10)
 
 	// republish an event
-	eventBus.Publish(newMockEvent("", ClientConnected))
+	eventBus.Publish(newMockEvent("", TypeClientConnected))
 
 	select {
 	case e := <-done:
