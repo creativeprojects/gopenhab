@@ -2,29 +2,39 @@ package openhab
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/creativeprojects/gopenhab/api"
 )
 
 type Item struct {
-	name     string
-	data     api.Item
-	mainType ItemType
-	subType  string
-	client   *Client
+	name            string
+	data            api.Item
+	state           StateValue
+	mainType        ItemType
+	subType         string
+	client          *Client
+	stateLocker     sync.Mutex
+	stateChanged    chan StateValue
+	listenersLocker sync.Mutex
+	listeners       int
 }
 
 func newItem(client *Client, name string) *Item {
 	return &Item{
-		name:   name,
-		client: client,
+		name:         name,
+		state:        nil,
+		client:       client,
+		stateChanged: make(chan StateValue),
+		listeners:    0,
 	}
 }
 
 func (i *Item) set(data api.Item) *Item {
 	i.data = data
 	i.mainType, i.subType = getItemType(i.data.Type)
+	i.setInternalState(data.State)
 	return i
 }
 
@@ -69,8 +79,24 @@ func (i *Item) stateFromString(state string) StateValue {
 	}
 }
 
-// State always calls the api to return a fresh value from openHAB
+// State returns an internal cached value if available,
+// or calls the api to return a fresh value from openHAB if not
+//
+// State value is automatically refreshed from openHAB events,
+// so you should always get an accurate value.
+//
+// Please note if you just sent a state change command,
+// the new value won't be reflected instantly, but only after openHAB
+// sent a state changed event.
+//
+// If you need the new value after sending a command,
+// you might want to use WaitState(duration) instead
 func (i *Item) State() (StateValue, error) {
+	internalState := i.getInternalStateValue()
+	if internalState != nil {
+		return internalState, nil
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -78,7 +104,24 @@ func (i *Item) State() (StateValue, error) {
 	if err != nil {
 		return i.stateFromString(""), err
 	}
-	return i.stateFromString(state), nil
+	value := i.stateFromString(state)
+	i.setInternalStateValue(value)
+	return value, nil
+}
+
+// WaitState waits until the state gets updated, for a maximum of duration
+// If a state was received, it returns it along with true,
+// If a state hasn't been received before duration, it returns the last known state along with false
+func (i *Item) WaitState(duration time.Duration) (StateValue, bool) {
+	i.beginListener()
+	defer i.endListener()
+
+	select {
+	case state := <-i.stateChanged:
+		return state, true
+	case <-time.After(duration):
+		return i.getInternalStateValue(), false
+	}
 }
 
 func (i *Item) SendCommand(command StateValue) error {
@@ -90,4 +133,50 @@ func (i *Item) SendCommand(command StateValue) error {
 		return err
 	}
 	return nil
+}
+
+// getInternalStateValue gets the internal state value: it does not trigger an API call to get the state.
+func (i *Item) getInternalStateValue() StateValue {
+	i.stateLocker.Lock()
+	defer i.stateLocker.Unlock()
+
+	return i.state
+}
+
+// setInternalStateValue sets the internal state value: it does not trigger an API call to set the state.
+// this method should be used after state received or changed events
+func (i *Item) setInternalStateValue(state StateValue) {
+	i.stateLocker.Lock()
+	defer i.stateLocker.Unlock()
+
+	i.state = state
+	go i.sendStateChanged(state)
+}
+
+func (i *Item) setInternalState(state string) {
+	i.setInternalStateValue(i.stateFromString(state))
+}
+
+func (i *Item) beginListener() {
+	i.listenersLocker.Lock()
+	defer i.listenersLocker.Unlock()
+
+	i.listeners++
+}
+
+func (i *Item) endListener() {
+	i.listenersLocker.Lock()
+	defer i.listenersLocker.Unlock()
+
+	i.listeners--
+}
+
+func (i *Item) sendStateChanged(value StateValue) {
+	i.listenersLocker.Lock()
+	defer i.listenersLocker.Unlock()
+
+	// send the message to each receiver
+	for count := 0; count < i.listeners; count++ {
+		i.stateChanged <- value
+	}
 }

@@ -5,10 +5,13 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/creativeprojects/gopenhab/api"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type itemModel struct {
@@ -99,6 +102,9 @@ func TestGetItemAPI(t *testing.T) {
 		err := item.SendCommand(SwitchON)
 		assert.NoError(t, err)
 
+		// fake receiving the item state event
+		item.setInternalStateValue(SwitchON)
+
 		state, err := item.State()
 		assert.NoError(t, err)
 		assert.Equal(t, SwitchON, state)
@@ -107,15 +113,61 @@ func TestGetItemAPI(t *testing.T) {
 		err = item.SendCommand(SwitchOFF)
 		assert.NoError(t, err)
 
+		// fake receiving the item state event
+		item.setInternalStateValue(SwitchOFF)
+
 		state, err = item.State()
 		assert.NoError(t, err)
 		assert.Equal(t, SwitchOFF, state)
 	})
+
+	t.Run("TestListeningForChanges", func(t *testing.T) {
+		item := newSwitchItem(client, "TestSwitch")
+		state, err := item.State()
+		require.NoError(t, err)
+		assert.Equal(t, SwitchOFF, state)
+
+		wg := sync.WaitGroup{}
+
+		for i := 0; i < 2; i++ {
+			wg.Add(1)
+			go func() {
+				state, ok := item.WaitState(100 * time.Millisecond)
+				assert.True(t, ok)
+				assert.Equal(t, SwitchON, state)
+				wg.Done()
+			}()
+		}
+
+		item.setInternalStateValue(SwitchON)
+
+		wg.Wait()
+		assert.Equal(t, 0, item.listeners)
+	})
+
+	t.Run("TestListeningForNoChange", func(t *testing.T) {
+		item := newSwitchItem(client, "TestSwitch")
+
+		wg := sync.WaitGroup{}
+
+		for i := 0; i < 2; i++ {
+			wg.Add(1)
+			go func() {
+				state, ok := item.WaitState(100 * time.Millisecond)
+				assert.False(t, ok)
+				assert.Equal(t, SwitchOFF, state)
+				wg.Done()
+			}()
+		}
+
+		wg.Wait()
+		assert.Equal(t, 0, item.listeners)
+	})
 }
 
 func newSwitchItem(client *Client, name string) *Item {
-	item := newItem(client, "TestSwitch")
+	item := newItem(client, name)
 	// the item needs a type so it can work properly
-	item.set(api.Item{Type: "Switch"})
+	item.set(api.Item{Type: "Switch", State: "OFF"})
 	return item
 }

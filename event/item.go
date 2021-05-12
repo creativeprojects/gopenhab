@@ -1,18 +1,14 @@
 package event
 
 type Item struct {
-	Name             string
-	Label            string
-	Link             string
-	Type             string
-	State            string
-	TransformedState string
-	Editable         bool
-	Category         string
-	Tags             []string
-	GroupNames       []string
-	Members          []string
-	GroupType        string
+	Name       string
+	Label      string
+	Type       string
+	Category   string
+	Tags       []string
+	GroupNames []string
+	Members    []string
+	GroupType  string
 }
 
 type ItemReceivedCommand struct {
@@ -61,7 +57,7 @@ func (i ItemStateChanged) Type() Type {
 
 type ItemAdded struct {
 	topic string
-	Item
+	Item  Item
 }
 
 func (i ItemAdded) Topic() string {
@@ -74,7 +70,7 @@ func (i ItemAdded) Type() Type {
 
 type ItemRemoved struct {
 	topic string
-	Item
+	Item  Item
 }
 
 func (i ItemRemoved) Topic() string {
@@ -88,7 +84,7 @@ func (i ItemRemoved) Type() Type {
 type ItemUpdated struct {
 	topic   string
 	OldItem Item
-	Item
+	Item    Item
 }
 
 func (i ItemUpdated) Topic() string {

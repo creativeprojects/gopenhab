@@ -54,33 +54,41 @@ func TestOneSubscriberWithTopic(t *testing.T) {
 func TestTwoSubscribers(t *testing.T) {
 	first := false
 	second := false
-	done := make(chan Event, 2)
+	done1 := make(chan Event)
+	done2 := make(chan Event)
 	eventBus := NewEventBus()
 
 	eventBus.Subscribe("topic", TypeItemState, func(e Event) {
 		if first {
 			t.Error("function called more than once")
 		}
-		first = true
-		done <- e
+		done1 <- e
 	})
 	eventBus.Subscribe("", TypeItemState, func(e Event) {
 		if second {
 			t.Error("function called more than once")
 		}
-		second = true
-		done <- e
+		done2 <- e
 	})
 
 	eventBus.Publish(newMockEvent("topic", TypeItemState))
 
 	for {
 		select {
-		case e := <-done:
+		case e := <-done1:
 			assert.IsType(t, mockEvent{}, e)
-			if first && second {
+			if second {
 				return
 			}
+			first = true
+
+		case e := <-done2:
+			assert.IsType(t, mockEvent{}, e)
+			if first {
+				return
+			}
+			second = true
+
 		case <-time.After(100 * time.Millisecond):
 			// fail the test after 100ms
 			t.Fatal("timeout!")

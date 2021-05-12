@@ -51,6 +51,15 @@ func (r *Rule) activate(client *Client) error {
 	return nil
 }
 
+func (r *Rule) deactivate(client *Client) {
+	for _, trigger := range r.triggers {
+		if trigger == nil {
+			continue
+		}
+		trigger.deactivate(client)
+	}
+}
+
 func (r *Rule) run(e event.Event) {
 	r.runner(r.client, r.ruleData, e)
 }

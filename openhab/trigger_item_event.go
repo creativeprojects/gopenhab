@@ -1,11 +1,11 @@
 package openhab
 
 import (
+	"errors"
+
 	"github.com/creativeprojects/gopenhab/api"
 	"github.com/creativeprojects/gopenhab/event"
 )
-
-const itemTopicPrefix = "smarthome/items/"
 
 type ItemReceivedCommandTrigger struct {
 	topic string
@@ -23,6 +23,9 @@ func OnItemReceivedCommand(item string, state StateValue) *ItemReceivedCommandTr
 }
 
 func (c *ItemReceivedCommandTrigger) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
+	if c.subId > 0 {
+		return errors.New("rule already activated")
+	}
 	c.subId = client.subscribe(c.topic, event.TypeItemCommand, func(e event.Event) {
 		if run == nil {
 			return
@@ -67,6 +70,9 @@ func OnItemReceivedState(item string, state StateValue) *ItemReceivedStateTrigge
 }
 
 func (c *ItemReceivedStateTrigger) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
+	if c.subId > 0 {
+		return errors.New("rule already activated")
+	}
 	c.subId = client.subscribe(c.topic, event.TypeItemState, func(e event.Event) {
 		if run == nil {
 			return
@@ -131,6 +137,9 @@ func OnItemChangedFromTo(item string, from, to StateValue) *ItemChangedTrigger {
 }
 
 func (c *ItemChangedTrigger) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
+	if c.subId > 0 {
+		return errors.New("rule already activated")
+	}
 	c.subId = client.subscribe(c.topic, event.TypeItemStateChanged, func(e event.Event) {
 		if run == nil {
 			return

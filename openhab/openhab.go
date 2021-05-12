@@ -10,9 +10,11 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
+	"github.com/creativeprojects/gopenhab/api"
 	"github.com/creativeprojects/gopenhab/event"
 	"github.com/robfig/cron/v3"
 )
@@ -27,13 +29,16 @@ const (
 )
 
 type Client struct {
-	config   Config
-	baseURL  string
-	client   *http.Client
-	cron     *cron.Cron
-	items    *Items
-	rules    []*Rule
-	eventBus event.PubSub
+	config         Config
+	baseURL        string
+	client         *http.Client
+	cron           *cron.Cron
+	items          *Items
+	rules          []*Rule
+	eventBus       event.PubSub
+	internalRules  sync.Once
+	rulesWaitGroup sync.WaitGroup
+	rulesLocker    sync.Mutex
 }
 
 func NewClient(config Config) *Client {
@@ -208,7 +213,7 @@ func (c *Client) listenEvents() error {
 func (c *Client) dispatchRawEvent(data string) {
 	e, err := event.New(data)
 	if err != nil {
-		errorlog.Printf("event deleted: %s", err)
+		errorlog.Printf("event ignored: %s", err)
 		return
 	}
 	c.eventBus.Publish(e)
@@ -228,6 +233,8 @@ func (c *Client) eventLoop() {
 
 func (c *Client) subscribe(topic string, eventType event.Type, callback func(e event.Event)) int {
 	return c.eventBus.Subscribe(topic, eventType, func(e event.Event) {
+		c.ruleExecutionStarted()
+		defer c.rulesWaitGroup.Done()
 		defer preventPanic()
 		callback(e)
 	})
@@ -247,6 +254,8 @@ func (c *Client) AddRule(ruleData RuleData, run Runner, triggers ...Trigger) err
 // The function will return after the process received a Terminate, Abort or Interrupt signal,
 // and after all the currently running rules have finished
 func (c *Client) Start() {
+	c.addInternalRules()
+
 	for _, rule := range c.rules {
 		err := rule.activate(c)
 		if err != nil {
@@ -270,6 +279,48 @@ func (c *Client) Start() {
 
 	debuglog.Printf("shutting down...")
 	ctx := c.cron.Stop()
+
 	// Wait until all the cron tasks finished running
 	<-ctx.Done()
+
+	// and also all the event based rules
+	c.waitFinishingRules()
+}
+
+func (c *Client) addInternalRules() {
+	// make sure the internal rules are only added once
+	c.internalRules.Do(func() {
+		c.subscribe("", event.TypeItemState, func(e event.Event) {
+			c.itemStateChanged(e)
+		})
+	})
+}
+
+func (c *Client) ruleExecutionStarted() {
+	c.rulesLocker.Lock()
+	defer c.rulesLocker.Unlock()
+
+	c.rulesWaitGroup.Add(1)
+}
+
+func (c *Client) waitFinishingRules() {
+	c.rulesLocker.Lock()
+	defer c.rulesLocker.Unlock()
+
+	c.rulesWaitGroup.Wait()
+}
+
+func (c *Client) itemStateChanged(e event.Event) {
+	if ev, ok := e.(event.ItemReceivedState); ok {
+		itemName := strings.TrimPrefix(ev.Topic(), itemTopicPrefix)
+		itemName = strings.TrimSuffix(itemName, "/"+api.TopicEventState)
+
+		item, err := c.items.GetItem(itemName)
+		if err != nil {
+			errorlog.Printf("itemStateChanged: %w", err)
+			return
+		}
+		item.setInternalState(ev.State)
+		debuglog.Printf("Item %s received state %s", itemName, ev.State)
+	}
 }
