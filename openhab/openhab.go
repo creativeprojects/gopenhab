@@ -27,6 +27,7 @@ const (
 	eventData          = "data: "
 )
 
+// Client for openHAB. It's using openHAB REST API internally.
 type Client struct {
 	config         Config
 	baseURL        string
@@ -40,9 +41,13 @@ type Client struct {
 	rulesLocker    sync.Mutex
 }
 
+// NewClient creates a new client to connect to a openHAB instance
 func NewClient(config Config) *Client {
 	if config.URL == "" {
 		panic("missing URL from Config")
+	}
+	if config.DelayBeforeReconnecting == 0 {
+		config.DelayBeforeReconnecting = time.Second
 	}
 	baseURL := strings.ToLower(config.URL)
 	if baseURL[:len(baseURL)-1] != "/" {
@@ -226,7 +231,8 @@ func (c *Client) eventLoop() {
 		if err != nil {
 			errorlog.Printf("error listening to openhab events: %s", err)
 		}
-		time.Sleep(1 * time.Second)
+		debuglog.Printf("reconnecting in %s...", c.config.DelayBeforeReconnecting.String())
+		time.Sleep(c.config.DelayBeforeReconnecting)
 	}
 }
 
@@ -243,10 +249,11 @@ func (c *Client) unsubscribe(subID int) {
 	c.eventBus.Unsubscribe(subID)
 }
 
-func (c *Client) AddRule(ruleData RuleData, run Runner, triggers ...Trigger) error {
+// AddRule adds a rule definition
+func (c *Client) AddRule(ruleData RuleData, run Runner, triggers ...Trigger) *Client {
 	rule := newRule(c, ruleData, run, triggers)
 	c.rules = append(c.rules, rule)
-	return nil
+	return c
 }
 
 // Start the handling of the defined rules.
