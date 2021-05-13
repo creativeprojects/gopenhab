@@ -14,7 +14,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/creativeprojects/gopenhab/api"
 	"github.com/creativeprojects/gopenhab/event"
 	"github.com/robfig/cron/v3"
 )
@@ -231,8 +230,8 @@ func (c *Client) eventLoop() {
 	}
 }
 
-func (c *Client) subscribe(topic string, eventType event.Type, callback func(e event.Event)) int {
-	return c.eventBus.Subscribe(topic, eventType, func(e event.Event) {
+func (c *Client) subscribe(name string, eventType event.Type, callback func(e event.Event)) int {
+	return c.eventBus.Subscribe(name, eventType, func(e event.Event) {
 		c.ruleExecutionStarted()
 		defer c.rulesWaitGroup.Done()
 		defer preventPanic()
@@ -312,15 +311,12 @@ func (c *Client) waitFinishingRules() {
 
 func (c *Client) itemStateChanged(e event.Event) {
 	if ev, ok := e.(event.ItemReceivedState); ok {
-		itemName := strings.TrimPrefix(ev.Topic(), itemTopicPrefix)
-		itemName = strings.TrimSuffix(itemName, "/"+api.TopicEventState)
-
-		item, err := c.items.GetItem(itemName)
+		item, err := c.items.GetItem(ev.ItemName)
 		if err != nil {
 			errorlog.Printf("itemStateChanged: %w", err)
 			return
 		}
 		item.setInternalState(ev.State)
-		debuglog.Printf("Item %s received state %s", itemName, ev.State)
+		debuglog.Printf("Item %s received state %s", ev.ItemName, ev.State)
 	}
 }

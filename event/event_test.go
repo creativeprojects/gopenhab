@@ -16,19 +16,22 @@ func TestCreateEventFromJSON(t *testing.T) {
 			GenericEvent{topic: "smarthome/items/TestSwitch/other", typeName: "OtherEvent", payload: "[{}]"}},
 
 		{`{"topic":"smarthome/items/TestSwitch/command","payload":"{\"type\":\"OnOff\",\"value\":\"OFF\"}","type":"ItemCommandEvent"}`,
-			ItemReceivedCommand{topic: "smarthome/items/TestSwitch/command", CommandType: "OnOff", Command: "OFF"}},
+			ItemReceivedCommand{topic: "smarthome/items/TestSwitch/command", ItemName: "TestSwitch", CommandType: "OnOff", Command: "OFF"}},
 
 		{`{"topic":"smarthome/items/TestSwitch/state","payload":"{\"type\":\"OnOff\",\"value\":\"OFF\"}","type":"ItemStateEvent"}`,
-			ItemReceivedState{topic: "smarthome/items/TestSwitch/state", StateType: "OnOff", State: "OFF"}},
+			ItemReceivedState{topic: "smarthome/items/TestSwitch/state", ItemName: "TestSwitch", StateType: "OnOff", State: "OFF"}},
 
 		{`{"topic":"smarthome/items/TestSwitch/command","payload":"{\"type\":\"OnOff\",\"value\":\"ON\"}","type":"ItemCommandEvent"}`,
-			ItemReceivedCommand{topic: "smarthome/items/TestSwitch/command", CommandType: "OnOff", Command: "ON"}},
+			ItemReceivedCommand{topic: "smarthome/items/TestSwitch/command", ItemName: "TestSwitch", CommandType: "OnOff", Command: "ON"}},
 
 		{`{"topic":"smarthome/items/TestSwitch/state","payload":"{\"type\":\"OnOff\",\"value\":\"ON\"}","type":"ItemStateEvent"}`,
-			ItemReceivedState{topic: "smarthome/items/TestSwitch/state", StateType: "OnOff", State: "ON"}},
+			ItemReceivedState{topic: "smarthome/items/TestSwitch/state", ItemName: "TestSwitch", StateType: "OnOff", State: "ON"}},
 
 		{`{"topic":"smarthome/items/TestSwitch/statechanged","payload":"{\"type\":\"OnOff\",\"value\":\"ON\",\"oldType\":\"OnOff\",\"oldValue\":\"OFF\"}","type":"ItemStateChangedEvent"}`,
-			ItemStateChanged{topic: "smarthome/items/TestSwitch/statechanged", StateType: "OnOff", State: "ON", OldStateType: "OnOff", OldState: "OFF"}},
+			ItemStateChanged{topic: "smarthome/items/TestSwitch/statechanged", ItemName: "TestSwitch", NewStateType: "OnOff", NewState: "ON", PreviousStateType: "OnOff", PreviousState: "OFF"}},
+
+		{`{"topic":"smarthome/items/HouseTemperature/UpstairsTemperature/statechanged","payload":"{\"type\":\"Decimal\",\"value\":\"18.43\",\"oldType\":\"Decimal\",\"oldValue\":\"18.32\"}","type":"GroupItemStateChangedEvent"}`,
+			GroupItemStateChanged{topic: "smarthome/items/HouseTemperature/UpstairsTemperature/statechanged", ItemName: "HouseTemperature", TriggeringItem: "UpstairsTemperature", NewStateType: "Decimal", NewState: "18.43", PreviousStateType: "Decimal", PreviousState: "18.32"}},
 
 		{`{"topic":"smarthome/items/TestSwitch/added","payload":"{\"type\":\"Switch\",\"name\":\"TestSwitch\",\"label\":\"TestSwitch\",\"category\":\"Switch\",\"tags\":[],\"groupNames\":[]}","type":"ItemAddedEvent"}`,
 			ItemAdded{topic: "smarthome/items/TestSwitch/added", Item: Item{Name: "TestSwitch", Label: "TestSwitch", Type: "Switch", Category: "Switch", Tags: []string{}, GroupNames: []string{}, Members: []string(nil), GroupType: ""}}},
@@ -65,9 +68,18 @@ func TestErrorEventFromJSON(t *testing.T) {
 	}{
 		{`{["topic":"smarthome/items/TestSwitch/other","payload":"","type":"OtherEvent"]}`},
 		{`{"topic":"smarthome/items/TestSwitch/other","payload":"","type":"OtherEvent"}]`},
-		{`{"topic":"smarthome/items/TestSwitch/command","payload":"{\"type\":\"OnOff\",\"value\":\"OFF\"}]","type":"ItemCommandEvent"}`},
+		{`{"topic":"smarthome/items//command","payload":"{\"type\":\"OnOff\",\"value\":\"OFF\"}","type":"ItemCommandEvent"}`},
+		{`{"topic":"smarthome/items//state","payload":"{\"type\":\"OnOff\",\"value\":\"OFF\"}","type":"ItemStateEvent"}`},
+		{`{"topic":"smarthome/items//state","payload":"{\"type\":\"OnOff\",\"value\":\"OFF\"}","type":"ItemStateEvent"}`},
 		{`{"topic":"smarthome/items/TestSwitch/state","payload":"{\"type\":\"OnOff\",\"value\"]:\"OFF\"}","type":"ItemStateEvent"}`},
+		{`{"topic":"smarthome/items//statechanged","payload":"{\"type\":\"OnOff\",\"value\":\"ON\"}","type":"ItemStateChangedEvent"}`},
 		{`{"topic":"smarthome/items/TestSwitch/statechanged","payload":"{\"type\":\"OnOff\",[\"value\":\"ON\"}","type":"ItemStateChangedEvent"}`},
+		{`{"topic":"smarthome/items/HouseTemperature/UpstairsTemperature/statechanged","payload":"{\"type\":\"Decimal\",\"value\":\"18.43\",\"oldType\":\"Decimal\",\"oldValue\":\"18.32\"}]","type":"GroupItemStateChangedEvent"}`},
+		{`{"topic":"smarthome/items///statechanged","payload":"{\"type\":\"Decimal\",\"value\":\"18.43\",\"oldType\":\"Decimal\",\"oldValue\":\"18.32\"}","type":"GroupItemStateChangedEvent"}`},
+		{`{"topic":"smarthome/items/TestGroup/added","payload":"{\"groupType\":\"Switch\",\"function\":{\"name\":\"AND\",\"params\":[\"ON\",\"OFF\"]},\"type\":\"Group\",\"name\":}","type":"ItemAddedEvent"}`},
+		{`{"topic":"smarthome/items/Dummy/removed","payload":"{\"type\":\"Number:Length\",\"name\":\"Dummy}","type":"ItemRemovedEvent"}`},
+		{`{"topic":"smarthome/items/TestSwitch/updated","payload":"[{\"type\":\"Switch\",\"name\":\"TestSwitch\",]","type":"ItemUpdatedEvent"}`},
+		{`{"topic":"smarthome/items/TestSwitch/updated","payload":"[{\"type\":\"Switch\",\"name\":\"TestSwitch\"}]","type":"ItemUpdatedEvent"}`},
 	}
 
 	for _, testItem := range testData {

@@ -1,8 +1,13 @@
 # gopenHAB
 
-Write your openHAB rules in Go.
+Write your openHAB rules in Go. The awesomeness of openHAB rules with the simplicity of Go.
 
-This is very much work in progress, but you can this working:
+I had some existing code written in Go that I needed to connect to openHAB.
+My first thought was to make a REST API to make this external system accessible from openHAB, but after fiddling with openHAB DSL rules and trying Jython scripts, I realised the best thing was to actually connect my system to the openHAB event bus and replicate a rule system, all in Go.
+
+In theory, everything you can do in a DSL rule or in Jython should be available.
+
+This is very much work in progress, but you already get something like this working:
 
 ```go
 package main
@@ -11,6 +16,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/creativeprojects/gopenhab/event"
 	"github.com/creativeprojects/gopenhab/openhab"
 )
 
@@ -25,7 +31,7 @@ func main() {
 		func(client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
 			log.Printf("SYSTEM EVENT: client connected")
 		},
-		openhab.OnConnect(),
+		openhab.Debounce(openhab.OnConnect(), 1*time.Minute),
 	)
 
 	client.AddRule(
@@ -33,7 +39,7 @@ func main() {
 		func(client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
 			log.Print("SYSTEM EVENT: client disconnected")
 		},
-		openhab.OnDisconnect(),
+		openhab.Debounce(openhab.OnDisconnect(), 10*time.Second),
 	)
 
 	client.AddRule(
@@ -91,11 +97,11 @@ func main() {
 	client.AddRule(
 		openhab.RuleData{Name: "Receiving state changed"},
 		func(client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
-			if ev, ok := e.(event.ItemChanged); ok {
-				log.Printf("STATE CHANGED EVENT: Back_Garden_Lighting_Switch changed to state %+v", ev.State)
+			if ev, ok := e.(event.ItemStateChanged); ok {
+				log.Printf("STATE CHANGED EVENT: Back_Garden_Lighting_Switch changed to state %+v", ev.NewState)
 			}
 		},
-		openhab.OnItemChanged("Back_Garden_Lighting_Switch"),
+		openhab.OnItemStateChanged("Back_Garden_Lighting_Switch"),
 	)
 
 	client.AddRule(
@@ -107,34 +113,22 @@ func main() {
 			if err != nil {
 				log.Print(err)
 			}
-			err = item.SendCommand(openhab.SwitchON)
+
+			_, err = item.SendCommandWait(openhab.SwitchON, 2*time.Second)
 			if err != nil {
 				log.Printf("sending command: %s", err)
 			}
-
-			state, err := item.State()
-			if err != nil {
-				log.Printf("getting state: %s", err)
-			}
-
-			log.Printf("switched %s for 4 seconds...", state)
 			time.Sleep(4 * time.Second)
 
-			err = item.SendCommand(openhab.SwitchOFF)
+			_, err = item.SendCommandWait(openhab.SwitchOFF, 2*time.Second)
 			if err != nil {
 				log.Printf("sending command: %s", err)
 			}
-
-			state, err = item.State()
-			if err != nil {
-				log.Printf("getting state: %s", err)
-			}
-
-			log.Printf("switched %s", state)
 		},
 		openhab.OnTimeCron("*/10 * * ? * *"),
 	)
 	client.Start()
 }
+
 
 ```

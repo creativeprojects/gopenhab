@@ -6,28 +6,26 @@ import (
 	"time"
 
 	"github.com/creativeprojects/gopenhab/api"
+	"github.com/creativeprojects/gopenhab/event"
 )
 
+// Item represents an item in openHAB
 type Item struct {
-	name            string
-	data            api.Item
-	state           StateValue
-	mainType        ItemType
-	subType         string
-	client          *Client
-	stateLocker     sync.Mutex
-	stateChanged    chan StateValue
-	listenersLocker sync.Mutex
-	listeners       int
+	name        string
+	data        api.Item
+	state       StateValue
+	mainType    ItemType
+	subType     string
+	client      *Client
+	apiLocker   sync.Mutex
+	stateLocker sync.Mutex
 }
 
 func newItem(client *Client, name string) *Item {
 	return &Item{
-		name:         name,
-		state:        nil,
-		client:       client,
-		stateChanged: make(chan StateValue),
-		listeners:    0,
+		name:   name,
+		state:  nil,
+		client: client,
 	}
 }
 
@@ -51,32 +49,25 @@ func (i *Item) load() error {
 	return nil
 }
 
-func (i *Item) hasData() bool {
-	return i.data.Name != ""
-}
+// func (i *Item) hasData() bool {
+// 	return i.data.Name != ""
+// }
 
-func (i *Item) getData() api.Item {
-	if !i.hasData() {
-		i.load()
-	}
-	return i.data
-}
+// func (i *Item) getData() api.Item {
+// 	if !i.hasData() {
+// 		i.load()
+// 	}
+// 	return i.data
+// }
 
+// Name returns the name of the item (an item name is unique in openHAB)
 func (i *Item) Name() string {
 	return i.name
 }
 
+// Type return the item type
 func (i *Item) Type() ItemType {
 	return i.mainType
-}
-
-func (i *Item) stateFromString(state string) StateValue {
-	switch i.mainType {
-	default:
-		return StringState(state)
-	case ItemTypeSwitch:
-		return SwitchState(state)
-	}
 }
 
 // State returns an internal cached value if available,
@@ -86,11 +77,8 @@ func (i *Item) stateFromString(state string) StateValue {
 // so you should always get an accurate value.
 //
 // Please note if you just sent a state change command,
-// the new value won't be reflected instantly, but only after openHAB
-// sent a state changed event.
-//
-// If you need the new value after sending a command,
-// you might want to use WaitState(duration) instead
+// the new value might not be reflected instantly,
+// but only after openHAB sent a state changed event.
 func (i *Item) State() (StateValue, error) {
 	internalState := i.getInternalStateValue()
 	if internalState != nil {
@@ -109,22 +97,11 @@ func (i *Item) State() (StateValue, error) {
 	return value, nil
 }
 
-// WaitState waits until the state gets updated, for a maximum of duration
-// If a state was received, it returns it along with true,
-// If a state hasn't been received before duration, it returns the last known state along with false
-func (i *Item) WaitState(duration time.Duration) (StateValue, bool) {
-	i.beginListener()
-	defer i.endListener()
-
-	select {
-	case state := <-i.stateChanged:
-		return state, true
-	case <-time.After(duration):
-		return i.getInternalStateValue(), false
-	}
-}
-
+// SendCommand sends a command to an item
 func (i *Item) SendCommand(command StateValue) error {
+	i.apiLocker.Lock()
+	defer i.apiLocker.Unlock()
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -133,6 +110,45 @@ func (i *Item) SendCommand(command StateValue) error {
 		return err
 	}
 	return nil
+}
+
+// SendCommandWait sends a command to an item and wait until the event bus acknowledge receiving the state, or after a timeout
+// It returns true if openHAB acknowledge it's setting the desired state to the item (even if it's the same value as before).
+// It returns false in case the acknowledged value is different than the command, or after timeout
+func (i *Item) SendCommandWait(command StateValue, timeout time.Duration) (bool, error) {
+	stateChan := make(chan string)
+	subID := i.client.subscribe(i.Name(), event.TypeItemState, func(e event.Event) {
+		if ev, ok := e.(event.ItemReceivedState); ok {
+			stateChan <- ev.State
+		}
+	})
+	defer func() {
+		i.client.unsubscribe(subID)
+		close(stateChan)
+	}()
+
+	err := i.SendCommand(command)
+	if err != nil {
+		return false, err
+	}
+
+	select {
+	case state := <-stateChan:
+		return state == command.String(), nil
+	case <-time.After(timeout):
+		return false, nil
+	}
+}
+
+func (i *Item) stateFromString(state string) StateValue {
+	switch i.mainType {
+	default:
+		return StringState(state)
+	case ItemTypeSwitch:
+		return SwitchState(state)
+	case ItemTypeNumber:
+		return MustParseDecimalState(state)
+	}
 }
 
 // getInternalStateValue gets the internal state value: it does not trigger an API call to get the state.
@@ -150,33 +166,8 @@ func (i *Item) setInternalStateValue(state StateValue) {
 	defer i.stateLocker.Unlock()
 
 	i.state = state
-	go i.sendStateChanged(state)
 }
 
 func (i *Item) setInternalState(state string) {
 	i.setInternalStateValue(i.stateFromString(state))
-}
-
-func (i *Item) beginListener() {
-	i.listenersLocker.Lock()
-	defer i.listenersLocker.Unlock()
-
-	i.listeners++
-}
-
-func (i *Item) endListener() {
-	i.listenersLocker.Lock()
-	defer i.listenersLocker.Unlock()
-
-	i.listeners--
-}
-
-func (i *Item) sendStateChanged(value StateValue) {
-	i.listenersLocker.Lock()
-	defer i.listenersLocker.Unlock()
-
-	// send the message to each receiver
-	for count := 0; count < i.listeners; count++ {
-		i.stateChanged <- value
-	}
 }

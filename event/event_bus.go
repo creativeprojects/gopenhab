@@ -5,7 +5,7 @@ import (
 )
 
 type PubSub interface {
-	Subscribe(topic string, eventType Type, callback func(e Event)) int
+	Subscribe(name string, eventType Type, callback func(e Event)) int
 	Unsubscribe(subId int)
 	Publish(e Event)
 }
@@ -23,15 +23,19 @@ func NewEventBus() *EventBus {
 	}
 }
 
-// Subscribe returns an id for when you need to un-subscribe
-func (b *EventBus) Subscribe(topic string, eventType Type, callback func(e Event)) int {
+// Subscribe returns an id for when you need to un-subscribe.
+//
+// name is the name of the item/thing/channel you want to follow.
+// eventType is the type of event you want to follow.
+// callback function is called when a matching event occurs.
+func (b *EventBus) Subscribe(name string, eventType Type, callback func(e Event)) int {
 	b.subLock.Lock()
 	defer b.subLock.Unlock()
 
 	b.subIdCount++
 	sub := subscription{
 		id:        b.subIdCount,
-		topic:     topic,
+		name:      name,
 		eventType: eventType,
 		callback:  callback,
 	}
@@ -62,7 +66,7 @@ func (b *EventBus) findID(id int) int {
 	return -1
 }
 
-// Publish event
+// Publish event to all subscribers (in a goroutine each)
 func (b *EventBus) Publish(e Event) {
 	b.subLock.Lock()
 	defer b.subLock.Unlock()
@@ -71,7 +75,7 @@ func (b *EventBus) Publish(e Event) {
 		if sub.eventType != e.Type() {
 			continue
 		}
-		if sub.topic == "" || e.Topic() == sub.topic {
+		if sub.name == "" || sub.eventType.Match(e.Topic(), sub.name) {
 			// run the callback in a goroutine
 			go sub.callback(e)
 		}

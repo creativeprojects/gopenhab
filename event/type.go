@@ -1,5 +1,16 @@
 package event
 
+import (
+	"fmt"
+	"strings"
+
+	"github.com/creativeprojects/gopenhab/api"
+)
+
+const (
+	itemTopicPrefix = "smarthome/items/"
+)
+
 type Type int
 
 const (
@@ -27,3 +38,28 @@ const (
 	TypeItemChannelLinkRemoved // An item channel link has been removed from the registry.
 	TypeChannelTriggered       // A channel has been triggered.
 )
+
+// Match returns true if the name matches the topic
+func (t Type) Match(topic, name string) bool {
+	switch t {
+	case TypeUnknown, TypeClientConnected, TypeClientDisconnected, TypeTimeCron:
+		return true
+	case TypeItemAdded:
+		return topic == itemTopicPrefix+name+"/"+api.TopicEventAdded
+	case TypeItemRemoved:
+		return topic == itemTopicPrefix+name+"/"+api.TopicEventRemoved
+	case TypeItemUpdated:
+		return topic == itemTopicPrefix+name+"/"+api.TopicEventUpdated
+	case TypeItemCommand:
+		return topic == itemTopicPrefix+name+"/"+api.TopicEventCommand
+	case TypeItemState:
+		return topic == itemTopicPrefix+name+"/"+api.TopicEventState
+	case TypeItemStateChanged:
+		return topic == itemTopicPrefix+name+"/"+api.TopicEventStateChanged
+	case TypeGroupItemStateChanged:
+		return strings.HasPrefix(topic, itemTopicPrefix+name+"/") &&
+			strings.HasSuffix(topic, "/"+api.TopicEventStateChanged)
+	default:
+		panic(fmt.Sprintf("event.Type %d Match undefined", t))
+	}
+}

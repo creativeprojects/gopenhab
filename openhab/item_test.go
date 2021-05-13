@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/creativeprojects/gopenhab/api"
+	"github.com/creativeprojects/gopenhab/event"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -131,37 +132,34 @@ func TestGetItemAPI(t *testing.T) {
 
 		for i := 0; i < 2; i++ {
 			wg.Add(1)
-			go func() {
-				state, ok := item.WaitState(100 * time.Millisecond)
+			go func(i int) {
+				// the event bus is not connected so we send an event manually
+				go func(i int) {
+					time.Sleep(time.Duration(i+1) * time.Millisecond)
+					ev := event.NewItemReceivedState("smarthome/items/TestSwitch/state")
+					ev.State = SwitchON.String()
+					item.client.eventBus.Publish(ev)
+				}(i)
+				ok, err := item.SendCommandWait(SwitchON, 100*time.Millisecond)
+				assert.NoError(t, err)
 				assert.True(t, ok)
-				assert.Equal(t, SwitchON, state)
 				wg.Done()
-			}()
+			}(i)
 		}
 
-		item.setInternalStateValue(SwitchON)
-
 		wg.Wait()
-		assert.Equal(t, 0, item.listeners)
 	})
 
-	t.Run("TestListeningForNoChange", func(t *testing.T) {
+	// Test is FAILING
+	t.Run("TestSendCommandTimeout", func(t *testing.T) {
 		item := newSwitchItem(client, "TestSwitch")
+		state, err := item.State()
+		require.NoError(t, err)
+		assert.Equal(t, SwitchOFF, state)
 
-		wg := sync.WaitGroup{}
-
-		for i := 0; i < 2; i++ {
-			wg.Add(1)
-			go func() {
-				state, ok := item.WaitState(100 * time.Millisecond)
-				assert.False(t, ok)
-				assert.Equal(t, SwitchOFF, state)
-				wg.Done()
-			}()
-		}
-
-		wg.Wait()
-		assert.Equal(t, 0, item.listeners)
+		ok, err := item.SendCommandWait(SwitchON, 100*time.Millisecond)
+		assert.NoError(t, err)
+		assert.False(t, ok)
 	})
 }
 

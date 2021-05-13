@@ -1,5 +1,7 @@
 package openhab
 
+import "strconv"
+
 type StateValue interface {
 	String() string
 }
@@ -28,4 +30,28 @@ type StringState string
 
 func (s StringState) String() string {
 	return string(s)
+}
+
+type DecimalState float64
+
+func (s DecimalState) String() string {
+	return strconv.FormatFloat(float64(s), 'f', -1, 64)
+}
+
+// ParseDecimalState converts a string to a DecimalState
+func ParseDecimalState(value string) (DecimalState, error) {
+	number, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		return 0.0, err
+	}
+	return DecimalState(number), nil
+}
+
+// MustParseDecimalState does not panic if the string is not a number, it returns 0 instead
+func MustParseDecimalState(value string) DecimalState {
+	number, err := ParseDecimalState(value)
+	if err != nil {
+		return 0.0
+	}
+	return number
 }

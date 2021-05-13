@@ -16,7 +16,7 @@ func New(data string) (Event, error) {
 	message := api.EventMessage{}
 	err := json.Unmarshal([]byte(data), &message)
 	if err != nil {
-		return nil, fmt.Errorf("invalid event data: %s", err)
+		return nil, fmt.Errorf("invalid event data %q: %w", data, err)
 	}
 	switch message.Type {
 	case api.EventItemCommand:
@@ -25,8 +25,13 @@ func New(data string) (Event, error) {
 		if err != nil {
 			return nil, fmt.Errorf("error decoding message: %w", err)
 		}
+		itemName, _, _ := splitItemTopic(message.Topic)
+		if itemName == "" {
+			return nil, fmt.Errorf("invalid topic: %q", message.Topic)
+		}
 		return ItemReceivedCommand{
 			topic:       message.Topic,
+			ItemName:    itemName,
 			CommandType: data.Type,
 			Command:     data.Value,
 		}, nil
@@ -37,8 +42,13 @@ func New(data string) (Event, error) {
 		if err != nil {
 			return nil, fmt.Errorf("error decoding message: %w", err)
 		}
+		itemName, _, _ := splitItemTopic(message.Topic)
+		if itemName == "" {
+			return nil, fmt.Errorf("invalid topic: %q", message.Topic)
+		}
 		return ItemReceivedState{
 			topic:     message.Topic,
+			ItemName:  itemName,
 			StateType: data.Type,
 			State:     data.Value,
 		}, nil
@@ -49,12 +59,37 @@ func New(data string) (Event, error) {
 		if err != nil {
 			return nil, fmt.Errorf("error decoding message: %w", err)
 		}
+		itemName, _, _ := splitItemTopic(message.Topic)
+		if itemName == "" {
+			return nil, fmt.Errorf("invalid topic: %q", message.Topic)
+		}
 		return ItemStateChanged{
-			topic:        message.Topic,
-			StateType:    data.Type,
-			State:        data.Value,
-			OldStateType: data.OldType,
-			OldState:     data.OldValue,
+			topic:             message.Topic,
+			ItemName:          itemName,
+			NewStateType:      data.Type,
+			NewState:          data.Value,
+			PreviousStateType: data.OldType,
+			PreviousState:     data.OldValue,
+		}, nil
+
+	case api.EventGroupItemStateChanged:
+		data := api.EventStateChanged{}
+		err := json.Unmarshal([]byte(message.Payload), &data)
+		if err != nil {
+			return nil, fmt.Errorf("error decoding message: %w", err)
+		}
+		itemName, triggeringItem, _ := splitItemTopic(message.Topic)
+		if itemName == "" {
+			return nil, fmt.Errorf("invalid topic: %q", message.Topic)
+		}
+		return GroupItemStateChanged{
+			topic:             message.Topic,
+			ItemName:          itemName,
+			TriggeringItem:    triggeringItem,
+			NewStateType:      data.Type,
+			NewState:          data.Value,
+			PreviousStateType: data.OldType,
+			PreviousState:     data.OldValue,
 		}, nil
 
 	case api.EventItemAdded:

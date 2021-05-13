@@ -33,14 +33,14 @@ func TestOneSubscriberWithTopic(t *testing.T) {
 	done := make(chan Event, 1)
 	eventBus := NewEventBus()
 
-	eventBus.Subscribe("topic", TypeItemState, func(e Event) {
+	eventBus.Subscribe("item", TypeItemState, func(e Event) {
 		panic("This function should not have been called!")
 	})
-	eventBus.Subscribe("topic2", TypeItemState, func(e Event) {
+	eventBus.Subscribe("item2", TypeItemState, func(e Event) {
 		done <- e
 	})
 
-	eventBus.Publish(newMockEvent("topic2", TypeItemState))
+	eventBus.Publish(newMockEvent("smarthome/items/item2/state", TypeItemState))
 
 	select {
 	case e := <-done:
@@ -58,20 +58,20 @@ func TestTwoSubscribers(t *testing.T) {
 	done2 := make(chan Event)
 	eventBus := NewEventBus()
 
-	eventBus.Subscribe("topic", TypeItemState, func(e Event) {
+	eventBus.Subscribe("item", TypeItemState, func(e Event) {
 		if first {
 			t.Error("function called more than once")
 		}
 		done1 <- e
 	})
-	eventBus.Subscribe("", TypeItemState, func(e Event) {
+	eventBus.Subscribe("item", TypeItemState, func(e Event) {
 		if second {
 			t.Error("function called more than once")
 		}
 		done2 <- e
 	})
 
-	eventBus.Publish(newMockEvent("topic", TypeItemState))
+	eventBus.Publish(newMockEvent("smarthome/items/item/state", TypeItemState))
 
 	for {
 		select {
