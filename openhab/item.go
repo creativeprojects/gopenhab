@@ -38,7 +38,7 @@ func (i *Item) set(data api.Item) *Item {
 
 func (i *Item) load() error {
 	data := api.Item{}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), i.client.config.TimeoutHTTP)
 	defer cancel()
 
 	err := i.client.getJSON(ctx, "items/"+i.name, &data)
@@ -85,7 +85,7 @@ func (i *Item) State() (StateValue, error) {
 		return internalState, nil
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), i.client.config.TimeoutHTTP)
 	defer cancel()
 
 	state, err := i.client.getString(ctx, "items/"+i.name+"/state")
@@ -102,7 +102,7 @@ func (i *Item) SendCommand(command StateValue) error {
 	i.apiLocker.Lock()
 	defer i.apiLocker.Unlock()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), i.client.config.TimeoutHTTP)
 	defer cancel()
 
 	err := i.client.postString(ctx, "items/"+i.name, command.String())

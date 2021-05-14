@@ -3,7 +3,6 @@ package openhab
 import (
 	"context"
 	"sync"
-	"time"
 
 	"github.com/creativeprojects/gopenhab/api"
 )
@@ -58,7 +57,7 @@ func (items *Items) loadCache() error {
 
 func (items *Items) load() ([]api.Item, error) {
 	all := make([]api.Item, 0)
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), items.client.config.TimeoutHTTP)
 	defer cancel()
 	err := items.client.getJSON(ctx, "items", &all)
 	if err != nil {

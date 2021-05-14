@@ -14,6 +14,8 @@ type Config struct {
 	APIToken            string
 	// Client is optional. You can specify a custom *http.Client if you need, otherwise it's going to use the http.DefaultClient
 	Client *http.Client
+	// TimeoutHTTP is the maximum time allowed to send or receive commands through the openHAB API. Default is 5 seconds.
+	TimeoutHTTP time.Duration
 	// DelayBeforeReconnecting represents a delay between the time you lost the connection to openHAB and the time you try to reconnect.
 	// If undefined, it defaults to 1 second
 	DelayBeforeReconnecting time.Duration

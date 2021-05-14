@@ -49,6 +49,9 @@ func NewClient(config Config) *Client {
 	if config.DelayBeforeReconnecting == 0 {
 		config.DelayBeforeReconnecting = time.Second
 	}
+	if config.TimeoutHTTP == 0 {
+		config.TimeoutHTTP = 5 * time.Second
+	}
 	baseURL := strings.ToLower(config.URL)
 	if baseURL[:len(baseURL)-1] != "/" {
 		baseURL += "/"
