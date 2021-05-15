@@ -1,32 +1,39 @@
 package main
 
 import (
+	"embed"
 	"encoding/json"
-	"io/fs"
-	"os"
+	"strings"
 	"testing"
 
 	"github.com/creativeprojects/gopenhab/api"
 	"github.com/stretchr/testify/assert"
 )
 
+//go:embed examples
+var exampleFiles embed.FS
+
+// load any file named item*.json in folder examples/
+// and try to decode the content as []api.Item
 func TestCanLoadExampleItems(t *testing.T) {
-	for _, itemsFile := range []string{"items25.json", "items30.json"} {
-		t.Run(itemsFile, func(t *testing.T) {
-			if _, err := fs.Stat(os.DirFS("."), "examples/"+itemsFile); err != nil {
-				t.Skip("no example file")
-			}
+	files, err := exampleFiles.ReadDir("examples")
+	if err != nil || len(files) == 0 {
+		t.Skip("no example file")
+	}
+	for _, itemsFile := range files {
+		if strings.HasPrefix(itemsFile.Name(), "items") && strings.HasSuffix(itemsFile.Name(), ".json") {
+			t.Run(itemsFile.Name(), func(t *testing.T) {
+				file, err := exampleFiles.Open("examples/" + itemsFile.Name())
+				assert.NoError(t, err)
 
-			file, err := os.DirFS(".").Open("examples/" + itemsFile)
-			assert.NoError(t, err)
+				decoder := json.NewDecoder(file)
+				decoder.DisallowUnknownFields()
+				var items []api.Item
+				err = decoder.Decode(&items)
+				assert.NoError(t, err)
 
-			decoder := json.NewDecoder(file)
-			decoder.DisallowUnknownFields()
-			var items []api.Item
-			err = decoder.Decode(&items)
-			assert.NoError(t, err)
-
-			t.Logf("loaded %d items", len(items))
-		})
+				t.Logf("loaded %d items", len(items))
+			})
+		}
 	}
 }
