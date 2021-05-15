@@ -1,6 +1,8 @@
 package openhab
 
 import (
+	"sync"
+
 	"github.com/creativeprojects/gopenhab/event"
 	"github.com/segmentio/ksuid"
 )
@@ -8,10 +10,11 @@ import (
 type Runner func(client *Client, ruleData RuleData, e event.Event)
 
 type Rule struct {
-	ruleData RuleData
-	client   *Client
-	runner   Runner
-	triggers []Trigger
+	ruleData  RuleData
+	client    *Client
+	runner    Runner
+	triggers  []Trigger
+	runLocker sync.Mutex
 }
 
 func newRule(client *Client, ruleData RuleData, runner Runner, triggers []Trigger) *Rule {
@@ -27,7 +30,7 @@ func newRule(client *Client, ruleData RuleData, runner Runner, triggers []Trigge
 	}
 }
 
-func (r Rule) String() string {
+func (r *Rule) String() string {
 	if r.ruleData.Name != "" {
 		return r.ruleData.Name
 	}
@@ -61,5 +64,9 @@ func (r *Rule) deactivate(client *Client) {
 }
 
 func (r *Rule) run(e event.Event) {
+	// only run one instance of that rule at any time
+	r.runLocker.Lock()
+	defer r.runLocker.Unlock()
+
 	r.runner(r.client, r.ruleData, e)
 }
