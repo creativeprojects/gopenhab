@@ -323,7 +323,7 @@ func (c *Client) itemStateChanged(e event.Event) {
 	if ev, ok := e.(event.ItemReceivedState); ok {
 		item, err := c.items.GetItem(ev.ItemName)
 		if err != nil {
-			errorlog.Printf("itemStateChanged: %w", err)
+			errorlog.Printf("itemStateChanged: %s", err)
 			return
 		}
 		item.setInternalState(ev.State)
