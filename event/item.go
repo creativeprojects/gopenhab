@@ -1,6 +1,10 @@
 package event
 
-import "strings"
+import (
+	"strings"
+
+	"github.com/creativeprojects/gopenhab/api"
+)
 
 type Item struct {
 	Name       string
@@ -20,6 +24,16 @@ type ItemReceivedCommand struct {
 	Command     string
 }
 
+func NewItemReceivedCommand(itemName, commandType, command string) ItemReceivedCommand {
+	topic := itemTopicPrefix + itemName + "/" + api.TopicEventCommand
+	return ItemReceivedCommand{
+		topic:       topic,
+		ItemName:    itemName,
+		CommandType: commandType,
+		Command:     command,
+	}
+}
+
 func (i ItemReceivedCommand) Topic() string {
 	return i.topic
 }
@@ -35,9 +49,13 @@ type ItemReceivedState struct {
 	State     string
 }
 
-func NewItemReceivedState(topic string) ItemReceivedState {
+func NewItemReceivedState(itemName, stateType, state string) ItemReceivedState {
+	topic := itemTopicPrefix + itemName + "/" + api.TopicEventState
 	return ItemReceivedState{
-		topic: topic,
+		topic:     topic,
+		ItemName:  itemName,
+		StateType: stateType,
+		State:     state,
 	}
 }
 
@@ -56,6 +74,18 @@ type ItemStateChanged struct {
 	NewState          string
 	PreviousStateType string
 	PreviousState     string
+}
+
+func NewItemStateChanged(itemName, stateType, previousState, newState string) ItemStateChanged {
+	topic := itemTopicPrefix + itemName + "/" + api.TopicEventStateChanged
+	return ItemStateChanged{
+		topic:             topic,
+		ItemName:          itemName,
+		PreviousStateType: stateType,
+		PreviousState:     previousState,
+		NewStateType:      stateType,
+		NewState:          newState,
+	}
 }
 
 func (i ItemStateChanged) Topic() string {

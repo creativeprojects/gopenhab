@@ -136,8 +136,7 @@ func TestGetItemAPI(t *testing.T) {
 				// the event bus is not connected so we send an event manually
 				go func(i int) {
 					time.Sleep(time.Duration(i+1) * time.Millisecond)
-					ev := event.NewItemReceivedState("smarthome/items/TestSwitch/state")
-					ev.State = SwitchON.String()
+					ev := event.NewItemReceivedState("TestSwitch", "OnOff", SwitchON.String())
 					item.client.eventBus.Publish(ev)
 				}(i)
 				ok, err := item.SendCommandWait(SwitchON, 100*time.Millisecond)

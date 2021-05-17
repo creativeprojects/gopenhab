@@ -1,8 +1,13 @@
 package openhabtest
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http/httptest"
 	"sync"
+
+	"github.com/creativeprojects/gopenhab/api"
+	"github.com/creativeprojects/gopenhab/event"
 )
 
 // Server is a mock openHAB instance to use in tests
@@ -61,9 +66,76 @@ func (s *Server) Close() {
 	}
 }
 
-// SendRawEvent sends a raw JSON string event to the event bus. Example of a raw event:
+// RawEvent sends a raw JSON string event to the event bus. Example of a raw event:
 //
 // {"topic":"smarthome/items/LocalWeatherAndForecast_Current_Cloudiness/state","payload":"{\"type\":\"Quantity\",\"value\":\"20 %\"}","type":"ItemStateEvent"}
-func (s *Server) SendRawEvent(event string) {
+func (s *Server) RawEvent(event string) {
 	s.eventChan <- event
+}
+
+// Event sends a event.Event to the mock openHAB event bus
+func (s *Server) Event(e event.Event) {
+	if e == nil {
+		return
+	}
+	switch ev := e.(type) {
+	case event.ItemReceivedCommand:
+		rawPayload, err := json.Marshal(api.EventCommand{
+			Type:  ev.CommandType,
+			Value: ev.Command,
+		})
+		if err != nil {
+			panic(err)
+		}
+		rawEvent, err := json.Marshal(api.EventMessage{
+			Topic:   ev.Topic(),
+			Payload: string(rawPayload),
+			Type:    api.EventItemCommand,
+		})
+		if err != nil {
+			panic(err)
+		}
+		s.RawEvent(string(rawEvent))
+
+	case event.ItemReceivedState:
+		rawPayload, err := json.Marshal(api.EventState{
+			Type:  ev.StateType,
+			Value: ev.State,
+		})
+		if err != nil {
+			panic(err)
+		}
+		rawEvent, err := json.Marshal(api.EventMessage{
+			Topic:   ev.Topic(),
+			Payload: string(rawPayload),
+			Type:    api.EventItemState,
+		})
+		if err != nil {
+			panic(err)
+		}
+		s.RawEvent(string(rawEvent))
+
+	case event.ItemStateChanged:
+		rawPayload, err := json.Marshal(api.EventStateChanged{
+			Type:     ev.NewStateType,
+			Value:    ev.NewState,
+			OldType:  ev.PreviousStateType,
+			OldValue: ev.PreviousState,
+		})
+		if err != nil {
+			panic(err)
+		}
+		rawEvent, err := json.Marshal(api.EventMessage{
+			Topic:   ev.Topic(),
+			Payload: string(rawPayload),
+			Type:    api.EventItemStateChanged,
+		})
+		if err != nil {
+			panic(err)
+		}
+		s.RawEvent(string(rawEvent))
+
+	default:
+		panic(fmt.Sprintf("event type %d not handled", e.Type()))
+	}
 }
