@@ -2,6 +2,7 @@ package openhab
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/creativeprojects/gopenhab/api"
@@ -37,7 +38,7 @@ func (items *Items) GetItem(name string) (*Item, error) {
 	if item, ok := items.cache[name]; ok {
 		return item, nil
 	}
-	return nil, ErrorNotFound
+	return nil, fmt.Errorf("item %q %w", name, ErrorNotFound)
 }
 
 // loadCache loads all items into the cache.
