@@ -8,4 +8,7 @@ type Trigger interface {
 	activate(client *Client, run func(ev event.Event), ruleData RuleData) error
 	// deactivate the trigger in the context of a *Client
 	deactivate(client *Client)
+	// match the event should activate the trigger.
+	// This method should NOT be used outside of unit tests
+	match(e event.Event) bool
 }

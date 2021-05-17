@@ -15,8 +15,10 @@ type Type int
 
 const (
 	TypeUnknown Type = iota
+	TypeClientStarted
 	TypeClientConnected
 	TypeClientDisconnected
+	TypeClientStopped
 	TypeTimeCron
 	TypeItemAdded              // An item has been added to the item registry.
 	TypeItemRemoved            // An item has been removed from the item registry.

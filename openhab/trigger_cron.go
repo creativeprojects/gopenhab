@@ -43,5 +43,9 @@ func (c *TimeCronTrigger) deactivate(client *Client) {
 	}
 }
 
+func (c *TimeCronTrigger) match(e event.Event) bool {
+	return true
+}
+
 // Interface
 var _ Trigger = &TimeCronTrigger{}

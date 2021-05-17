@@ -3,9 +3,12 @@ package openhab
 import (
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 	"time"
 
+	"github.com/creativeprojects/gopenhab/event"
+	"github.com/creativeprojects/gopenhab/openhabtest"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -44,4 +47,64 @@ data: {"topic":"smarthome/items/TestSwitch/statechanged","payload":"{\"type\":\"
 	})
 	err := client.listenEvents()
 	assert.NoError(t, err)
+}
+
+func TestStartEvent(t *testing.T) {
+	called := false
+	server := openhabtest.NewServer(t)
+	client := NewClient(Config{
+		URL: server.URL(),
+	})
+	client.AddRule(
+		RuleData{},
+		func(client *Client, ruleData RuleData, e event.Event) {
+			ev, ok := e.(event.SystemEvent)
+			assert.True(t, ok)
+			assert.Equal(t, event.TypeClientStarted, ev.Type())
+			called = true
+			client.Stop()
+		},
+		OnStart())
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		client.Start()
+	}()
+
+	wg.Wait()
+	assert.True(t, called)
+}
+
+func TestStopEvent(t *testing.T) {
+	called := false
+	server := openhabtest.NewServer(t)
+	client := NewClient(Config{
+		URL: server.URL(),
+	})
+	client.AddRule(
+		RuleData{},
+		func(client *Client, ruleData RuleData, e event.Event) {
+			ev, ok := e.(event.SystemEvent)
+			assert.True(t, ok)
+			assert.Equal(t, event.TypeClientStopped, ev.Type())
+			called = true
+		},
+		OnStop())
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		client.Start()
+	}()
+
+	// stop the server in 50ms
+	time.AfterFunc(50*time.Millisecond, func() {
+		client.Stop()
+	})
+
+	wg.Wait()
+	assert.True(t, called)
 }

@@ -28,6 +28,21 @@ func OnDisconnect() *SystemEventTrigger {
 	}
 }
 
+// OnStart is a trigger activated when the client has started. At this stage, the client may be connected to the openHAB event bus.
+func OnStart() *SystemEventTrigger {
+	return &SystemEventTrigger{
+		eventType: event.TypeClientStarted,
+	}
+}
+
+// OnStop is a trigger activated when the client is about to stop.
+// There's no guarantee it is going to be the last running event, some other queued events may still run after.
+func OnStop() *SystemEventTrigger {
+	return &SystemEventTrigger{
+		eventType: event.TypeClientStopped,
+	}
+}
+
 // activate subscribes to the corresponding event
 func (c *SystemEventTrigger) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
 	c.subId = client.subscribe("", c.eventType, func(e event.Event) {
@@ -44,6 +59,10 @@ func (c *SystemEventTrigger) deactivate(client *Client) {
 		client.unsubscribe(c.subId)
 		c.subId = 0
 	}
+}
+
+func (c *SystemEventTrigger) match(e event.Event) bool {
+	return e.Type() == c.eventType
 }
 
 // Interface

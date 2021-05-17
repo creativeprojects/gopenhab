@@ -2,6 +2,7 @@ package openhabtest
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http/httptest"
 	"sync"
@@ -21,6 +22,8 @@ type Server struct {
 	eventChan   chan string
 	closing     chan bool
 	closeLocker sync.Mutex
+	items       map[string]event.Item
+	itemsLocker sync.Mutex
 }
 
 // NewServer creates a new mock openHAB instance to use in tests
@@ -40,6 +43,7 @@ func NewServer(log Logger) *Server {
 		server:    server,
 		eventChan: eventChan,
 		closing:   closing,
+		items:     make(map[string]event.Item, 10),
 	}
 }
 
@@ -138,4 +142,15 @@ func (s *Server) Event(e event.Event) {
 	default:
 		panic(fmt.Sprintf("event type %d not handled", e.Type()))
 	}
+}
+
+func (s *Server) AddItem(item event.Item) error {
+	if item.Name == "" {
+		return errors.New("missing item name")
+	}
+	s.itemsLocker.Lock()
+	defer s.itemsLocker.Unlock()
+
+	s.items[item.Name] = item
+	return nil
 }

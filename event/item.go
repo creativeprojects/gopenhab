@@ -42,6 +42,9 @@ func (i ItemReceivedCommand) Type() Type {
 	return TypeItemCommand
 }
 
+// Verify interface
+var _ Event = ItemReceivedCommand{}
+
 type ItemReceivedState struct {
 	topic     string
 	ItemName  string
@@ -66,6 +69,9 @@ func (i ItemReceivedState) Topic() string {
 func (i ItemReceivedState) Type() Type {
 	return TypeItemState
 }
+
+// Verify interface
+var _ Event = ItemReceivedState{}
 
 type ItemStateChanged struct {
 	topic             string
@@ -96,6 +102,9 @@ func (i ItemStateChanged) Type() Type {
 	return TypeItemStateChanged
 }
 
+// Verify interface
+var _ Event = ItemStateChanged{}
+
 type GroupItemStateChanged struct {
 	topic             string
 	ItemName          string
@@ -114,6 +123,9 @@ func (i GroupItemStateChanged) Type() Type {
 	return TypeGroupItemStateChanged
 }
 
+// Verify interface
+var _ Event = GroupItemStateChanged{}
+
 type ItemAdded struct {
 	topic string
 	Item  Item
@@ -126,6 +138,9 @@ func (i ItemAdded) Topic() string {
 func (i ItemAdded) Type() Type {
 	return TypeItemAdded
 }
+
+// Verify interface
+var _ Event = ItemAdded{}
 
 type ItemRemoved struct {
 	topic string
@@ -140,6 +155,9 @@ func (i ItemRemoved) Type() Type {
 	return TypeItemRemoved
 }
 
+// Verify interface
+var _ Event = ItemRemoved{}
+
 type ItemUpdated struct {
 	topic   string
 	OldItem Item
@@ -153,6 +171,9 @@ func (i ItemUpdated) Topic() string {
 func (i ItemUpdated) Type() Type {
 	return TypeItemUpdated
 }
+
+// Verify interface
+var _ Event = ItemUpdated{}
 
 // splitItemTopic returns the item name, triggering item (if any) and the event type
 func splitItemTopic(topic string) (string, string, string) {

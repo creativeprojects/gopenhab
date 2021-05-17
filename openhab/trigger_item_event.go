@@ -32,16 +32,9 @@ func (c *ItemReceivedCommandTrigger) activate(client *Client, run func(ev event.
 		if run == nil {
 			return
 		}
-		if c.state != nil && c.state.String() != "" {
-			// check for the desired state
-			if ev, ok := e.(event.ItemReceivedCommand); ok {
-				if ev.Command != c.state.String() {
-					// not the value we wanted
-					return
-				}
-			}
+		if c.match(e) {
+			run(e)
 		}
-		run(e)
 	})
 	return nil
 }
@@ -51,6 +44,22 @@ func (c *ItemReceivedCommandTrigger) deactivate(client *Client) {
 		client.unsubscribe(c.subId)
 		c.subId = 0
 	}
+}
+
+func (c *ItemReceivedCommandTrigger) match(e event.Event) bool {
+	if c.state != nil && c.state.String() != "" {
+		// check for the desired state
+		if ev, ok := e.(event.ItemReceivedCommand); ok {
+			if ev.Command != c.state.String() {
+				// not the value we wanted
+				return false
+			}
+		} else {
+			panic("expected event of type event.ItemReceivedCommand")
+			// return false
+		}
+	}
+	return true
 }
 
 // Interface
@@ -82,16 +91,9 @@ func (c *ItemReceivedStateTrigger) activate(client *Client, run func(ev event.Ev
 		if run == nil {
 			return
 		}
-		if c.state != nil && c.state.String() != "" {
-			// check for the desired state
-			if ev, ok := e.(event.ItemReceivedState); ok {
-				if ev.State != c.state.String() {
-					// not the value we wanted
-					return
-				}
-			}
+		if c.match(e) {
+			run(e)
 		}
-		run(e)
 	})
 	return nil
 }
@@ -101,6 +103,22 @@ func (c *ItemReceivedStateTrigger) deactivate(client *Client) {
 		client.unsubscribe(c.subId)
 		c.subId = 0
 	}
+}
+
+func (c *ItemReceivedStateTrigger) match(e event.Event) bool {
+	if c.state != nil && c.state.String() != "" {
+		// check for the desired state
+		if ev, ok := e.(event.ItemReceivedState); ok {
+			if ev.State != c.state.String() {
+				// not the value we wanted
+				return false
+			}
+		} else {
+			panic("expected event of type event.ItemReceivedState")
+			// return false
+		}
+	}
+	return true
 }
 
 // Interface
@@ -197,13 +215,14 @@ func (c *ItemStateChangedTrigger) match(e event.Event) bool {
 				// not the value we wanted
 				return false
 			}
-		}
-		// check for the desired state
-		if ev, ok := e.(event.GroupItemStateChanged); ok {
+		} else if ev, ok := e.(event.GroupItemStateChanged); ok {
 			if ev.PreviousState != c.from.String() {
 				// not the value we wanted
 				return false
 			}
+		} else {
+			panic("expected event of type event.ItemStateChanged or event.GroupItemStateChanged")
+			// return false
 		}
 	}
 	if c.to != nil && c.to.String() != "" {
@@ -213,13 +232,14 @@ func (c *ItemStateChangedTrigger) match(e event.Event) bool {
 				// not the value we wanted
 				return false
 			}
-		}
-		// check for the desired state
-		if ev, ok := e.(event.GroupItemStateChanged); ok {
+		} else if ev, ok := e.(event.GroupItemStateChanged); ok {
 			if ev.NewState != c.to.String() {
 				// not the value we wanted
 				return false
 			}
+		} else {
+			panic("expected event of type event.ItemStateChanged or event.GroupItemStateChanged")
+			// return false
 		}
 	}
 	return true

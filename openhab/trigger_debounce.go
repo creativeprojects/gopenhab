@@ -52,5 +52,9 @@ func (c *TriggerDebounce) deactivate(client *Client) {
 	}
 }
 
+func (c *TriggerDebounce) match(e event.Event) bool {
+	return c.trigger.match(e)
+}
+
 // Interface
 var _ Trigger = &TriggerDebounce{}

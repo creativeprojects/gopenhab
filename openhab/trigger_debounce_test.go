@@ -31,6 +31,10 @@ func (t *mockTrigger) deactivate(client *Client) {
 	}
 }
 
+func (t *mockTrigger) match(e event.Event) bool {
+	return true
+}
+
 func TestDebounce(t *testing.T) {
 	var (
 		counter uint64

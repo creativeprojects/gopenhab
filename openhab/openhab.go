@@ -39,6 +39,9 @@ type Client struct {
 	internalRules  sync.Once
 	rulesWaitGroup sync.WaitGroup
 	rulesLocker    sync.Mutex
+	startOnce      sync.Once
+	stopOnce       sync.Once
+	stopChan       chan os.Signal
 }
 
 // NewClient creates a new client to connect to a openHAB instance
@@ -72,6 +75,7 @@ func NewClient(config Config) *Client {
 				cron.NewParser(
 					cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor))),
 		eventBus: event.NewEventBus(),
+		stopChan: make(chan os.Signal, 1),
 	}
 	client.items = newItems(client)
 	return client
@@ -262,38 +266,55 @@ func (c *Client) AddRule(ruleData RuleData, run Runner, triggers ...Trigger) *Cl
 // Start the handling of the defined rules.
 // The function will return after the process received a Terminate, Abort or Interrupt signal,
 // and after all the currently running rules have finished
+//
+// Please note a client can only be started once. Any other call to this method will be ignored.
 func (c *Client) Start() {
-	c.addInternalRules()
+	c.startOnce.Do(func() {
+		c.addInternalRules()
 
-	for _, rule := range c.rules {
-		err := rule.activate(c)
-		if err != nil {
-			ruleName := rule.String()
-			if ruleName != "" {
-				ruleName = " \"" + ruleName + "\""
+		for _, rule := range c.rules {
+			err := rule.activate(c)
+			if err != nil {
+				ruleName := rule.String()
+				if ruleName != "" {
+					ruleName = " \"" + ruleName + "\""
+				}
+				errorlog.Printf("error activating rule%s: %s", ruleName, err)
 			}
-			errorlog.Printf("error activating rule%s: %s", ruleName, err)
 		}
-	}
-	c.cron.Start()
+		c.cron.Start()
 
-	// start the event bus
-	go c.eventLoop()
+		// start the event bus
+		go c.eventLoop()
 
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, syscall.SIGINT, syscall.SIGABRT, syscall.SIGTERM)
+		// listen to os signals
+		signal.Notify(c.stopChan, syscall.SIGINT, syscall.SIGABRT, syscall.SIGTERM)
 
-	// Wait until we're politely asked to leave
-	<-stop
+		// Send the started event
+		c.eventBus.Publish(event.NewSystemEvent(event.TypeClientStarted))
 
-	debuglog.Printf("shutting down...")
-	ctx := c.cron.Stop()
+		// Wait until we're politely asked to leave
+		<-c.stopChan
+		signal.Stop(c.stopChan)
 
-	// Wait until all the cron tasks finished running
-	<-ctx.Done()
+		// Send the stopped event
+		c.eventBus.Publish(event.NewSystemEvent(event.TypeClientStopped))
 
-	// and also all the event based rules
-	c.waitFinishingRules()
+		debuglog.Printf("shutting down...")
+		ctx := c.cron.Stop()
+
+		// Wait until all the cron tasks finished running
+		<-ctx.Done()
+
+		// and also all the event based rules
+		c.waitFinishingRules()
+	})
+}
+
+func (c *Client) Stop() {
+	c.stopOnce.Do(func() {
+		close(c.stopChan)
+	})
 }
 
 func (c *Client) addInternalRules() {
