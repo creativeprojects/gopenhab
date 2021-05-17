@@ -2,6 +2,7 @@ package openhabtest
 
 import (
 	"net/http"
+	"sync"
 )
 
 var (
@@ -12,6 +13,7 @@ var (
 type eventsHandler struct {
 	eventChan chan string
 	closing   chan bool
+	safe      sync.Mutex
 }
 
 func newEventsHandler(eventChan chan string, closing chan bool) *eventsHandler {
@@ -22,6 +24,9 @@ func newEventsHandler(eventChan chan string, closing chan bool) *eventsHandler {
 }
 
 func (h *eventsHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
+	h.safe.Lock()
+	defer h.safe.Unlock()
+
 	resp.Header().Add("Content-Type", "text/event-stream")
 
 	for {

@@ -9,6 +9,7 @@ import (
 //
 // Please note you should only connect ONE client per server.
 // The long running event bus request can only be polled by one client at a time.
+// It's very unlikely to need more than one client in a unit test anyway.
 type Server struct {
 	log         Logger
 	server      *httptest.Server
