@@ -1,9 +1,9 @@
 # gopenHAB
 
-Write your openHAB rules in Go. The awesomeness of openHAB rules with the simplicity of Go.
+Write your openHAB rules in Go. The power of openHAB rules with the simplicity of Go.
 
 I had some existing code written in Go that I needed to connect to openHAB.
-My first thought was to make a REST API to make this external system accessible from openHAB, but after fiddling with openHAB DSL rules and trying Jython scripts, I realised the best thing was to actually connect my system to the openHAB event bus and replicate a rule system, all in Go.
+My first thought was to make a REST API to make this external system accessible from openHAB, but after fiddling with openHAB DSL rules and trying Jython scripts, I realized the best thing was to actually connect my system to the openHAB event bus and replicate a rule system, all in Go.
 
 In theory, everything you can do in a DSL rule or in Jython should be available.
 

@@ -144,7 +144,8 @@ func (s *Server) Event(e event.Event) {
 	}
 }
 
-func (s *Server) AddItem(item event.Item) error {
+// SetItem adds the new item, or replaces the existing one (with the same name)
+func (s *Server) SetItem(item event.Item) error {
 	if item.Name == "" {
 		return errors.New("missing item name")
 	}
@@ -152,5 +153,17 @@ func (s *Server) AddItem(item event.Item) error {
 	defer s.itemsLocker.Unlock()
 
 	s.items[item.Name] = item
+	return nil
+}
+
+// RemoveItem removes an existing item. It doesn't return an error if the item doesn't exist.
+func (s *Server) RemoveItem(itemName string) error {
+	if itemName == "" {
+		return errors.New("missing item name")
+	}
+	s.itemsLocker.Lock()
+	defer s.itemsLocker.Unlock()
+
+	delete(s.items, itemName)
 	return nil
 }

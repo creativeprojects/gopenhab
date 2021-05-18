@@ -100,8 +100,8 @@ func TestStopEvent(t *testing.T) {
 		client.Start()
 	}()
 
-	// stop the server in 50ms
-	time.AfterFunc(50*time.Millisecond, func() {
+	// stop the server in 20ms
+	time.AfterFunc(20*time.Millisecond, func() {
 		client.Stop()
 	})
 

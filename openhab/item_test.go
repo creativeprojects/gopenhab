@@ -156,7 +156,7 @@ func TestGetItemAPI(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, SwitchOFF, state)
 
-		ok, err := item.SendCommandWait(SwitchON, 100*time.Millisecond)
+		ok, err := item.SendCommandWait(SwitchOFF, 100*time.Millisecond)
 		assert.NoError(t, err)
 		assert.False(t, ok)
 	})

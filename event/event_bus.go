@@ -8,12 +8,14 @@ type PubSub interface {
 	Subscribe(name string, eventType Type, callback func(e Event)) int
 	Unsubscribe(subId int)
 	Publish(e Event)
+	Wait()
 }
 
 type EventBus struct {
 	subs       []subscription
 	subLock    sync.Locker
 	subIdCount int
+	wg         sync.WaitGroup
 }
 
 func NewEventBus() *EventBus {
@@ -77,9 +79,18 @@ func (b *EventBus) Publish(e Event) {
 		}
 		if sub.name == "" || sub.eventType.Match(e.Topic(), sub.name) {
 			// run the callback in a goroutine
-			go sub.callback(e)
+			b.wg.Add(1)
+			go func(sub subscription, e Event) {
+				defer b.wg.Done()
+				sub.callback(e)
+			}(sub, e)
 		}
 	}
+}
+
+// Wait for all the subscribers to finish their tasks
+func (b *EventBus) Wait() {
+	b.wg.Wait()
 }
 
 // Verify interface

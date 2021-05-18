@@ -13,25 +13,21 @@ import (
 )
 
 func TestCanReceiveNotFoundStatus(t *testing.T) {
+	urls := []string{
+		"/something",
+		"/rest/something",
+		"/other/fail",
+	}
 	server := NewServer(nil)
 	defer server.Close()
 
-	resp, err := http.Get(server.URL() + "/something")
-	assert.NoError(t, err)
-	defer resp.Body.Close()
+	for _, url := range urls {
+		resp, err := http.Get(server.URL() + url)
+		assert.NoError(t, err)
+		defer resp.Body.Close()
 
-	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
-}
-
-func TestCanReceiveNotFoundRestStatus(t *testing.T) {
-	server := NewServer(nil)
-	defer server.Close()
-
-	resp, err := http.Get(server.URL() + "/rest/something")
-	assert.NoError(t, err)
-	defer resp.Body.Close()
-
-	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+		assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+	}
 }
 
 func TestCanReceiveRawEvents(t *testing.T) {

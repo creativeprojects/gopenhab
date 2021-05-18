@@ -27,6 +27,7 @@ func TestOneSubscriberNoTopic(t *testing.T) {
 		// fail the test after 100ms
 		t.Fatal("timeout!")
 	}
+	eventBus.Wait()
 }
 
 func TestOneSubscriberWithTopic(t *testing.T) {
@@ -49,6 +50,7 @@ func TestOneSubscriberWithTopic(t *testing.T) {
 		// fail the test after 100ms
 		t.Fatal("timeout!")
 	}
+	eventBus.Wait()
 }
 
 func TestTwoSubscribers(t *testing.T) {
@@ -116,6 +118,7 @@ func TestUnsubscribe(t *testing.T) {
 		// fail the test after 100ms
 		t.Fatal("timeout!")
 	}
+	eventBus.Wait()
 
 	eventBus.Unsubscribe(sub)
 
@@ -128,6 +131,7 @@ func TestUnsubscribe(t *testing.T) {
 	case <-time.After(100 * time.Millisecond):
 		// success
 	}
+	eventBus.Wait()
 }
 
 func TestUnsubscribeUnknownID(t *testing.T) {
@@ -150,6 +154,7 @@ func TestUnsubscribeUnknownID(t *testing.T) {
 		// fail the test after 100ms
 		t.Fatal("timeout!")
 	}
+	eventBus.Wait()
 
 	eventBus.Unsubscribe(sub + 10)
 
@@ -163,4 +168,5 @@ func TestUnsubscribeUnknownID(t *testing.T) {
 		// fail the test after 100ms
 		t.Fatal("timeout!")
 	}
+	eventBus.Wait()
 }

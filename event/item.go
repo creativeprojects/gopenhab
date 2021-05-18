@@ -115,6 +115,19 @@ type GroupItemStateChanged struct {
 	PreviousState     string
 }
 
+func NewGroupItemStateChanged(itemName, triggeringItem, stateType, previousState, newState string) GroupItemStateChanged {
+	topic := itemTopicPrefix + itemName + "/" + api.TopicEventStateChanged
+	return GroupItemStateChanged{
+		topic:             topic,
+		ItemName:          itemName,
+		TriggeringItem:    triggeringItem,
+		PreviousStateType: stateType,
+		PreviousState:     previousState,
+		NewStateType:      stateType,
+		NewState:          newState,
+	}
+}
+
 func (i GroupItemStateChanged) Topic() string {
 	return i.topic
 }

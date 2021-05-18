@@ -29,19 +29,17 @@ const (
 
 // Client for openHAB. It's using openHAB REST API internally.
 type Client struct {
-	config         Config
-	baseURL        string
-	client         *http.Client
-	cron           *cron.Cron
-	items          *Items
-	rules          []*Rule
-	eventBus       event.PubSub
-	internalRules  sync.Once
-	rulesWaitGroup sync.WaitGroup
-	rulesLocker    sync.Mutex
-	startOnce      sync.Once
-	stopOnce       sync.Once
-	stopChan       chan os.Signal
+	config        Config
+	baseURL       string
+	client        *http.Client
+	cron          *cron.Cron
+	items         *Items
+	rules         []*Rule
+	eventBus      event.PubSub
+	internalRules sync.Once
+	startOnce     sync.Once
+	stopOnce      sync.Once
+	stopChan      chan os.Signal
 }
 
 // NewClient creates a new client to connect to a openHAB instance
@@ -245,8 +243,6 @@ func (c *Client) eventLoop() {
 
 func (c *Client) subscribe(name string, eventType event.Type, callback func(e event.Event)) int {
 	return c.eventBus.Subscribe(name, eventType, func(e event.Event) {
-		c.ruleExecutionStarted()
-		defer c.rulesWaitGroup.Done()
 		defer preventPanic()
 		callback(e)
 	})
@@ -326,18 +322,8 @@ func (c *Client) addInternalRules() {
 	})
 }
 
-func (c *Client) ruleExecutionStarted() {
-	c.rulesLocker.Lock()
-	defer c.rulesLocker.Unlock()
-
-	c.rulesWaitGroup.Add(1)
-}
-
 func (c *Client) waitFinishingRules() {
-	c.rulesLocker.Lock()
-	defer c.rulesLocker.Unlock()
-
-	c.rulesWaitGroup.Wait()
+	c.eventBus.Wait()
 }
 
 func (c *Client) itemStateChanged(e event.Event) {

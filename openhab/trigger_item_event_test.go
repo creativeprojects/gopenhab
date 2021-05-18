@@ -13,6 +13,7 @@ func TestMatchingEvent(t *testing.T) {
 		trigger Trigger
 		match   bool
 	}{
+		// received command
 		{
 			event.NewItemReceivedCommand("TestItem", "OnOff", "ON"),
 			OnItemReceivedCommand("TestItem", SwitchOFF),
@@ -33,6 +34,7 @@ func TestMatchingEvent(t *testing.T) {
 			OnItemReceivedCommand("TestItem", nil),
 			true,
 		},
+		// received state
 		{
 			event.NewItemReceivedState("TestItem", "OnOff", "ON"),
 			OnItemReceivedState("TestItem", SwitchOFF),
@@ -52,6 +54,78 @@ func TestMatchingEvent(t *testing.T) {
 			event.NewItemReceivedState("TestItem", "OnOff", "OFF"),
 			OnItemReceivedState("TestItem", nil),
 			true,
+		},
+		// item state changed
+		{
+			event.NewItemStateChanged("TestItem", "OnOff", "OFF", "ON"),
+			OnItemStateChanged("TestItem"),
+			true,
+		},
+		{
+			event.NewItemStateChanged("TestItem", "OnOff", "OFF", "ON"),
+			OnItemStateChangedFrom("TestItem", SwitchOFF),
+			true,
+		},
+		{
+			event.NewItemStateChanged("TestItem", "OnOff", "ON", "OFF"),
+			OnItemStateChangedFrom("TestItem", SwitchOFF),
+			false,
+		},
+		{
+			event.NewItemStateChanged("TestItem", "OnOff", "OFF", "ON"),
+			OnItemStateChangedTo("TestItem", SwitchON),
+			true,
+		},
+		{
+			event.NewItemStateChanged("TestItem", "OnOff", "ON", "OFF"),
+			OnItemStateChangedTo("TestItem", SwitchON),
+			false,
+		},
+		{
+			event.NewItemStateChanged("TestItem", "OnOff", "OFF", "ON"),
+			OnItemStateChangedFromTo("TestItem", SwitchOFF, SwitchON),
+			true,
+		},
+		{
+			event.NewItemStateChanged("TestItem", "OnOff", "ON", "OFF"),
+			OnItemStateChangedFromTo("TestItem", SwitchOFF, SwitchON),
+			false,
+		},
+		// group item state changed
+		{
+			event.NewGroupItemStateChanged("TestItem", "TriggeringItem", "OnOff", "OFF", "ON"),
+			OnItemStateChanged("TestItem"),
+			true,
+		},
+		{
+			event.NewGroupItemStateChanged("TestItem", "TriggeringItem", "OnOff", "OFF", "ON"),
+			OnItemStateChangedFrom("TestItem", SwitchOFF),
+			true,
+		},
+		{
+			event.NewGroupItemStateChanged("TestItem", "TriggeringItem", "OnOff", "ON", "OFF"),
+			OnItemStateChangedFrom("TestItem", SwitchOFF),
+			false,
+		},
+		{
+			event.NewGroupItemStateChanged("TestItem", "TriggeringItem", "OnOff", "OFF", "ON"),
+			OnItemStateChangedTo("TestItem", SwitchON),
+			true,
+		},
+		{
+			event.NewGroupItemStateChanged("TestItem", "TriggeringItem", "OnOff", "ON", "OFF"),
+			OnItemStateChangedTo("TestItem", SwitchON),
+			false,
+		},
+		{
+			event.NewGroupItemStateChanged("TestItem", "TriggeringItem", "OnOff", "OFF", "ON"),
+			OnItemStateChangedFromTo("TestItem", SwitchOFF, SwitchON),
+			true,
+		},
+		{
+			event.NewGroupItemStateChanged("TestItem", "TriggeringItem", "OnOff", "ON", "OFF"),
+			OnItemStateChangedFromTo("TestItem", SwitchOFF, SwitchON),
+			false,
 		},
 	}
 
