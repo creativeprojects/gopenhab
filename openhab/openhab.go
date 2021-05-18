@@ -47,8 +47,17 @@ func NewClient(config Config) *Client {
 	if config.URL == "" {
 		panic("missing URL from Config")
 	}
-	if config.DelayBeforeReconnecting == 0 {
-		config.DelayBeforeReconnecting = time.Second
+	if config.ReconnectionInitialBackoff == 0 {
+		config.ReconnectionInitialBackoff = time.Second
+	}
+	if config.ReconnectionMultiplier == 0 {
+		config.ReconnectionMultiplier = 2.0
+	}
+	if config.ReconnectionMaxBackoff == 0 {
+		config.ReconnectionMaxBackoff = time.Minute
+	}
+	if config.StableConnectionDuration == 0 {
+		config.StableConnectionDuration = time.Minute
 	}
 	if config.TimeoutHTTP == 0 {
 		config.TimeoutHTTP = 5 * time.Second
@@ -231,13 +240,35 @@ func (c *Client) dispatchRawEvent(data string) {
 // eventLoop listen to the events from the REST api and send them to the event bus.
 // the method never returns: if the connection drops it tries to reconnect in a loop
 func (c *Client) eventLoop() {
+	var successTimer *time.Timer
+	backoff := c.config.ReconnectionInitialBackoff
+
 	for {
+		// run a timer in the background to reset the backoff when the connection is stable
+		go func() {
+			successTimer = time.AfterFunc(c.config.StableConnectionDuration, func() {
+				backoff = c.config.ReconnectionInitialBackoff
+				successTimer = nil
+				debuglog.Printf("connection to the event bus looks stable")
+				// ==> We could maybe make a new system event when the connection is stable?
+			})
+		}()
 		err := c.listenEvents()
 		if err != nil {
-			errorlog.Printf("error listening to openhab events: %s", err)
+			errorlog.Printf("error connecting or listening to openhab events: %s", err)
 		}
-		debuglog.Printf("reconnecting in %s...", c.config.DelayBeforeReconnecting.String())
-		time.Sleep(c.config.DelayBeforeReconnecting)
+		// we just got logged off so we cancel any success timer
+		if successTimer != nil {
+			successTimer.Stop()
+		}
+		debuglog.Printf("reconnecting in %s...", backoff.String())
+		time.Sleep(backoff)
+
+		// calculate next backoff
+		backoff = time.Duration(float64(backoff) * c.config.ReconnectionMultiplier)
+		if backoff > c.config.ReconnectionMaxBackoff {
+			backoff = c.config.ReconnectionMaxBackoff
+		}
 	}
 }
 
