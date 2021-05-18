@@ -2,7 +2,6 @@ package openhabtest
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http/httptest"
 	"sync"
@@ -15,26 +14,28 @@ import (
 //
 // Please note you should only connect ONE client per server.
 // The long running event bus request can only be polled by one client at a time.
-// It's very unlikely to need more than one client in a unit test anyway.
+// It seems very unlikely to need more than one client at a time in a unit test.
 type Server struct {
 	log         Logger
 	server      *httptest.Server
 	eventChan   chan string
 	closing     chan bool
 	closeLocker sync.Mutex
-	items       map[string]event.Item
-	itemsLocker sync.Mutex
+	items       *itemsHandler
 }
 
 // NewServer creates a new mock openHAB instance to use in tests
+// TODO: replace the event channel by a proper pubsub model
 func NewServer(log Logger) *Server {
 	if log == nil {
 		log = dummyLogger{}
 	}
 	eventChan := make(chan string)
 	closing := make(chan bool)
+	items := newItemsHandler(log)
 	routes := []route{
 		{"events", newEventsHandler(eventChan, closing)},
+		{"items", items},
 	}
 
 	server := httptest.NewServer(newRootHandler(log, routes))
@@ -43,11 +44,12 @@ func NewServer(log Logger) *Server {
 		server:    server,
 		eventChan: eventChan,
 		closing:   closing,
-		items:     make(map[string]event.Item, 10),
+		items:     items,
 	}
 }
 
-// URL returns the local URL of a mock openHAB server to use inside a unit test
+// URL returns the local URL of a mock openHAB server to use inside a unit test.
+// The URL returned has no trailing '/'
 func (s *Server) URL() string {
 	if s.server == nil {
 		panic("no instance of http server")
@@ -144,26 +146,16 @@ func (s *Server) Event(e event.Event) {
 	}
 }
 
-// SetItem adds the new item, or replaces the existing one (with the same name)
-func (s *Server) SetItem(item event.Item) error {
-	if item.Name == "" {
-		return errors.New("missing item name")
+// SetItem adds the new item, or replaces the existing one (with the same name).
+// If Link property is not set, it will be automatically set
+func (s *Server) SetItem(item api.Item) error {
+	if item.Link == "" {
+		item.Link = s.URL() + "/rest/items/" + item.Name
 	}
-	s.itemsLocker.Lock()
-	defer s.itemsLocker.Unlock()
-
-	s.items[item.Name] = item
-	return nil
+	return s.items.setItem(item)
 }
 
 // RemoveItem removes an existing item. It doesn't return an error if the item doesn't exist.
 func (s *Server) RemoveItem(itemName string) error {
-	if itemName == "" {
-		return errors.New("missing item name")
-	}
-	s.itemsLocker.Lock()
-	defer s.itemsLocker.Unlock()
-
-	delete(s.items, itemName)
-	return nil
+	return s.items.removeItem(itemName)
 }

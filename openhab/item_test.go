@@ -1,37 +1,21 @@
 package openhab
 
 import (
-	"encoding/json"
-	"io"
-	"net/http"
-	"net/http/httptest"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/creativeprojects/gopenhab/api"
 	"github.com/creativeprojects/gopenhab/event"
+	"github.com/creativeprojects/gopenhab/openhabtest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-type itemModel struct {
-	Link       string   `json:"link"`
-	State      string   `json:"state"`
-	Editable   bool     `json:"editable"`
-	Type       string   `json:"type"`
-	Name       string   `json:"name"`
-	Label      string   `json:"label"`
-	Category   string   `json:"category"`
-	Tags       []string `json:"tags"`
-	GroupNames []string `json:"groupNames"`
-}
-
 func TestGetItemAPI(t *testing.T) {
-	response := itemModel{
-		Link:       "http://openhab:8080/rest/items/TestSwitch",
+
+	item := api.Item{
 		State:      "OFF",
-		Editable:   false,
 		Type:       "Switch",
 		Name:       "TestSwitch",
 		Label:      "Test lights",
@@ -39,33 +23,14 @@ func TestGetItemAPI(t *testing.T) {
 		Tags:       []string{},
 		GroupNames: []string{},
 	}
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		defer req.Body.Close()
-		if req.Method == http.MethodGet {
-			if req.URL.Path == "/rest/items/TestSwitch" {
-				encoder := json.NewEncoder(w)
-				err := encoder.Encode(response)
-				assert.NoError(t, err)
-				return
-			}
-			if req.URL.Path == "/rest/items/TestSwitch/state" {
-				w.Write([]byte(response.State))
-				return
-			}
-		}
-		if req.Method == http.MethodPost {
-			if req.URL.Path == "/rest/items/TestSwitch" {
-				value, err := io.ReadAll(req.Body)
-				assert.NoError(t, err)
-				response.State = string(value)
-				return
-			}
-		}
-		http.NotFound(w, req)
-	}))
+
+	server := openhabtest.NewServer(t)
+	defer server.Close()
+
+	server.SetItem(item)
 
 	client := NewClient(Config{
-		URL: server.URL,
+		URL: server.URL(),
 	})
 
 	t.Run("TestLoadItemNotFound", func(t *testing.T) {
@@ -89,15 +54,16 @@ func TestGetItemAPI(t *testing.T) {
 	})
 
 	t.Run("TestGetItemState", func(t *testing.T) {
-		item := newSwitchItem(client, "TestSwitch")
+		item := newTestItem(client, "TestSwitch", "Switch", "OFF")
 		assert.Equal(t, ItemTypeSwitch, item.Type())
+
 		state, err := item.State()
 		assert.NoError(t, err)
 		assert.Equal(t, SwitchOFF, state)
 	})
 
 	t.Run("TestSendCommand", func(t *testing.T) {
-		item := newSwitchItem(client, "TestSwitch")
+		item := newTestItem(client, "TestSwitch", "Switch", "OFF")
 		assert.Equal(t, ItemTypeSwitch, item.Type())
 
 		err := item.SendCommand(SwitchON)
@@ -123,7 +89,7 @@ func TestGetItemAPI(t *testing.T) {
 	})
 
 	t.Run("TestListeningForChanges", func(t *testing.T) {
-		item := newSwitchItem(client, "TestSwitch")
+		item := newTestItem(client, "TestSwitch", "Switch", "OFF")
 		state, err := item.State()
 		require.NoError(t, err)
 		assert.Equal(t, SwitchOFF, state)
@@ -149,9 +115,8 @@ func TestGetItemAPI(t *testing.T) {
 		wg.Wait()
 	})
 
-	// Test is FAILING
 	t.Run("TestSendCommandTimeout", func(t *testing.T) {
-		item := newSwitchItem(client, "TestSwitch")
+		item := newTestItem(client, "TestSwitch", "Switch", "OFF")
 		state, err := item.State()
 		require.NoError(t, err)
 		assert.Equal(t, SwitchOFF, state)
@@ -162,9 +127,16 @@ func TestGetItemAPI(t *testing.T) {
 	})
 }
 
-func newSwitchItem(client *Client, name string) *Item {
+func newTestItem(client *Client, name, itemType, state string) *Item {
 	item := newItem(client, name)
 	// the item needs a type so it can work properly
-	item.set(api.Item{Type: "Switch", State: "OFF"})
+	item.set(api.Item{Type: itemType, State: state})
+	return item
+}
+
+func newTestGroupItem(client *Client, name, groupItemType, state string) *Item {
+	item := newItem(client, name)
+	// the item needs a type so it can work properly
+	item.set(api.Item{Type: groupItemType, State: state})
 	return item
 }

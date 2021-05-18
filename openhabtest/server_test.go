@@ -1,12 +1,15 @@
 package openhabtest
 
 import (
+	"bytes"
 	"io"
 	"net/http"
+	"strings"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/creativeprojects/gopenhab/api"
 	"github.com/creativeprojects/gopenhab/event"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -130,4 +133,187 @@ func TestCanEncodeEvents(t *testing.T) {
 	})
 
 	wg.Wait()
+}
+
+func TestEmptyItems(t *testing.T) {
+	server := NewServer(t)
+	defer server.Close()
+
+	resp, err := http.Get(server.URL() + "/rest/items")
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	data, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+	assert.Equal(t, "[]\n", string(data))
+}
+
+func TestListItem(t *testing.T) {
+	server := NewServer(t)
+	defer server.Close()
+
+	server.SetItem(api.Item{
+		Name:  "TestItem",
+		Type:  "Switch",
+		State: "OFF",
+	})
+
+	resp, err := http.Get(server.URL() + "/rest/items")
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	data, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+	assert.Truef(t, strings.HasPrefix(string(data), `[{"name":"TestItem","label":"","link":"http://`), "unexpected JSON string: %s", string(data))
+}
+
+func TestListGroupItem(t *testing.T) {
+	server := NewServer(t)
+	defer server.Close()
+
+	server.SetItem(api.Item{
+		Name:      "TestItem",
+		GroupType: "Number",
+		Type:      "Group",
+		State:     "OFF",
+	})
+
+	resp, err := http.Get(server.URL() + "/rest/items")
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	data, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+	assert.Truef(t, strings.HasPrefix(string(data), `[{"name":"TestItem","label":"","link":"http://`), "unexpected JSON string: %s", string(data))
+}
+
+func TestGetItemNotFound(t *testing.T) {
+	server := NewServer(t)
+	defer server.Close()
+
+	resp, err := http.Get(server.URL() + "/rest/items/NotFound")
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+}
+
+func TestGetItem(t *testing.T) {
+	server := NewServer(t)
+	defer server.Close()
+
+	server.SetItem(api.Item{
+		Name:  "TestItem",
+		Type:  "Switch",
+		State: "OFF",
+	})
+
+	resp, err := http.Get(server.URL() + "/rest/items/TestItem")
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	data, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+	assert.Truef(t, strings.HasPrefix(string(data), `{"name":"TestItem","label":"","link":"http://`), "unexpected JSON string: %s", string(data))
+}
+
+func TestGetItemStateNotFound(t *testing.T) {
+	server := NewServer(t)
+	defer server.Close()
+
+	resp, err := http.Get(server.URL() + "/rest/items/NotFound/state")
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+}
+
+func TestGetItemState(t *testing.T) {
+	state := "20.1 °C"
+	server := NewServer(t)
+	defer server.Close()
+
+	server.SetItem(api.Item{
+		Name:  "TestItem",
+		Type:  "Number:Temperature",
+		State: state,
+	})
+
+	resp, err := http.Get(server.URL() + "/rest/items/TestItem/state")
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	data, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+	assert.Equal(t, state, string(data))
+}
+
+func TestSetItemState(t *testing.T) {
+	state := "20.1 °C"
+	server := NewServer(t)
+	defer server.Close()
+
+	server.SetItem(api.Item{
+		Name:  "TestItem",
+		Type:  "Number:Temperature",
+		State: state,
+	})
+
+	// set new state
+	state = "20.49 °C"
+	func() {
+		data := bytes.NewBufferString(state)
+		req, err := http.NewRequest(http.MethodPut, server.URL()+"/rest/items/TestItem/state", data)
+		require.NoError(t, err)
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusAccepted, resp.StatusCode)
+	}()
+
+	resp, err := http.Get(server.URL() + "/rest/items/TestItem/state")
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	data, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+	assert.Equal(t, state, string(data))
+}
+
+func TestSendItemCommand(t *testing.T) {
+	state := "20.1 °C"
+	server := NewServer(t)
+	defer server.Close()
+
+	server.SetItem(api.Item{
+		Name:  "TestItem",
+		Type:  "Number:Temperature",
+		State: state,
+	})
+
+	// set new state
+	state = "20.49 °C"
+	func() {
+		data := bytes.NewBufferString(state)
+		req, err := http.NewRequest(http.MethodPost, server.URL()+"/rest/items/TestItem", data)
+		require.NoError(t, err)
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+	}()
+
+	resp, err := http.Get(server.URL() + "/rest/items/TestItem/state")
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	data, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+	assert.Equal(t, state, string(data))
 }

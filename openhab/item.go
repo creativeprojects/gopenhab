@@ -12,6 +12,7 @@ import (
 // Item represents an item in openHAB
 type Item struct {
 	name        string
+	isGroup     bool
 	data        api.Item
 	state       StateValue
 	mainType    ItemType
@@ -31,7 +32,13 @@ func newItem(client *Client, name string) *Item {
 
 func (i *Item) set(data api.Item) *Item {
 	i.data = data
-	i.mainType, i.subType = getItemType(i.data.Type)
+	if i.data.Type != "" {
+		i.mainType, i.subType = getItemType(i.data.Type)
+		i.isGroup = false
+	} else if i.data.GroupType != "" {
+		i.mainType, i.subType = getItemType(i.data.GroupType)
+		i.isGroup = true
+	}
 	i.setInternalState(data.State)
 	return i
 }
@@ -68,6 +75,19 @@ func (i *Item) Name() string {
 // Type return the item type
 func (i *Item) Type() ItemType {
 	return i.mainType
+}
+
+// IsGroup returns true if the item is a group of items
+func (i *Item) IsGroup() bool {
+	return i.isGroup
+}
+
+// Members return the list of direct members if the item is a group
+func (i *Item) Members() []string {
+	if !i.IsGroup() {
+		return nil
+	}
+	return i.data.Members
 }
 
 // State returns an internal cached value if available,

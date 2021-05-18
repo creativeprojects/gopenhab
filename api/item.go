@@ -1,21 +1,21 @@
 package api
 
 type Item struct {
-	Name               string             `json:"name"`
-	Label              string             `json:"label"`
-	Link               string             `json:"link"`
-	Type               string             `json:"type"`
-	State              string             `json:"state"`
-	TransformedState   string             `json:"transformedState"`
-	Editable           bool               `json:"editable"`
-	Category           string             `json:"category"`
-	Tags               []string           `json:"tags"`
-	GroupNames         []string           `json:"groupNames"`
-	Members            []string           `json:"members"`
-	GroupType          string             `json:"groupType"`
-	Function           *Function          `json:"function"`
-	StateDescription   StateDescription   `json:"stateDescription"`
-	CommandDescription CommandDescription `json:"commandDescription"`
+	Name               string              `json:"name"`
+	Label              string              `json:"label"`
+	Link               string              `json:"link"`
+	Type               string              `json:"type"`
+	State              string              `json:"state"`
+	TransformedState   string              `json:"transformedState,omitempty"`
+	Editable           bool                `json:"editable"`
+	Category           string              `json:"category"`
+	Tags               []string            `json:"tags"`
+	GroupNames         []string            `json:"groupNames"`
+	Members            []string            `json:"members,omitempty"`
+	GroupType          string              `json:"groupType,omitempty"`
+	Function           *Function           `json:"function,omitempty"`
+	StateDescription   *StateDescription   `json:"stateDescription,omitempty"`
+	CommandDescription *CommandDescription `json:"commandDescription,omitempty"`
 }
 
 type Function struct {
