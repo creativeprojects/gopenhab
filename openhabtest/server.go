@@ -1,8 +1,6 @@
 package openhabtest
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http/httptest"
 	"sync"
 
@@ -22,21 +20,26 @@ type Server struct {
 }
 
 // NewServer creates a new mock openHAB instance to use in tests
-func NewServer(log Logger) *Server {
-	if log == nil {
-		log = dummyLogger{}
+func NewServer(config Config) *Server {
+	if config.Log == nil {
+		config.Log = dummyLogger{}
 	}
 	done := make(chan bool)
 	bus := newEventBus()
-	items := newItemsHandler(log)
+	autoBus := bus
+	if !config.SendEvents {
+		// don't send the events automatically => we don't send the instance of the events bus to handlers
+		autoBus = nil
+	}
+	items := newItemsHandler(config.Log, autoBus)
 	routes := []route{
 		{"events", newEventsHandler(bus, done)},
 		{"items", items},
 	}
 
-	server := httptest.NewServer(newRootHandler(log, routes))
+	server := httptest.NewServer(newRootHandler(config.Log, routes))
 	return &Server{
-		log:      log,
+		log:      config.Log,
 		server:   server,
 		eventBus: bus,
 		items:    items,
@@ -65,10 +68,8 @@ func (s *Server) Close() {
 	s.closed = true
 
 	close(s.done)
-	s.eventBus.Close()
 
 	if s.server != nil {
-		s.server.CloseClientConnections()
 		s.server.Close()
 		s.server = nil
 	}
@@ -77,8 +78,8 @@ func (s *Server) Close() {
 // RawEvent sends a raw JSON string event to the event bus. Example of a raw event:
 //
 // {"topic":"smarthome/items/LocalWeatherAndForecast_Current_Cloudiness/state","payload":"{\"type\":\"Quantity\",\"value\":\"20 %\"}","type":"ItemStateEvent"}
-func (s *Server) RawEvent(event string) {
-	s.eventBus.Publish("", event)
+func (s *Server) RawEvent(topic, event string) {
+	s.eventBus.Publish(topic, event)
 }
 
 // Event sends a event.Event to the mock openHAB event bus
@@ -86,65 +87,9 @@ func (s *Server) Event(e event.Event) {
 	if e == nil {
 		return
 	}
-	switch ev := e.(type) {
-	case event.ItemReceivedCommand:
-		rawPayload, err := json.Marshal(api.EventCommand{
-			Type:  ev.CommandType,
-			Value: ev.Command,
-		})
-		if err != nil {
-			panic(err)
-		}
-		rawEvent, err := json.Marshal(api.EventMessage{
-			Topic:   ev.Topic(),
-			Payload: string(rawPayload),
-			Type:    api.EventItemCommand,
-		})
-		if err != nil {
-			panic(err)
-		}
-		s.RawEvent(string(rawEvent))
-
-	case event.ItemReceivedState:
-		rawPayload, err := json.Marshal(api.EventState{
-			Type:  ev.StateType,
-			Value: ev.State,
-		})
-		if err != nil {
-			panic(err)
-		}
-		rawEvent, err := json.Marshal(api.EventMessage{
-			Topic:   ev.Topic(),
-			Payload: string(rawPayload),
-			Type:    api.EventItemState,
-		})
-		if err != nil {
-			panic(err)
-		}
-		s.RawEvent(string(rawEvent))
-
-	case event.ItemStateChanged:
-		rawPayload, err := json.Marshal(api.EventStateChanged{
-			Type:     ev.NewStateType,
-			Value:    ev.NewState,
-			OldType:  ev.PreviousStateType,
-			OldValue: ev.PreviousState,
-		})
-		if err != nil {
-			panic(err)
-		}
-		rawEvent, err := json.Marshal(api.EventMessage{
-			Topic:   ev.Topic(),
-			Payload: string(rawPayload),
-			Type:    api.EventItemStateChanged,
-		})
-		if err != nil {
-			panic(err)
-		}
-		s.RawEvent(string(rawEvent))
-
-	default:
-		panic(fmt.Sprintf("event type %d not handled", e.Type()))
+	topic, ev := EventString(e)
+	if topic != "" && ev != "" {
+		s.RawEvent(topic, ev)
 	}
 }
 

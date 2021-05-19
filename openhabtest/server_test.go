@@ -21,7 +21,7 @@ func TestCanReceiveNotFoundStatus(t *testing.T) {
 		"/rest/something",
 		"/other/fail",
 	}
-	server := NewServer(nil)
+	server := NewServer(Config{})
 	defer server.Close()
 
 	for _, url := range urls {
@@ -39,7 +39,7 @@ func TestCanReceiveRawEvents(t *testing.T) {
 		`{"topic":"smarthome/items/LocalWeatherAndForecast_Current_Cloudiness/statechanged","payload":"{\"type\":\"Quantity\",\"value\":\"20 %\",\"oldType\":\"Quantity\",\"oldValue\":\"75 %\"}","type":"ItemStateChangedEvent"}`,
 		`{"topic":"smarthome/items/LocalWeatherAndForecast_Current_Cloudiness/state","payload":"{\"type\":\"Quantity\",\"value\":\"20 %\"}","type":"ItemStateEvent"}`,
 	}
-	server := NewServer(t)
+	server := NewServer(Config{Log: t})
 	defer server.Close()
 
 	wg := sync.WaitGroup{}
@@ -67,7 +67,7 @@ func TestCanReceiveRawEvents(t *testing.T) {
 	// send some messages
 	for _, rawEvent := range rawEvents {
 		time.Sleep(10 * time.Millisecond)
-		server.RawEvent(rawEvent)
+		server.RawEvent("", rawEvent)
 	}
 
 	// stop the server in 50ms
@@ -96,7 +96,7 @@ func TestCanEncodeEvents(t *testing.T) {
 			`{"topic":"smarthome/items/TestSwitch/statechanged","payload":"{\"type\":\"OnOff\",\"value\":\"ON\",\"oldType\":\"OnOff\",\"oldValue\":\"OFF\"}","type":"ItemStateChangedEvent"}`,
 		},
 	}
-	server := NewServer(t)
+	server := NewServer(Config{Log: t})
 	defer server.Close()
 
 	wg := sync.WaitGroup{}
@@ -128,15 +128,15 @@ func TestCanEncodeEvents(t *testing.T) {
 	}
 
 	// wait a bit before stopping the server
-	time.AfterFunc(20*time.Millisecond, func() {
-		server.Close()
-	})
+	// time.AfterFunc(20*time.Millisecond, func() {
+	server.Close()
+	// })
 
 	wg.Wait()
 }
 
 func TestEmptyItems(t *testing.T) {
-	server := NewServer(t)
+	server := NewServer(Config{Log: t})
 	defer server.Close()
 
 	resp, err := http.Get(server.URL() + "/rest/items")
@@ -149,7 +149,7 @@ func TestEmptyItems(t *testing.T) {
 }
 
 func TestListItem(t *testing.T) {
-	server := NewServer(t)
+	server := NewServer(Config{Log: t})
 	defer server.Close()
 
 	server.SetItem(api.Item{
@@ -168,7 +168,7 @@ func TestListItem(t *testing.T) {
 }
 
 func TestListGroupItem(t *testing.T) {
-	server := NewServer(t)
+	server := NewServer(Config{Log: t})
 	defer server.Close()
 
 	server.SetItem(api.Item{
@@ -188,7 +188,7 @@ func TestListGroupItem(t *testing.T) {
 }
 
 func TestGetItemNotFound(t *testing.T) {
-	server := NewServer(t)
+	server := NewServer(Config{Log: t})
 	defer server.Close()
 
 	resp, err := http.Get(server.URL() + "/rest/items/NotFound")
@@ -199,7 +199,7 @@ func TestGetItemNotFound(t *testing.T) {
 }
 
 func TestGetItem(t *testing.T) {
-	server := NewServer(t)
+	server := NewServer(Config{Log: t})
 	defer server.Close()
 
 	server.SetItem(api.Item{
@@ -219,7 +219,7 @@ func TestGetItem(t *testing.T) {
 }
 
 func TestGetItemStateNotFound(t *testing.T) {
-	server := NewServer(t)
+	server := NewServer(Config{Log: t})
 	defer server.Close()
 
 	resp, err := http.Get(server.URL() + "/rest/items/NotFound/state")
@@ -231,7 +231,7 @@ func TestGetItemStateNotFound(t *testing.T) {
 
 func TestGetItemState(t *testing.T) {
 	state := "20.1 °C"
-	server := NewServer(t)
+	server := NewServer(Config{Log: t})
 	defer server.Close()
 
 	server.SetItem(api.Item{
@@ -252,7 +252,7 @@ func TestGetItemState(t *testing.T) {
 
 func TestSetItemState(t *testing.T) {
 	state := "20.1 °C"
-	server := NewServer(t)
+	server := NewServer(Config{Log: t})
 	defer server.Close()
 
 	server.SetItem(api.Item{
@@ -286,7 +286,7 @@ func TestSetItemState(t *testing.T) {
 
 func TestSendItemCommand(t *testing.T) {
 	state := "20.1 °C"
-	server := NewServer(t)
+	server := NewServer(Config{Log: t})
 	defer server.Close()
 
 	server.SetItem(api.Item{
@@ -316,4 +316,97 @@ func TestSendItemCommand(t *testing.T) {
 	data, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 	assert.Equal(t, state, string(data))
+}
+
+func TestSendItemCommandEvents(t *testing.T) {
+	state := "20.1 °C"
+	server := NewServer(Config{Log: t, SendEvents: true})
+	defer server.Close()
+
+	server.SetItem(api.Item{
+		Name:  "TestItem",
+		Type:  "Number:Temperature",
+		State: state,
+	})
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	// read events
+	go func() {
+		defer wg.Done()
+
+		resp, err := http.Get(server.URL() + "/rest/events")
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		data, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+
+		// check all 3 events were sent
+		assert.Contains(t, string(data), `{"topic":"smarthome/items/TestItem/command","payload":"{\"type\":\"Test\",\"value\":\"20.49 °C\"}","type":"ItemCommandEvent"}`)
+		assert.Contains(t, string(data), `{"topic":"smarthome/items/TestItem/state","payload":"{\"type\":\"Test\",\"value\":\"20.49 °C\"}","type":"ItemStateEvent"}`)
+		assert.Contains(t, string(data), `{"topic":"smarthome/items/TestItem/statechanged","payload":"{\"type\":\"Test\",\"value\":\"20.49 °C\",\"oldType\":\"Test\",\"oldValue\":\"20.1 °C\"}","type":"ItemStateChangedEvent"}`)
+	}()
+
+	// set new state
+	state = "20.49 °C"
+	func() {
+		data := bytes.NewBufferString(state)
+		req, err := http.NewRequest(http.MethodPost, server.URL()+"/rest/items/TestItem", data)
+		require.NoError(t, err)
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusOK, resp.StatusCode)
+	}()
+
+	server.Close()
+	wg.Wait()
+}
+
+func TestSetItemStateEvents(t *testing.T) {
+	state := "20.1 °C"
+	server := NewServer(Config{Log: t, SendEvents: true})
+	defer server.Close()
+
+	server.SetItem(api.Item{
+		Name:  "TestItem",
+		Type:  "Number:Temperature",
+		State: state,
+	})
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	// read events
+	go func() {
+		defer wg.Done()
+
+		resp, err := http.Get(server.URL() + "/rest/events")
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		data, err := io.ReadAll(resp.Body)
+		require.NoError(t, err)
+
+		// check both events were sent
+		assert.Contains(t, string(data), `{"topic":"smarthome/items/TestItem/state","payload":"{\"type\":\"Test\",\"value\":\"20.49 °C\"}","type":"ItemStateEvent"}`)
+		assert.Contains(t, string(data), `{"topic":"smarthome/items/TestItem/statechanged","payload":"{\"type\":\"Test\",\"value\":\"20.49 °C\",\"oldType\":\"Test\",\"oldValue\":\"20.1 °C\"}","type":"ItemStateChangedEvent"}`)
+	}()
+
+	// set new state
+	state = "20.49 °C"
+	func() {
+		data := bytes.NewBufferString(state)
+		req, err := http.NewRequest(http.MethodPut, server.URL()+"/rest/items/TestItem/state", data)
+		require.NoError(t, err)
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer resp.Body.Close()
+
+		assert.Equal(t, http.StatusAccepted, resp.StatusCode)
+	}()
+
+	server.Close()
+	wg.Wait()
 }

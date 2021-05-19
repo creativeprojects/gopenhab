@@ -14,8 +14,6 @@ type eventBus struct {
 	subs       []subscription
 	subLock    sync.Locker
 	subIdCount int
-	wg         sync.WaitGroup
-	closing    sync.Mutex
 }
 
 func newEventBus() *eventBus {
@@ -23,14 +21,6 @@ func newEventBus() *eventBus {
 		subs:    make([]subscription, 0),
 		subLock: &sync.Mutex{},
 	}
-}
-
-func (b *eventBus) Close() {
-	b.closing.Lock()
-	defer b.closing.Unlock()
-
-	// wait for all the subscribers to finish their running jobs
-	b.wg.Wait()
 }
 
 // Subscribe returns an id for when you need to un-subscribe.
@@ -71,19 +61,14 @@ func (b *eventBus) findID(id int) int {
 	return -1
 }
 
-// Publish event to all subscribers (in a goroutine each)
+// Publish event to all subscribers (sequentially)
 func (b *eventBus) Publish(topic, message string) {
 	b.subLock.Lock()
 	defer b.subLock.Unlock()
 
 	for _, sub := range b.subs {
 		if sub.topic == "" || topic == sub.topic {
-			// run the callback in a goroutine
-			b.wg.Add(1)
-			go func(sub subscription, message string) {
-				defer b.wg.Done()
-				sub.callback(message)
-			}(sub, message)
+			sub.callback(message)
 		}
 	}
 }

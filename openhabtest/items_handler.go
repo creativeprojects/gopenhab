@@ -9,18 +9,21 @@ import (
 	"sync"
 
 	"github.com/creativeprojects/gopenhab/api"
+	"github.com/creativeprojects/gopenhab/event"
 )
 
 type itemsHandler struct {
 	log         Logger
 	items       map[string]api.Item
 	itemsLocker sync.Mutex
+	eventBus    *eventBus
 }
 
-func newItemsHandler(log Logger) *itemsHandler {
+func newItemsHandler(log Logger, bus *eventBus) *itemsHandler {
 	return &itemsHandler{
-		log:   log,
-		items: make(map[string]api.Item, 10),
+		log:      log,
+		items:    make(map[string]api.Item, 10),
+		eventBus: bus,
 	}
 }
 
@@ -29,8 +32,55 @@ func (h *itemsHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	encoder := json.NewEncoder(resp)
 
 	if len(parts) == 2 && req.Method == http.MethodGet {
-		// download all items
-		data := h.getItems()
+		// request is: get all items
+		h.sendAllItems(encoder, resp)
+		return
+	}
+
+	if len(parts) == 3 {
+		if req.Method == http.MethodGet {
+			// request is: get single item
+			h.sendItem(parts[2], encoder, resp)
+			return
+		}
+
+		if req.Method == http.MethodPost {
+			// request is: send command
+			h.receiveCommand(parts[2], encoder, resp, req)
+			return
+		}
+	}
+
+	if len(parts) == 4 && parts[3] == "state" {
+		if req.Method == http.MethodGet {
+			// request is: get item state
+			h.sendItemState(parts[2], encoder, resp)
+			return
+		}
+
+		if req.Method == http.MethodPut {
+			// request is: set item state
+			h.receiveState(parts[2], encoder, resp, req)
+			return
+		}
+	}
+
+	// fallback
+	resp.WriteHeader(http.StatusNotFound)
+}
+
+func (h *itemsHandler) sendAllItems(encoder *json.Encoder, resp http.ResponseWriter) {
+	data := h.getItems()
+	err := encoder.Encode(&data)
+	if err != nil {
+		h.log.Logf("cannot encode data into JSON: %+v", data)
+		resp.WriteHeader(http.StatusBadRequest)
+	}
+}
+
+func (h *itemsHandler) sendItem(name string, encoder *json.Encoder, resp http.ResponseWriter) {
+	data, ok := h.getItem(name)
+	if ok {
 		err := encoder.Encode(&data)
 		if err != nil {
 			h.log.Logf("cannot encode data into JSON: %+v", data)
@@ -38,78 +88,79 @@ func (h *itemsHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		}
 		return
 	}
+	// item not found
+	resp.WriteHeader(http.StatusNotFound)
+}
 
-	if len(parts) == 3 {
-		if req.Method == http.MethodGet {
-			// get single item
-			data, ok := h.getItem(parts[2])
-			if ok {
-				err := encoder.Encode(&data)
-				if err != nil {
-					h.log.Logf("cannot encode data into JSON: %+v", data)
-					resp.WriteHeader(http.StatusBadRequest)
-				}
-				return
-			}
-			// item not found
-			resp.WriteHeader(http.StatusNotFound)
+func (h *itemsHandler) receiveCommand(name string, encoder *json.Encoder, resp http.ResponseWriter, req *http.Request) {
+	item, ok := h.getItem(name)
+	if ok {
+		state, err := io.ReadAll(req.Body)
+		if err != nil || len(state) == 0 {
+			resp.WriteHeader(http.StatusBadRequest)
 			return
 		}
+		oldState := item.State
+		newState := string(state)
+		item.State = newState
+		h.setItem(item)
+		resp.WriteHeader(http.StatusOK)
 
-		if req.Method == http.MethodPost {
-			// send command
-			item, ok := h.getItem(parts[2])
-			if ok {
-				state, err := io.ReadAll(req.Body)
-				if err != nil || len(state) == 0 {
-					resp.WriteHeader(http.StatusBadRequest)
-					return
-				}
-				item.State = string(state)
-				h.setItem(item)
-				resp.WriteHeader(http.StatusOK)
-				return
-			}
-			// item not found
-			resp.WriteHeader(http.StatusNotFound)
+		if h.eventBus == nil {
 			return
 		}
+		// now send the events to the bus
+		topic, ev := EventString(event.NewItemReceivedCommand(name, "Test", newState))
+		h.eventBus.Publish(topic, ev)
+		topic, ev = EventString(event.NewItemReceivedState(name, "Test", newState))
+		h.eventBus.Publish(topic, ev)
+		if oldState != newState {
+			topic, ev = EventString(event.NewItemStateChanged(name, "Test", oldState, newState))
+			h.eventBus.Publish(topic, ev)
+		}
+		return
 	}
+	// item not found
+	resp.WriteHeader(http.StatusNotFound)
+}
 
-	if len(parts) == 4 && parts[3] == "state" {
-		if req.Method == http.MethodGet {
-			// get item state
-			data, ok := h.getItem(parts[2])
-			if ok {
-				resp.Write([]byte(data.State))
-				return
-			}
-			// item not found
-			resp.WriteHeader(http.StatusNotFound)
-			return
-		}
-
-		if req.Method == http.MethodPut {
-			// set item state
-			item, ok := h.getItem(parts[2])
-			if ok {
-				state, err := io.ReadAll(req.Body)
-				if err != nil || len(state) == 0 {
-					resp.WriteHeader(http.StatusBadRequest)
-					return
-				}
-				item.State = string(state)
-				h.setItem(item)
-				resp.WriteHeader(http.StatusAccepted)
-				return
-			}
-			// item not found
-			resp.WriteHeader(http.StatusNotFound)
-			return
-		}
+func (h *itemsHandler) sendItemState(name string, encoder *json.Encoder, resp http.ResponseWriter) {
+	data, ok := h.getItem(name)
+	if ok {
+		resp.Write([]byte(data.State))
+		return
 	}
+	// item not found
+	resp.WriteHeader(http.StatusNotFound)
+}
 
-	// fallback
+func (h *itemsHandler) receiveState(name string, encoder *json.Encoder, resp http.ResponseWriter, req *http.Request) {
+	item, ok := h.getItem(name)
+	if ok {
+		state, err := io.ReadAll(req.Body)
+		if err != nil || len(state) == 0 {
+			resp.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		oldState := item.State
+		newState := string(state)
+		item.State = newState
+		h.setItem(item)
+		resp.WriteHeader(http.StatusAccepted)
+
+		if h.eventBus == nil {
+			return
+		}
+		// now send the events to the bus
+		topic, ev := EventString(event.NewItemReceivedState(name, "Test", newState))
+		h.eventBus.Publish(topic, ev)
+		if oldState != newState {
+			topic, ev = EventString(event.NewItemStateChanged(name, "Test", oldState, newState))
+			h.eventBus.Publish(topic, ev)
+		}
+		return
+	}
+	// item not found
 	resp.WriteHeader(http.StatusNotFound)
 }
 
