@@ -320,7 +320,7 @@ func TestSendItemCommand(t *testing.T) {
 
 func TestSendItemCommandEvents(t *testing.T) {
 	state := "20.1 °C"
-	server := NewServer(Config{Log: t, SendEvents: true})
+	server := NewServer(Config{Log: t, SendEventsFromAPI: true})
 	defer server.Close()
 
 	server.SetItem(api.Item{
@@ -367,7 +367,7 @@ func TestSendItemCommandEvents(t *testing.T) {
 
 func TestSetItemStateEvents(t *testing.T) {
 	state := "20.1 °C"
-	server := NewServer(Config{Log: t, SendEvents: true})
+	server := NewServer(Config{Log: t, SendEventsFromAPI: true})
 	defer server.Close()
 
 	server.SetItem(api.Item{

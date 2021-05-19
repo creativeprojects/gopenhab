@@ -27,7 +27,7 @@ func NewServer(config Config) *Server {
 	done := make(chan bool)
 	bus := newEventBus()
 	autoBus := bus
-	if !config.SendEvents {
+	if !config.SendEventsFromAPI {
 		// don't send the events automatically => we don't send the instance of the events bus to handlers
 		autoBus = nil
 	}
@@ -77,7 +77,9 @@ func (s *Server) Close() {
 
 // RawEvent sends a raw JSON string event to the event bus. Example of a raw event:
 //
-// {"topic":"smarthome/items/LocalWeatherAndForecast_Current_Cloudiness/state","payload":"{\"type\":\"Quantity\",\"value\":\"20 %\"}","type":"ItemStateEvent"}
+//     {"topic":"smarthome/items/LocalWeatherAndForecast_Current_Cloudiness/state","payload":"{\"type\":\"Quantity\",\"value\":\"20 %\"}","type":"ItemStateEvent"}
+//
+// A topic parameter is needed for subscriber topic filtering, and to avoid decoding the event string unnecessarily.
 func (s *Server) RawEvent(topic, event string) {
 	s.eventBus.Publish(topic, event)
 }
