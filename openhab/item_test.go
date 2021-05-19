@@ -24,7 +24,7 @@ func TestGetItemAPI(t *testing.T) {
 		GroupNames: []string{},
 	}
 
-	server := openhabtest.NewServer(t)
+	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	defer server.Close()
 
 	server.SetItem(item)

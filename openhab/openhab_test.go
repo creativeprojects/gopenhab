@@ -51,7 +51,7 @@ data: {"topic":"smarthome/items/TestSwitch/statechanged","payload":"{\"type\":\"
 
 func TestStartEvent(t *testing.T) {
 	called := false
-	server := openhabtest.NewServer(t)
+	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	client := NewClient(Config{
 		URL: server.URL(),
 	})
@@ -79,7 +79,7 @@ func TestStartEvent(t *testing.T) {
 
 func TestStopEvent(t *testing.T) {
 	called := false
-	server := openhabtest.NewServer(t)
+	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	client := NewClient(Config{
 		URL: server.URL(),
 	})
