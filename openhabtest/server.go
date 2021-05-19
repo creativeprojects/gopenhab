@@ -10,41 +10,37 @@ import (
 	"github.com/creativeprojects/gopenhab/event"
 )
 
-// Server is a mock openHAB instance to use in tests
-//
-// Please note you should only connect ONE client per server.
-// The long running event bus request can only be polled by one client at a time.
-// It seems very unlikely to need more than one client at a time in a unit test.
+// Server is a mock openHAB instance to use in tests.
 type Server struct {
 	log         Logger
 	server      *httptest.Server
-	eventChan   chan string
-	closing     chan bool
+	eventBus    *eventBus
 	closeLocker sync.Mutex
 	items       *itemsHandler
+	done        chan bool
+	closed      bool
 }
 
 // NewServer creates a new mock openHAB instance to use in tests
-// TODO: replace the event channel by a proper pubsub model
 func NewServer(log Logger) *Server {
 	if log == nil {
 		log = dummyLogger{}
 	}
-	eventChan := make(chan string)
-	closing := make(chan bool)
+	done := make(chan bool)
+	bus := newEventBus()
 	items := newItemsHandler(log)
 	routes := []route{
-		{"events", newEventsHandler(eventChan, closing)},
+		{"events", newEventsHandler(bus, done)},
 		{"items", items},
 	}
 
 	server := httptest.NewServer(newRootHandler(log, routes))
 	return &Server{
-		log:       log,
-		server:    server,
-		eventChan: eventChan,
-		closing:   closing,
-		items:     items,
+		log:      log,
+		server:   server,
+		eventBus: bus,
+		items:    items,
+		done:     done,
 	}
 }
 
@@ -58,15 +54,21 @@ func (s *Server) URL() string {
 }
 
 // Close the mock openHAB server. The call will also close any long running request to the event bus API.
+// The method can safely be called multiple times.
 func (s *Server) Close() {
 	s.closeLocker.Lock()
 	defer s.closeLocker.Unlock()
 
-	if s.closing != nil {
-		close(s.closing)
-		s.closing = nil
+	if s.closed {
+		return
 	}
+	s.closed = true
+
+	close(s.done)
+	s.eventBus.Close()
+
 	if s.server != nil {
+		s.server.CloseClientConnections()
 		s.server.Close()
 		s.server = nil
 	}
@@ -76,7 +78,7 @@ func (s *Server) Close() {
 //
 // {"topic":"smarthome/items/LocalWeatherAndForecast_Current_Cloudiness/state","payload":"{\"type\":\"Quantity\",\"value\":\"20 %\"}","type":"ItemStateEvent"}
 func (s *Server) RawEvent(event string) {
-	s.eventChan <- event
+	s.eventBus.Publish("", event)
 }
 
 // Event sends a event.Event to the mock openHAB event bus

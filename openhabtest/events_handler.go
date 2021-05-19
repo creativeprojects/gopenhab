@@ -2,7 +2,6 @@ package openhabtest
 
 import (
 	"net/http"
-	"sync"
 )
 
 var (
@@ -11,31 +10,33 @@ var (
 )
 
 type eventsHandler struct {
-	eventChan chan string
-	closing   chan bool
-	safe      sync.Mutex
+	eventBus *eventBus
+	done     <-chan bool
 }
 
-func newEventsHandler(eventChan chan string, closing chan bool) *eventsHandler {
+func newEventsHandler(bus *eventBus, done <-chan bool) *eventsHandler {
 	return &eventsHandler{
-		eventChan: eventChan,
-		closing:   closing,
+		eventBus: bus,
+		done:     done,
 	}
 }
 
 func (h *eventsHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
-	h.safe.Lock()
-	defer h.safe.Unlock()
-
 	resp.Header().Add("Content-Type", "text/event-stream")
+
+	event := make(chan string)
+	subId := h.eventBus.Subscribe("", func(message string) {
+		event <- message
+	})
+	defer h.eventBus.Unsubscribe(subId)
 
 	for {
 		select {
-		case <-h.closing:
+		case <-h.done:
 			return
-		case event := <-h.eventChan:
+		case message := <-event:
 			resp.Write(streamPrefix)
-			resp.Write([]byte(event))
+			resp.Write([]byte(message))
 			resp.Write(streamSuffix)
 			if flusher, ok := resp.(http.Flusher); ok {
 				flusher.Flush()
