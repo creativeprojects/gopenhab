@@ -70,10 +70,7 @@ func TestCanReceiveRawEvents(t *testing.T) {
 		server.RawEvent("", rawEvent)
 	}
 
-	// stop the server in 50ms
-	time.AfterFunc(50*time.Millisecond, func() {
-		server.Close()
-	})
+	server.Close()
 
 	wg.Wait()
 }
@@ -127,10 +124,7 @@ func TestCanEncodeEvents(t *testing.T) {
 		server.Event(ev.e)
 	}
 
-	// wait a bit before stopping the server
-	// time.AfterFunc(20*time.Millisecond, func() {
 	server.Close()
-	// })
 
 	wg.Wait()
 }
@@ -351,6 +345,8 @@ func TestSendItemCommandEvents(t *testing.T) {
 	// set new state
 	state = "20.49 °C"
 	func() {
+		time.Sleep(10 * time.Millisecond)
+
 		data := bytes.NewBufferString(state)
 		req, err := http.NewRequest(http.MethodPost, server.URL()+"/rest/items/TestItem", data)
 		require.NoError(t, err)
@@ -397,6 +393,8 @@ func TestSetItemStateEvents(t *testing.T) {
 	// set new state
 	state = "20.49 °C"
 	func() {
+		time.Sleep(10 * time.Millisecond)
+
 		data := bytes.NewBufferString(state)
 		req, err := http.NewRequest(http.MethodPut, server.URL()+"/rest/items/TestItem/state", data)
 		require.NoError(t, err)

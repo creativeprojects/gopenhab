@@ -2,6 +2,7 @@ package openhabtest
 
 import (
 	"net/http"
+	"sync"
 )
 
 var (
@@ -24,6 +25,34 @@ func newEventsHandler(bus *eventBus, done <-chan bool) *eventsHandler {
 func (h *eventsHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	resp.Header().Add("Content-Type", "text/event-stream")
 
+	subId := h.eventBus.Subscribe("", func(message string) {
+		resp.Write(streamPrefix)
+		resp.Write([]byte(message))
+		resp.Write(streamSuffix)
+
+		if flusher, ok := resp.(http.Flusher); ok {
+			flusher.Flush()
+		}
+	})
+	defer h.eventBus.Unsubscribe(subId)
+
+	<-h.done
+}
+
+func (h *eventsHandler) AsyncServeHTTP(resp http.ResponseWriter, req *http.Request) {
+	resp.Header().Add("Content-Type", "text/event-stream")
+
+	sendEvent := func(message string) {
+		resp.Write(streamPrefix)
+		resp.Write([]byte(message))
+		resp.Write(streamSuffix)
+		if flusher, ok := resp.(http.Flusher); ok {
+			flusher.Flush()
+		}
+	}
+
+	wg := sync.WaitGroup{}
+	wg.Wait()
 	event := make(chan string)
 	subId := h.eventBus.Subscribe("", func(message string) {
 		event <- message
@@ -31,15 +60,17 @@ func (h *eventsHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	defer h.eventBus.Unsubscribe(subId)
 
 	for {
+		// first select: we wait for either data or the exit signal
 		select {
-		case <-h.done:
-			return
 		case message := <-event:
-			resp.Write(streamPrefix)
-			resp.Write([]byte(message))
-			resp.Write(streamSuffix)
-			if flusher, ok := resp.(http.Flusher); ok {
-				flusher.Flush()
+			sendEvent(message)
+		case <-h.done:
+			// got an exit signal: but now we need to drain the event channel before leaving
+			select {
+			case message := <-event:
+				sendEvent(message)
+			default:
+				return
 			}
 		}
 	}
