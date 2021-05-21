@@ -1,4 +1,6 @@
-/examples
+/examples/*.json
+/examples/*.txt
+!/examples/items30.json
 /openhab30_*
 /main.go
 /coverage.out

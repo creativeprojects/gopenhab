@@ -1,0 +1,1341 @@
+[
+  {
+    "link": "http://localhost:8083/rest/items/Shutter_GF_Living",
+    "state": "NULL",
+    "editable": false,
+    "type": "Rollershutter",
+    "name": "Shutter_GF_Living",
+    "label": "Livingroom",
+    "tags": ["Blinds"],
+    "groupNames": ["GF_Living", "Shutters"]
+  },
+  {
+    "members": [],
+    "link": "http://localhost:8083/rest/items/Weather_Chart",
+    "state": "NULL",
+    "editable": false,
+    "type": "Group",
+    "name": "Weather_Chart",
+    "tags": [],
+    "groupNames": []
+  },
+  {
+    "members": [],
+    "link": "http://localhost:8083/rest/items/Status",
+    "state": "NULL",
+    "editable": false,
+    "type": "Group",
+    "name": "Status",
+    "tags": [],
+    "groupNames": []
+  },
+  {
+    "members": [],
+    "link": "http://localhost:8083/rest/items/Thermostat",
+    "state": "NULL",
+    "editable": false,
+    "type": "Group",
+    "name": "Thermostat",
+    "label": "Thermostat",
+    "category": "temperature",
+    "tags": ["Thermostat"],
+    "groupNames": []
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Light_FF_Daughter_Ceiling",
+    "state": "OFF",
+    "editable": false,
+    "type": "Switch",
+    "name": "Light_FF_Daughter_Ceiling",
+    "label": "Ceiling",
+    "tags": ["Light"],
+    "groupNames": ["FF_Daughter", "Lights"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Window_FF_Bed",
+    "state": "CLOSED",
+    "transformedState": "closed",
+    "stateDescription": {
+      "pattern": "MAP(en.map):%s",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": false,
+    "type": "Contact",
+    "name": "Window_FF_Bed",
+    "label": "Bedroom",
+    "tags": ["Window"],
+    "groupNames": ["FF_Bed", "Windows"]
+  },
+  {
+    "members": [],
+    "link": "http://localhost:8083/rest/items/GF_Toilet",
+    "state": "NULL",
+    "editable": false,
+    "type": "Group",
+    "name": "GF_Toilet",
+    "label": "Toilet",
+    "category": "bath",
+    "tags": ["Bathroom"],
+    "groupNames": ["gGF"]
+  },
+  {
+    "members": [],
+    "link": "http://localhost:8083/rest/items/FF_Corridor",
+    "state": "NULL",
+    "editable": false,
+    "type": "Group",
+    "name": "FF_Corridor",
+    "label": "Corridor",
+    "category": "corridor",
+    "tags": ["Corridor"],
+    "groupNames": ["gFF"]
+  },
+  {
+    "members": [],
+    "link": "http://localhost:8083/rest/items/FF_Office",
+    "state": "NULL",
+    "editable": false,
+    "type": "Group",
+    "name": "FF_Office",
+    "label": "Office",
+    "category": "office",
+    "tags": ["Room"],
+    "groupNames": ["gFF"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Weather_Chart_Period",
+    "state": "NULL",
+    "editable": false,
+    "type": "Number",
+    "name": "Weather_Chart_Period",
+    "label": "Chart Period",
+    "tags": [],
+    "groupNames": []
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Light_C_Staircase",
+    "state": "OFF",
+    "editable": false,
+    "type": "Switch",
+    "name": "Light_C_Staircase",
+    "label": "Staircase",
+    "tags": ["Light"],
+    "groupNames": ["gC", "Lights"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Light_FF_Office_Ceiling",
+    "state": "OFF",
+    "editable": false,
+    "type": "Switch",
+    "name": "Light_FF_Office_Ceiling",
+    "label": "Ceiling",
+    "tags": ["Light"],
+    "groupNames": ["FF_Office", "Lights"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Light_FF_Bed_Ceiling",
+    "state": "OFF",
+    "editable": false,
+    "type": "Switch",
+    "name": "Light_FF_Bed_Ceiling",
+    "label": "Ceiling",
+    "tags": ["Light"],
+    "groupNames": ["FF_Bed", "Lights"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Heating_GF_Corridor",
+    "state": "OFF",
+    "editable": false,
+    "type": "Switch",
+    "name": "Heating_GF_Corridor",
+    "label": "Corridor",
+    "category": "heating",
+    "tags": ["HVAC"],
+    "groupNames": ["GF_Corridor", "Heating"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Sun_Azimuth",
+    "state": "284.9626891614299 °",
+    "stateDescription": {
+      "pattern": "%.2f %unit%",
+      "readOnly": true,
+      "options": []
+    },
+    "editable": false,
+    "type": "Number:Angle",
+    "name": "Sun_Azimuth",
+    "label": "Sun Azimuth",
+    "category": "sun",
+    "tags": [],
+    "groupNames": []
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Temperature_GF_Kitchen",
+    "state": "19.9",
+    "stateDescription": {
+      "pattern": "%.1f °C",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": false,
+    "type": "Number",
+    "name": "Temperature_GF_Kitchen",
+    "label": "Kitchen",
+    "category": "temperature",
+    "tags": ["Measurement", "Temperature", "CurrentTemperature"],
+    "groupNames": ["Temperature", "GF_Kitchen", "Thermostat"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Weather_LastUpdate",
+    "state": "NULL",
+    "stateDescription": {
+      "pattern": "%1$ta %1$tR",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": false,
+    "type": "DateTime",
+    "name": "Weather_LastUpdate",
+    "label": "Last Update",
+    "category": "clock",
+    "tags": [],
+    "groupNames": []
+  },
+  {
+    "members": [],
+    "link": "http://localhost:8083/rest/items/GF_Corridor",
+    "state": "NULL",
+    "editable": false,
+    "type": "Group",
+    "name": "GF_Corridor",
+    "label": "Corridor",
+    "category": "corridor",
+    "tags": ["Corridor"],
+    "groupNames": ["gGF"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Shutter_all",
+    "state": "NULL",
+    "editable": false,
+    "type": "Switch",
+    "name": "Shutter_all",
+    "tags": [],
+    "groupNames": []
+  },
+  {
+    "members": [],
+    "groupType": "Contact",
+    "function": { "name": "OR", "params": ["OPEN", "CLOSED"] },
+    "link": "http://localhost:8083/rest/items/Windows",
+    "state": "OPEN",
+    "stateDescription": { "pattern": "(%d)", "readOnly": false, "options": [] },
+    "editable": false,
+    "type": "Group",
+    "name": "Windows",
+    "label": "Open windows",
+    "category": "contact",
+    "tags": [],
+    "groupNames": []
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Window_FF_Office_Window",
+    "state": "CLOSED",
+    "transformedState": "closed",
+    "stateDescription": {
+      "pattern": "MAP(en.map):%s",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": false,
+    "type": "Contact",
+    "name": "Window_FF_Office_Window",
+    "label": "Office Window",
+    "tags": ["Window"],
+    "groupNames": ["FF_Office", "Windows"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Temperature_GF_Living",
+    "state": "18.6",
+    "stateDescription": {
+      "pattern": "%.1f °C",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": false,
+    "type": "Number",
+    "name": "Temperature_GF_Living",
+    "label": "Living Room",
+    "category": "temperature",
+    "tags": ["Measurement", "Temperature"],
+    "groupNames": ["Temperature", "GF_Living"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/DemoBlinds",
+    "state": "NULL",
+    "stateDescription": {
+      "pattern": "%d %%",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": false,
+    "type": "Dimmer",
+    "name": "DemoBlinds",
+    "label": "Blinds",
+    "category": "rollershutter",
+    "tags": [],
+    "groupNames": []
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Window_GF_Kitchen",
+    "state": "OPEN",
+    "transformedState": "open",
+    "stateDescription": {
+      "pattern": "MAP(en.map):%s",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": false,
+    "type": "Contact",
+    "name": "Window_GF_Kitchen",
+    "label": "Kitchen",
+    "tags": ["Window"],
+    "groupNames": ["GF_Kitchen", "Windows"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Light_GF_Toilet_Mirror",
+    "state": "ON",
+    "editable": false,
+    "type": "Switch",
+    "name": "Light_GF_Toilet_Mirror",
+    "label": "Mirror",
+    "tags": ["Light"],
+    "groupNames": ["GF_Toilet", "Lights"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Moon_Azimuth",
+    "state": "51.25365702026231 °",
+    "stateDescription": {
+      "pattern": "%.2f %unit%",
+      "readOnly": true,
+      "options": []
+    },
+    "editable": false,
+    "type": "Number:Angle",
+    "name": "Moon_Azimuth",
+    "label": "Moon Azimuth",
+    "category": "moon",
+    "tags": [],
+    "groupNames": []
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Temperature_FF_Son",
+    "state": "21.2",
+    "stateDescription": {
+      "pattern": "%.1f °C",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": false,
+    "type": "Number",
+    "name": "Temperature_FF_Son",
+    "label": "Oliver\u0027s Room",
+    "category": "temperature",
+    "tags": ["Measurement", "Temperature"],
+    "groupNames": ["Temperature", "FF_Son"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Light_C_Washing_Ceiling",
+    "state": "ON",
+    "editable": false,
+    "type": "Switch",
+    "name": "Light_C_Washing_Ceiling",
+    "label": "Washing",
+    "tags": ["Light"],
+    "groupNames": ["gC", "Lights"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Light_FF_Son_Ceiling",
+    "state": "OFF",
+    "editable": false,
+    "type": "Switch",
+    "name": "Light_FF_Son_Ceiling",
+    "label": "Ceiling",
+    "tags": ["Light"],
+    "groupNames": ["FF_Son", "Lights"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Wifi_Level",
+    "state": "0",
+    "stateDescription": { "pattern": "%d/4", "readOnly": false, "options": [] },
+    "editable": false,
+    "type": "Number",
+    "name": "Wifi_Level",
+    "label": "Wifi Level",
+    "category": "signal",
+    "tags": [],
+    "groupNames": ["FF_Office"]
+  },
+  {
+    "members": [],
+    "groupType": "Switch",
+    "function": { "name": "OR", "params": ["ON", "OFF"] },
+    "link": "http://localhost:8083/rest/items/Heating",
+    "state": "ON",
+    "stateDescription": { "pattern": "(%d)", "readOnly": false, "options": [] },
+    "editable": false,
+    "type": "Group",
+    "name": "Heating",
+    "label": "No. of Active Heatings",
+    "category": "heating",
+    "tags": [],
+    "groupNames": []
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Volume",
+    "state": "NULL",
+    "stateDescription": {
+      "pattern": "%.1f %%",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": false,
+    "type": "Dimmer",
+    "name": "Volume",
+    "label": "Volume",
+    "tags": [],
+    "groupNames": []
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Shutter_FF_Bed",
+    "state": "NULL",
+    "editable": false,
+    "type": "Rollershutter",
+    "name": "Shutter_FF_Bed",
+    "label": "Bedroom",
+    "tags": ["Blinds"],
+    "groupNames": ["FF_Bed", "Shutters"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Temperature_FF_Bed",
+    "state": "18.6",
+    "stateDescription": {
+      "pattern": "%.1f °C",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": false,
+    "type": "Number",
+    "name": "Temperature_FF_Bed",
+    "label": "Bedroom",
+    "category": "temperature",
+    "tags": ["Measurement", "Temperature"],
+    "groupNames": ["Temperature", "FF_Bed"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Light_FF_Corridor_Ceiling",
+    "state": "ON",
+    "editable": false,
+    "type": "Switch",
+    "name": "Light_FF_Corridor_Ceiling",
+    "label": "Corridor",
+    "tags": ["Light"],
+    "groupNames": ["FF_Corridor", "Lights"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Sun_Elevation",
+    "state": "7.709169093079609 °",
+    "stateDescription": {
+      "pattern": "%.2f %unit%",
+      "readOnly": true,
+      "options": []
+    },
+    "editable": false,
+    "type": "Number:Angle",
+    "name": "Sun_Elevation",
+    "label": "Sun Elevation",
+    "category": "sun",
+    "tags": [],
+    "groupNames": []
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Light_C_Corridor_Ceiling",
+    "state": "OFF",
+    "editable": false,
+    "type": "Switch",
+    "name": "Light_C_Corridor_Ceiling",
+    "label": "Ceiling",
+    "tags": ["Light"],
+    "groupNames": ["gC", "Lights"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Window_GF_Frontdoor",
+    "state": "OPEN",
+    "transformedState": "open",
+    "stateDescription": {
+      "pattern": "MAP(en.map):%s",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": false,
+    "type": "Contact",
+    "name": "Window_GF_Frontdoor",
+    "label": "Frontdoor",
+    "category": "frontdoor",
+    "tags": ["FrontDoor"],
+    "groupNames": ["GF_Corridor", "Windows"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/RGBLight",
+    "state": "NULL",
+    "editable": false,
+    "type": "Color",
+    "name": "RGBLight",
+    "label": "RGB Light",
+    "category": "slider",
+    "tags": [],
+    "groupNames": []
+  },
+  {
+    "link": "http://localhost:8083/rest/items/DemoLocation",
+    "state": "52.5200066,13.4049540",
+    "editable": false,
+    "type": "Location",
+    "name": "DemoLocation",
+    "label": "Brandenburg Gate Berlin",
+    "tags": [],
+    "groupNames": []
+  },
+  {
+    "members": [],
+    "link": "http://localhost:8083/rest/items/FF_Daughter",
+    "state": "NULL",
+    "editable": false,
+    "type": "Group",
+    "name": "FF_Daughter",
+    "label": "Amelia\u0027s Room",
+    "category": "girl_1",
+    "tags": ["Bedroom"],
+    "groupNames": ["gFF"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Heating_FF_Bath",
+    "state": "ON",
+    "editable": false,
+    "type": "Switch",
+    "name": "Heating_FF_Bath",
+    "label": "Bath",
+    "category": "heating",
+    "tags": ["HVAC"],
+    "groupNames": ["FF_Bath", "Heating"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Light_GF_Kitchen_Table",
+    "state": "OFF",
+    "editable": false,
+    "type": "Switch",
+    "name": "Light_GF_Kitchen_Table",
+    "label": "Table",
+    "tags": ["Light"],
+    "groupNames": ["GF_Kitchen", "Lights"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Light_GF_Living_Table",
+    "state": "0",
+    "editable": false,
+    "type": "Dimmer",
+    "name": "Light_GF_Living_Table",
+    "label": "Table",
+    "tags": ["Light", "Lighting"],
+    "groupNames": ["GF_Living", "Lights"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Window_GF_Toilet",
+    "state": "CLOSED",
+    "transformedState": "closed",
+    "stateDescription": {
+      "pattern": "MAP(en.map):%s",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": false,
+    "type": "Contact",
+    "name": "Window_GF_Toilet",
+    "label": "Toilet",
+    "tags": ["Window"],
+    "groupNames": ["GF_Toilet", "Windows"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Light_GF_Corridor_Wardrobe",
+    "state": "ON",
+    "editable": false,
+    "type": "Switch",
+    "name": "Light_GF_Corridor_Wardrobe",
+    "label": "Wardrobe",
+    "tags": ["Light"],
+    "groupNames": ["GF_Corridor", "Lights"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Heating_FF_Bed",
+    "state": "OFF",
+    "editable": false,
+    "type": "Switch",
+    "name": "Heating_FF_Bed",
+    "label": "Bedroom",
+    "category": "heating",
+    "tags": ["HVAC"],
+    "groupNames": ["FF_Bed", "Heating"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Garage_Door",
+    "state": "OPEN",
+    "transformedState": "open",
+    "stateDescription": {
+      "pattern": "MAP(en.map):%s",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": false,
+    "type": "Contact",
+    "name": "Garage_Door",
+    "label": "Garage Door",
+    "category": "garagedoor",
+    "tags": ["GarageDoor"],
+    "groupNames": ["Garden", "Windows"]
+  },
+  {
+    "members": [],
+    "link": "http://localhost:8083/rest/items/gFF",
+    "state": "NULL",
+    "editable": false,
+    "type": "Group",
+    "name": "gFF",
+    "label": "First Floor",
+    "category": "firstfloor",
+    "tags": ["FirstFloor"],
+    "groupNames": []
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Heating_FF_Daughter",
+    "state": "OFF",
+    "editable": false,
+    "type": "Switch",
+    "name": "Heating_FF_Daughter",
+    "label": "Amelia\u0027s Room",
+    "category": "heating",
+    "tags": ["HVAC"],
+    "groupNames": ["FF_Daughter", "Heating"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Weather_Temp_Min",
+    "state": "NULL",
+    "stateDescription": {
+      "pattern": "%.1f °C",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": false,
+    "type": "Number",
+    "name": "Weather_Temp_Min",
+    "label": "Todays Minimum",
+    "category": "temperature",
+    "tags": [],
+    "groupNames": ["Weather", "Weather_Chart"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Window_FF_Office_Door",
+    "state": "CLOSED",
+    "transformedState": "closed",
+    "stateDescription": {
+      "pattern": "MAP(en.map):%s",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": false,
+    "type": "Contact",
+    "name": "Window_FF_Office_Door",
+    "label": "Balcony Door",
+    "category": "door",
+    "tags": ["Door"],
+    "groupNames": ["FF_Office", "Windows"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Heating_FF_Office",
+    "state": "OFF",
+    "editable": false,
+    "type": "Switch",
+    "name": "Heating_FF_Office",
+    "label": "Office",
+    "category": "heating",
+    "tags": ["HVAC"],
+    "groupNames": ["FF_Office", "Heating"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/DimmedLight",
+    "state": "NULL",
+    "stateDescription": {
+      "pattern": "%d %%",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": false,
+    "type": "Dimmer",
+    "name": "DimmedLight",
+    "label": "Dimmer",
+    "category": "slider",
+    "tags": [],
+    "groupNames": []
+  },
+  {
+    "members": [],
+    "link": "http://localhost:8083/rest/items/FF_Bath",
+    "state": "NULL",
+    "editable": false,
+    "type": "Group",
+    "name": "FF_Bath",
+    "label": "Bathroom",
+    "category": "bath",
+    "tags": ["Bathroom"],
+    "groupNames": ["gFF"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Shutter_GF_Kitchen",
+    "state": "NULL",
+    "editable": false,
+    "type": "Rollershutter",
+    "name": "Shutter_GF_Kitchen",
+    "label": "Kitchen",
+    "tags": ["Blinds"],
+    "groupNames": ["GF_Kitchen", "Shutters"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Light_C_Workshop",
+    "state": "OFF",
+    "editable": false,
+    "type": "Switch",
+    "name": "Light_C_Workshop",
+    "label": "Workshop",
+    "tags": ["Light", "Lighting"],
+    "groupNames": ["gC", "Lights"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Heating_GF_Toilet",
+    "state": "ON",
+    "editable": false,
+    "type": "Switch",
+    "name": "Heating_GF_Toilet",
+    "label": "Toilet",
+    "category": "heating",
+    "tags": ["HVAC"],
+    "groupNames": ["GF_Toilet", "Heating"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Heating_FF_Son",
+    "state": "OFF",
+    "editable": false,
+    "type": "Switch",
+    "name": "Heating_FF_Son",
+    "label": "Oliver\u0027s Room",
+    "category": "heating",
+    "tags": ["HVAC"],
+    "groupNames": ["FF_Son", "Heating"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Light_GF_Kitchen_Ceiling",
+    "state": "OFF",
+    "editable": false,
+    "type": "Switch",
+    "name": "Light_GF_Kitchen_Ceiling",
+    "label": "Ceiling",
+    "tags": ["Light"],
+    "groupNames": ["GF_Kitchen", "Lights"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Shutter_FF_Office_Window",
+    "state": "NULL",
+    "editable": false,
+    "type": "Rollershutter",
+    "name": "Shutter_FF_Office_Window",
+    "label": "Office Window",
+    "tags": ["Blinds"],
+    "groupNames": ["FF_Office", "Shutters"]
+  },
+  {
+    "members": [],
+    "link": "http://localhost:8083/rest/items/GF_Kitchen",
+    "state": "NULL",
+    "editable": false,
+    "type": "Group",
+    "name": "GF_Kitchen",
+    "label": "Kitchen",
+    "category": "kitchen",
+    "tags": ["Kitchen"],
+    "groupNames": ["gGF"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Window_GF_Living",
+    "state": "OPEN",
+    "transformedState": "open",
+    "stateDescription": {
+      "pattern": "MAP(en.map):%s",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": false,
+    "type": "Contact",
+    "name": "Window_GF_Living",
+    "label": "Terrace door",
+    "category": "door",
+    "tags": ["Door"],
+    "groupNames": ["GF_Living", "Windows"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Sunset_Time",
+    "state": "2021-05-01T19:29:00.000+0100",
+    "stateDescription": {
+      "pattern": "%1$tH:%1$tM",
+      "readOnly": true,
+      "options": []
+    },
+    "editable": false,
+    "type": "DateTime",
+    "name": "Sunset_Time",
+    "label": "Sunset",
+    "category": "sunset",
+    "tags": [],
+    "groupNames": []
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Temperature_GF_Toilet",
+    "state": "18.7",
+    "stateDescription": {
+      "pattern": "%.1f °C",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": false,
+    "type": "Number",
+    "name": "Temperature_GF_Toilet",
+    "label": "Toilet",
+    "category": "temperature",
+    "tags": ["Measurement", "Temperature"],
+    "groupNames": ["Temperature", "GF_Toilet"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/DemoSwitch",
+    "state": "NULL",
+    "editable": false,
+    "type": "Switch",
+    "name": "DemoSwitch",
+    "label": "Switch",
+    "tags": [],
+    "groupNames": []
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Temperature_FF_Daughter",
+    "state": "19.4",
+    "stateDescription": {
+      "pattern": "%.1f °C",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": false,
+    "type": "Number",
+    "name": "Temperature_FF_Daughter",
+    "label": "Amelia\u0027s Room",
+    "category": "temperature",
+    "tags": ["Measurement", "Temperature"],
+    "groupNames": ["Temperature", "FF_Daughter"]
+  },
+  {
+    "members": [],
+    "link": "http://localhost:8083/rest/items/gGF",
+    "state": "NULL",
+    "editable": false,
+    "type": "Group",
+    "name": "gGF",
+    "label": "Ground Floor",
+    "category": "groundfloor",
+    "tags": ["GroundFloor"],
+    "groupNames": []
+  },
+  {
+    "members": [],
+    "link": "http://localhost:8083/rest/items/Shutters",
+    "state": "NULL",
+    "editable": false,
+    "type": "Group",
+    "name": "Shutters",
+    "tags": [],
+    "groupNames": []
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Light_GF_Toilet_Ceiling",
+    "state": "OFF",
+    "editable": false,
+    "type": "Switch",
+    "name": "Light_GF_Toilet_Ceiling",
+    "label": "Ceiling",
+    "tags": ["Light"],
+    "groupNames": ["GF_Toilet", "Lights"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Light_FF_Bath_Mirror",
+    "state": "ON",
+    "editable": false,
+    "type": "Switch",
+    "name": "Light_FF_Bath_Mirror",
+    "label": "Mirror",
+    "tags": ["Light"],
+    "groupNames": ["FF_Bath", "Lights"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Weather_Temp_Max",
+    "state": "NULL",
+    "stateDescription": {
+      "pattern": "%.1f °C",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": false,
+    "type": "Number",
+    "name": "Weather_Temp_Max",
+    "label": "Todays Maximum",
+    "category": "temperature",
+    "tags": [],
+    "groupNames": ["Weather", "Weather_Chart"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Sunrise_Time",
+    "state": "2021-05-01T04:36:00.000+0100",
+    "stateDescription": {
+      "pattern": "%1$tH:%1$tM",
+      "readOnly": true,
+      "options": []
+    },
+    "editable": false,
+    "type": "DateTime",
+    "name": "Sunrise_Time",
+    "label": "Sunrise",
+    "category": "sunrise",
+    "tags": [],
+    "groupNames": []
+  },
+  {
+    "members": [],
+    "link": "http://localhost:8083/rest/items/Garden",
+    "state": "NULL",
+    "editable": false,
+    "type": "Group",
+    "name": "Garden",
+    "label": "Garden",
+    "category": "garden",
+    "tags": ["Garden"],
+    "groupNames": []
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Light_FF_Bath_Ceiling",
+    "state": "ON",
+    "editable": false,
+    "type": "Switch",
+    "name": "Light_FF_Bath_Ceiling",
+    "label": "Ceiling",
+    "tags": ["Light"],
+    "groupNames": ["FF_Bath", "Lights"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Temperature_Setpoint",
+    "state": "22",
+    "stateDescription": {
+      "pattern": "%.1f °C",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": false,
+    "type": "Number",
+    "name": "Temperature_Setpoint",
+    "label": "Temperature",
+    "category": "temperature",
+    "tags": ["Temperature", "homekit:TargetTemperature", "Setpoint"],
+    "groupNames": ["Thermostat"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/DemoShutter",
+    "state": "NULL",
+    "editable": false,
+    "type": "Rollershutter",
+    "name": "DemoShutter",
+    "label": "Roller Shutter",
+    "tags": [],
+    "groupNames": []
+  },
+  {
+    "link": "http://localhost:8083/rest/items/ImageURL",
+    "state": "https://www.placecage.com/320/240",
+    "stateDescription": { "pattern": "%s", "readOnly": false, "options": [] },
+    "editable": false,
+    "type": "String",
+    "name": "ImageURL",
+    "label": "Image URL",
+    "tags": [],
+    "groupNames": []
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Radio_Station",
+    "state": "NULL",
+    "editable": false,
+    "type": "Number",
+    "name": "Radio_Station",
+    "label": "Radio",
+    "category": "network",
+    "tags": [],
+    "groupNames": []
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Light_Garden_Garage",
+    "state": "ON",
+    "editable": false,
+    "type": "Switch",
+    "name": "Light_Garden_Garage",
+    "label": "Garage",
+    "tags": ["Light", "Lighting"],
+    "groupNames": ["Garden", "Lights"]
+  },
+  {
+    "members": [],
+    "link": "http://localhost:8083/rest/items/Weather",
+    "state": "NULL",
+    "editable": false,
+    "type": "Group",
+    "name": "Weather",
+    "label": "Weather",
+    "category": "sun",
+    "tags": [],
+    "groupNames": []
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Thermostat_Mode",
+    "state": "NULL",
+    "stateDescription": { "pattern": "%s", "readOnly": false, "options": [] },
+    "editable": false,
+    "type": "String",
+    "name": "Thermostat_Mode",
+    "label": "Thermostat Mode",
+    "category": "temperature",
+    "tags": ["homekit:TargetHeatingCoolingMode", "Control"],
+    "groupNames": ["Thermostat"]
+  },
+  {
+    "members": [],
+    "link": "http://localhost:8083/rest/items/gC",
+    "state": "NULL",
+    "editable": false,
+    "type": "Group",
+    "name": "gC",
+    "label": "Cellar",
+    "category": "cellar",
+    "tags": ["Basement"],
+    "groupNames": []
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Moon_Phase",
+    "state": "WANING_GIBBOUS",
+    "stateDescription": {
+      "pattern": "%s",
+      "readOnly": true,
+      "options": [
+        { "value": "NEW", "label": "New moon" },
+        { "value": "WAXING_CRESCENT", "label": "Waxing crescent" },
+        { "value": "FIRST_QUARTER", "label": "First quarter" },
+        { "value": "WAXING_GIBBOUS", "label": "Waxing gibbous" },
+        { "value": "FULL", "label": "Full moon" },
+        { "value": "WANING_GIBBOUS", "label": "Waning gibbous" },
+        { "value": "THIRD_QUARTER", "label": "Third quarter" },
+        { "value": "WANING_CRESCENT", "label": "Waning crescent" }
+      ]
+    },
+    "commandDescription": {
+      "commandOptions": [
+        { "command": "NEW", "label": "New moon" },
+        { "command": "WAXING_CRESCENT", "label": "Waxing crescent" },
+        { "command": "FIRST_QUARTER", "label": "First quarter" },
+        { "command": "WAXING_GIBBOUS", "label": "Waxing gibbous" },
+        { "command": "FULL", "label": "Full moon" },
+        { "command": "WANING_GIBBOUS", "label": "Waning gibbous" },
+        { "command": "THIRD_QUARTER", "label": "Third quarter" },
+        { "command": "WANING_CRESCENT", "label": "Waning crescent" }
+      ]
+    },
+    "editable": false,
+    "type": "String",
+    "name": "Moon_Phase",
+    "label": "Moon Phase",
+    "category": "moon",
+    "tags": [],
+    "groupNames": []
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Shutter_FF_Bath",
+    "state": "NULL",
+    "editable": false,
+    "type": "Rollershutter",
+    "name": "Shutter_FF_Bath",
+    "label": "Bath",
+    "tags": ["Blinds"],
+    "groupNames": ["FF_Bath", "Shutters"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Shutter_FF_Office_Door",
+    "state": "NULL",
+    "editable": false,
+    "type": "Rollershutter",
+    "name": "Shutter_FF_Office_Door",
+    "label": "Office Door",
+    "tags": ["Blinds"],
+    "groupNames": ["FF_Office", "Shutters"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Light_Garden_Terrace",
+    "state": "ON",
+    "editable": false,
+    "type": "Switch",
+    "name": "Light_Garden_Terrace",
+    "label": "Terrace",
+    "tags": ["Light"],
+    "groupNames": ["Garden", "Lights"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Heating_GF_Living",
+    "state": "OFF",
+    "editable": false,
+    "type": "Switch",
+    "name": "Heating_GF_Living",
+    "label": "Livingroom",
+    "category": "heating",
+    "tags": ["HVAC"],
+    "groupNames": ["GF_Living", "Heating"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Weather_Temperature",
+    "state": "NULL",
+    "stateDescription": {
+      "pattern": "%.1f °C",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": false,
+    "type": "Number",
+    "name": "Weather_Temperature",
+    "label": "Outside Temperature",
+    "category": "temperature",
+    "tags": [],
+    "groupNames": ["Weather", "Weather_Chart"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Window_FF_Bath",
+    "state": "OPEN",
+    "transformedState": "open",
+    "stateDescription": {
+      "pattern": "MAP(en.map):%s",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": false,
+    "type": "Contact",
+    "name": "Window_FF_Bath",
+    "label": "Bath",
+    "tags": ["Window"],
+    "groupNames": ["FF_Bath", "Windows"]
+  },
+  {
+    "members": [],
+    "link": "http://localhost:8083/rest/items/GF_Living",
+    "state": "NULL",
+    "editable": false,
+    "type": "Group",
+    "name": "GF_Living",
+    "label": "Living Room",
+    "category": "video",
+    "tags": ["LivingRoom"],
+    "groupNames": ["gGF"]
+  },
+  {
+    "members": [],
+    "groupType": "Number",
+    "function": { "name": "AVG" },
+    "link": "http://localhost:8083/rest/items/Temperature",
+    "state": "20.0",
+    "stateDescription": {
+      "pattern": "%.1f °C",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": false,
+    "type": "Group",
+    "name": "Temperature",
+    "label": "Avg. Room Temperature",
+    "category": "temperature",
+    "tags": [],
+    "groupNames": ["Status"]
+  },
+  {
+    "members": [],
+    "link": "http://localhost:8083/rest/items/FF_Son",
+    "state": "NULL",
+    "editable": false,
+    "type": "Group",
+    "name": "FF_Son",
+    "label": "Oliver\u0027s Room",
+    "category": "boy_1",
+    "tags": ["Bedroom"],
+    "groupNames": ["gFF"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Scene_General",
+    "state": "NULL",
+    "editable": false,
+    "type": "Number",
+    "name": "Scene_General",
+    "label": "Scene",
+    "category": "sofa",
+    "tags": [],
+    "groupNames": []
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Shutter_GF_Toilet",
+    "state": "NULL",
+    "editable": false,
+    "type": "Rollershutter",
+    "name": "Shutter_GF_Toilet",
+    "label": "Toilet",
+    "tags": ["Blinds"],
+    "groupNames": ["GF_Toilet", "Shutters"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Temperature_GF_Corridor",
+    "state": "21.5",
+    "stateDescription": {
+      "pattern": "%.1f °C",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": false,
+    "type": "Number",
+    "name": "Temperature_GF_Corridor",
+    "label": "Corridor",
+    "category": "temperature",
+    "tags": ["Measurement", "Temperature"],
+    "groupNames": ["Temperature", "GF_Corridor"]
+  },
+  {
+    "members": [],
+    "groupType": "Switch",
+    "function": { "name": "OR", "params": ["ON", "OFF"] },
+    "link": "http://localhost:8083/rest/items/Lights",
+    "state": "ON",
+    "stateDescription": { "pattern": "(%d)", "readOnly": false, "options": [] },
+    "editable": false,
+    "type": "Group",
+    "name": "Lights",
+    "label": "All Lights",
+    "tags": [],
+    "groupNames": []
+  },
+  {
+    "members": [],
+    "link": "http://localhost:8083/rest/items/FF_Bed",
+    "state": "NULL",
+    "editable": false,
+    "type": "Group",
+    "name": "FF_Bed",
+    "label": "Bedroom",
+    "category": "bedroom",
+    "tags": ["Bedroom"],
+    "groupNames": ["gFF"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Temperature_FF_Bath",
+    "state": "20.6",
+    "stateDescription": {
+      "pattern": "%.1f °C",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": false,
+    "type": "Number",
+    "name": "Temperature_FF_Bath",
+    "label": "Bath",
+    "category": "temperature",
+    "tags": ["Measurement", "Temperature"],
+    "groupNames": ["Temperature", "FF_Bath"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Light_GF_Corridor_Ceiling",
+    "state": "ON",
+    "editable": false,
+    "type": "Switch",
+    "name": "Light_GF_Corridor_Ceiling",
+    "label": "Ceiling",
+    "tags": ["Light"],
+    "groupNames": ["GF_Corridor", "Lights"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Temperature_FF_Office",
+    "state": "20.2",
+    "stateDescription": {
+      "pattern": "%.1f °C",
+      "readOnly": false,
+      "options": []
+    },
+    "editable": false,
+    "type": "Number",
+    "name": "Temperature_FF_Office",
+    "label": "Office",
+    "category": "temperature",
+    "tags": ["Measurement", "Temperature"],
+    "groupNames": ["Temperature", "FF_Office"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/CurrentDate",
+    "state": "2021-05-01T18:32:51.025+0100",
+    "stateDescription": {
+      "pattern": "%1$tA, %1$td.%1$tm.%1$tY",
+      "readOnly": true,
+      "options": []
+    },
+    "editable": false,
+    "type": "DateTime",
+    "name": "CurrentDate",
+    "label": "Date",
+    "category": "calendar",
+    "tags": [],
+    "groupNames": []
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Heating_GF_Kitchen",
+    "state": "OFF",
+    "editable": false,
+    "type": "Switch",
+    "name": "Heating_GF_Kitchen",
+    "label": "Kitchen",
+    "category": "heating",
+    "tags": ["HVAC"],
+    "groupNames": ["GF_Kitchen", "Heating"]
+  },
+  {
+    "link": "http://localhost:8083/rest/items/Moon_Elevation",
+    "state": "-55.31126331414705 °",
+    "stateDescription": {
+      "pattern": "%.2f %unit%",
+      "readOnly": true,
+      "options": []
+    },
+    "editable": false,
+    "type": "Number:Angle",
+    "name": "Moon_Elevation",
+    "label": "Moon Elevation",
+    "category": "moon",
+    "tags": [],
+    "groupNames": []
+  }
+]
