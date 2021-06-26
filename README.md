@@ -1,3 +1,5 @@
+[![Build](https://github.com/creativeprojects/gopenhab/actions/workflows/build.yml/badge.svg)](https://github.com/creativeprojects/gopenhab/actions/workflows/build.yml)
+
 # gopenHAB
 
 Write your openHAB rules in Go. The power of openHAB rules with the simplicity of Go.
