@@ -170,3 +170,14 @@ func TestUnsubscribeUnknownID(t *testing.T) {
 	}
 	eventBus.Wait()
 }
+
+func TestUnsubscribeWhileRunning(t *testing.T) {
+	eventBus := NewEventBus()
+	sub := eventBus.Subscribe("", TypeClientConnected, func(e Event) {
+		time.Sleep(100 * time.Millisecond)
+	})
+	// publish an event
+	eventBus.Publish(newMockEvent("", TypeClientConnected))
+
+	eventBus.Unsubscribe(sub)
+}

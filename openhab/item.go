@@ -144,7 +144,6 @@ func (i *Item) SendCommandWait(command StateValue, timeout time.Duration) (bool,
 	})
 	defer func() {
 		i.client.unsubscribe(subID)
-		close(stateChan)
 	}()
 
 	err := i.SendCommand(command)
