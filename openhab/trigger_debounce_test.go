@@ -115,7 +115,7 @@ func TestDebounceCancelled(t *testing.T) {
 
 	trigger.callback(nil)
 
-	time.Sleep(50 * time.Millisecond)
+	time.Sleep(20 * time.Millisecond)
 	debounced.deactivate(nil)
 
 	time.Sleep(100 * time.Millisecond)
