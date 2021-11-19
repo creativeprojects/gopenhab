@@ -41,6 +41,28 @@ func (items *Items) GetItem(name string) (*Item, error) {
 	return nil, fmt.Errorf("item %q %w", name, ErrorNotFound)
 }
 
+// GetMembersOf returns a list of items member of the group
+func (items *Items) GetMembersOf(groupName string) ([]*Item, error) {
+	items.cacheLocker.Lock()
+	defer items.cacheLocker.Unlock()
+
+	if items.cache == nil {
+		// load them all now
+		err := items.loadCache()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	members := []*Item{}
+	for _, item := range items.cache {
+		if item.IsMemberOf(groupName) {
+			members = append(members, item)
+		}
+	}
+	return members, nil
+}
+
 // loadCache loads all items into the cache.
 // This method is NOT using the cacheLocker: it is the responsability of the caller to do so.
 func (items *Items) loadCache() error {
@@ -56,6 +78,7 @@ func (items *Items) loadCache() error {
 	return nil
 }
 
+// load all items from the API
 func (items *Items) load() ([]api.Item, error) {
 	all := make([]api.Item, 0)
 	ctx, cancel := context.WithTimeout(context.Background(), items.client.config.TimeoutHTTP)

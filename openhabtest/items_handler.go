@@ -179,9 +179,6 @@ func (h *itemsHandler) setItem(item api.Item) error {
 	if item.GroupNames == nil {
 		item.GroupNames = []string{}
 	}
-	if item.Members == nil {
-		item.Members = []string{}
-	}
 	h.items[item.Name] = item
 	return nil
 }

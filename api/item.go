@@ -1,5 +1,6 @@
 package api
 
+// Item structure in the openHAB API
 type Item struct {
 	Name               string              `json:"name"`
 	Label              string              `json:"label"`
@@ -11,11 +12,11 @@ type Item struct {
 	Category           string              `json:"category"`
 	Tags               []string            `json:"tags"`
 	GroupNames         []string            `json:"groupNames"`
-	Members            []string            `json:"members,omitempty"`
 	GroupType          string              `json:"groupType,omitempty"`
 	Function           *Function           `json:"function,omitempty"`
 	StateDescription   *StateDescription   `json:"stateDescription,omitempty"`
 	CommandDescription *CommandDescription `json:"commandDescription,omitempty"`
+	Members            []*Item             `json:"members,omitempty"` // this field is only populated with ?recursive=true parameter
 }
 
 type Function struct {

@@ -82,13 +82,23 @@ func (i *Item) IsGroup() bool {
 	return i.isGroup
 }
 
-// Members return the list of direct members if the item is a group
-func (i *Item) Members() []string {
-	if !i.IsGroup() {
-		return nil
+// IsMemberOf returns true if the item is a member of the group
+func (i *Item) IsMemberOf(groupName string) bool {
+	for _, group := range i.data.GroupNames {
+		if group == groupName {
+			return true
+		}
 	}
-	return i.data.Members
+	return false
 }
+
+// Members return the list of direct members if the item is a group
+// func (i *Item) Members() []string {
+// 	if !i.IsGroup() {
+// 		return nil
+// 	}
+// 	return i.data.Members
+// }
 
 // State returns an internal cached value if available,
 // or calls the api to return a fresh value from openHAB if not
