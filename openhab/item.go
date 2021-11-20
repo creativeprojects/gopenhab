@@ -20,6 +20,7 @@ type Item struct {
 	client      *Client
 	apiLocker   sync.Mutex
 	stateLocker sync.Mutex
+	updated     time.Time
 }
 
 func newItem(client *Client, name string) *Item {
@@ -90,6 +91,11 @@ func (i *Item) IsMemberOf(groupName string) bool {
 		}
 	}
 	return false
+}
+
+// Updated returns the last time the item state was updated (doesn't necessarily mean the state was changed)
+func (i *Item) Updated() time.Time {
+	return i.updated
 }
 
 // Members return the list of direct members if the item is a group
@@ -195,6 +201,7 @@ func (i *Item) setInternalStateValue(state StateValue) {
 	defer i.stateLocker.Unlock()
 
 	i.state = state
+	i.updated = time.Now()
 }
 
 func (i *Item) setInternalState(state string) {

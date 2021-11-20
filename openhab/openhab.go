@@ -348,7 +348,7 @@ func (c *Client) addInternalRules() {
 	// make sure the internal rules are only added once
 	c.internalRules.Do(func() {
 		c.subscribe("", event.TypeItemState, func(e event.Event) {
-			c.itemStateChanged(e)
+			c.itemStateUpdated(e)
 		})
 	})
 }
@@ -357,14 +357,14 @@ func (c *Client) waitFinishingRules() {
 	c.eventBus.Wait()
 }
 
-func (c *Client) itemStateChanged(e event.Event) {
+func (c *Client) itemStateUpdated(e event.Event) {
 	if ev, ok := e.(event.ItemReceivedState); ok {
 		item, err := c.items.GetItem(ev.ItemName)
 		if err != nil {
-			errorlog.Printf("itemStateChanged: %s", err)
+			errorlog.Printf("itemStateUpdated: %s", err)
 			return
 		}
 		item.setInternalState(ev.State)
-		debuglog.Printf("Item %s received state %s", ev.ItemName, ev.State)
+		// debuglog.Printf("Item %s received state %s", ev.ItemName, ev.State)
 	}
 }

@@ -1,6 +1,9 @@
 package openhab
 
-import "strconv"
+import (
+	"math"
+	"strconv"
+)
 
 type StateValue interface {
 	String() string
@@ -33,6 +36,11 @@ func (s StringState) String() string {
 }
 
 type DecimalState float64
+
+// NewDecimalState creates a DecimalState rounded to 2 decimal places
+func NewDecimalState(value float64) DecimalState {
+	return DecimalState(math.Round(value*100) / 100)
+}
 
 func (s DecimalState) String() string {
 	return strconv.FormatFloat(float64(s), 'f', -1, 64)
