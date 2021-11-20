@@ -1,4 +1,6 @@
 [![Build](https://github.com/creativeprojects/gopenhab/actions/workflows/build.yml/badge.svg)](https://github.com/creativeprojects/gopenhab/actions/workflows/build.yml)
+[![codecov](https://codecov.io/gh/creativeprojects/gopenhab/branch/main/graph/badge.svg?token=wyzDjPzIO3)](https://codecov.io/gh/creativeprojects/gopenhab)
+[![Go Reference](https://pkg.go.dev/badge/github.com/creativeprojects/gopenhab.svg)](https://pkg.go.dev/github.com/creativeprojects/gopenhab)
 
 # gopenHAB
 
@@ -9,7 +11,7 @@ My first thought was to make a REST API to make this external system accessible 
 
 In theory, everything you can do in a DSL rule or in Jython should be available.
 
-This is very much work in progress, but you already get something like this working:
+This is work in progress, but here's an example of what you can already do with it:
 
 ```go
 package main
@@ -134,3 +136,9 @@ func main() {
 
 
 ```
+
+# testing
+
+To be able to run some unit tests I created a *mock* openHAB server, which can trigger events and can keep items in memory. This is work in progress but you can use it to test your rules.
+
+I'll post more information about it, but here's the [godoc](https://pkg.go.dev/github.com/creativeprojects/gopenhab/openhabtest).
