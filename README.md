@@ -158,7 +158,7 @@ openhab.RuleData{
 
 I'm not giving the code of `calculateAverage`, but simply imagine it sends the result to the item in output configuration, from the example the name of the item is `ZoneTemperature`.
 
-Here's how you can test it with the openhab mock server:
+Here's how you can test it with the openHAB mock server:
 
 ```go
 func TestCalculateZoneTemperature(t *testing.T) {
@@ -166,6 +166,7 @@ func TestCalculateZoneTemperature(t *testing.T) {
 	const temperatureItem2 = "temperature2"
 	const averageTemperatureItem = "ZoneTemperature"
 
+	// Create the openHAB mock server that will publish events from changes coming from the API calls
 	server := openhabtest.NewServer(openhabtest.Config{Log: t, SendEventsFromAPI: true})
 	defer server.Close()
 
@@ -186,6 +187,7 @@ func TestCalculateZoneTemperature(t *testing.T) {
 		State: "10.0",
 	})
 
+	// create a client that connects to our mock server
 	client := openhab.NewClient(openhab.Config{URL: server.URL()})
 
 	// standard rule to calculate the average
@@ -220,6 +222,7 @@ func TestCalculateZoneTemperature(t *testing.T) {
 		openhab.OnItemReceivedCommand(averageTemperatureItem, nil),
 	)
 
+	// start the client in the background so we can send events to it
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
@@ -227,8 +230,9 @@ func TestCalculateZoneTemperature(t *testing.T) {
 		wg.Done()
 	}()
 
+	// make sure the client is ready (it surely needs less than that)
 	time.Sleep(10 * time.Millisecond)
-	// we simulate openhab receiving an event: temperature2 item received a new temperature of 11 degrees, brrrr!
+	// we simulate openhab receiving an event: temperature2 item received a new value of 11 degrees, brrrr!
 	server.Event(event.NewItemReceivedState(temperatureItem2, "Number", "11.0"))
 
 	wg.Wait()
