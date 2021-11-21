@@ -137,8 +137,100 @@ func main() {
 
 ```
 
-# testing
+# Unit test your rules
 
 To be able to run some unit tests I created a *mock* openHAB server, which can trigger events and can keep items in memory. This is work in progress but you can use it to test your rules.
 
-I'll post more information about it, but here's the [godoc](https://pkg.go.dev/github.com/creativeprojects/gopenhab/openhabtest).
+## How to test a simple event
+
+Imagine you have a function `calculateZoneTemperature` that takes an array of values coming from the `Context` and sends an average temperature to an output item. The context of the function will be as such:
+
+```go
+
+openhab.RuleData{
+	Name: "Calculate average",
+	Context: zoneContext{
+		name:   "test-zone",
+		config: ZoneConfiguration{Output: "ZoneTemperature", Sensors: []string{"temperature1", "temperature2"}},
+	},
+},
+```
+
+I'm not giving the code of `calculateAverage`, but simply imagine it sends the result to the item in output configuration, from the example the name of the item is `ZoneTemperature`.
+
+Here's how you can test it with the openhab mock server:
+
+```go
+func TestCalculateZoneTemperature(t *testing.T) {
+	const temperatureItem1 = "temperature1"
+	const temperatureItem2 = "temperature2"
+	const averageTemperatureItem = "ZoneTemperature"
+
+	server := openhabtest.NewServer(openhabtest.Config{Log: t, SendEventsFromAPI: true})
+	defer server.Close()
+
+	// setup all 3 items in the mock server
+	server.SetItem(api.Item{
+		Name:  averageTemperatureItem,
+		Type:  "Number",
+		State: "0.0",
+	})
+	server.SetItem(api.Item{
+		Name:  temperatureItem1,
+		Type:  "Number",
+		State: "10.0",
+	})
+	server.SetItem(api.Item{
+		Name:  temperatureItem2,
+		Type:  "Number",
+		State: "10.0",
+	})
+
+	client := openhab.NewClient(openhab.Config{URL: server.URL()})
+
+	// standard rule to calculate the average
+	client.AddRule(
+		openhab.RuleData{
+			Name: "Calculate average",
+			Context: zoneContext{
+				name:   "test-zone",
+				config: ZoneConfiguration{Output: averageTemperatureItem, Sensors: []string{temperatureItem1, temperatureItem2}},
+			},
+		},
+		calculateZoneTemperature, // this is the code to test
+		openhab.OnItemReceivedState(temperatureItem1, nil),
+		openhab.OnItemReceivedState(temperatureItem2, nil),
+	)
+
+	// testing rule to verify the calculation
+	client.AddRule(
+		openhab.RuleData{
+			Name: "Test rule",
+		},
+		func(client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
+			// stop the client after receiving this event
+			defer client.Stop()
+
+			ev, ok := e.(event.ItemReceivedCommand)
+			if !ok {
+				t.Fatalf("expected event to be of type ItemReceivedCommand")
+			}
+			assert.Equal(t, "10.5", ev.Command)
+		},
+		openhab.OnItemReceivedCommand(averageTemperatureItem, nil),
+	)
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		client.Start()
+		wg.Done()
+	}()
+
+	time.Sleep(10 * time.Millisecond)
+	// we simulate openhab receiving an event: temperature2 item received a new temperature of 11 degrees, brrrr!
+	server.Event(event.NewItemReceivedState(temperatureItem2, "Number", "11.0"))
+
+	wg.Wait()
+}
+```
