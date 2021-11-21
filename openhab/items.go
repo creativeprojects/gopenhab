@@ -22,9 +22,9 @@ func newItems(client *Client) *Items {
 	}
 }
 
-// GetItem returns an openHAB item from its name.
+// getItem returns an openHAB item from its name.
 // The very first call of GetItem will try to load the items collection from openHAB.
-func (items *Items) GetItem(name string) (*Item, error) {
+func (items *Items) getItem(name string) (*Item, error) {
 	items.cacheLocker.Lock()
 	defer items.cacheLocker.Unlock()
 
@@ -41,8 +41,8 @@ func (items *Items) GetItem(name string) (*Item, error) {
 	return nil, fmt.Errorf("item %q %w", name, ErrorNotFound)
 }
 
-// GetMembersOf returns a list of items member of the group
-func (items *Items) GetMembersOf(groupName string) ([]*Item, error) {
+// getMembersOf returns a list of items member of the group
+func (items *Items) getMembersOf(groupName string) ([]*Item, error) {
 	items.cacheLocker.Lock()
 	defer items.cacheLocker.Unlock()
 

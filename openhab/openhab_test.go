@@ -57,7 +57,7 @@ func TestStartEvent(t *testing.T) {
 	})
 	client.AddRule(
 		RuleData{},
-		func(client *Client, ruleData RuleData, e event.Event) {
+		func(client RuleClient, ruleData RuleData, e event.Event) {
 			ev, ok := e.(event.SystemEvent)
 			assert.True(t, ok)
 			assert.Equal(t, event.TypeClientStarted, ev.Type())
@@ -85,7 +85,7 @@ func TestStopEvent(t *testing.T) {
 	})
 	client.AddRule(
 		RuleData{},
-		func(client *Client, ruleData RuleData, e event.Event) {
+		func(client RuleClient, ruleData RuleData, e event.Event) {
 			ev, ok := e.(event.SystemEvent)
 			assert.True(t, ok)
 			assert.Equal(t, event.TypeClientStopped, ev.Type())

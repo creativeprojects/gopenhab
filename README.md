@@ -32,7 +32,7 @@ func main() {
 
 	client.AddRule(
 		openhab.RuleData{Name: "Connected to openHAB events"},
-		func(client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
+		func(client openhab.RuleClient, ruleData openhab.RuleData, e event.Event) {
 			log.Printf("SYSTEM EVENT: client connected")
 		},
 		openhab.Debounce(openhab.OnConnect(), 1*time.Minute),
@@ -40,7 +40,7 @@ func main() {
 
 	client.AddRule(
 		openhab.RuleData{Name: "Disconnected from openHAB events"},
-		func(client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
+		func(client openhab.RuleClient, ruleData openhab.RuleData, e event.Event) {
 			log.Print("SYSTEM EVENT: client disconnected")
 		},
 		openhab.Debounce(openhab.OnDisconnect(), 10*time.Second),
@@ -48,7 +48,7 @@ func main() {
 
 	client.AddRule(
 		openhab.RuleData{Name: "Receiving item command"},
-		func(client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
+		func(client openhab.RuleClient, ruleData openhab.RuleData, e event.Event) {
 			if ev, ok := e.(event.ItemReceivedCommand); ok {
 				log.Printf("COMMAND EVENT: Back_Garden_Lighting_Switch received command %+v", ev.Command)
 			}
@@ -58,7 +58,7 @@ func main() {
 
 	client.AddRule(
 		openhab.RuleData{Name: "Receiving ON command"},
-		func(client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
+		func(client openhab.RuleClient, ruleData openhab.RuleData, e event.Event) {
 			log.Print("COMMAND EVENT: Back_Garden_Lighting_Switch switched ON")
 		},
 		openhab.OnItemReceivedCommand("Back_Garden_Lighting_Switch", openhab.SwitchON),
@@ -66,7 +66,7 @@ func main() {
 
 	client.AddRule(
 		openhab.RuleData{Name: "Receiving OFF command"},
-		func(client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
+		func(client openhab.RuleClient, ruleData openhab.RuleData, e event.Event) {
 			log.Print("COMMAND EVENT: Back_Garden_Lighting_Switch switched OFF")
 		},
 		openhab.OnItemReceivedCommand("Back_Garden_Lighting_Switch", openhab.SwitchOFF),
@@ -74,7 +74,7 @@ func main() {
 
 	client.AddRule(
 		openhab.RuleData{Name: "Receiving updated state"},
-		func(client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
+		func(client openhab.RuleClient, ruleData openhab.RuleData, e event.Event) {
 			if ev, ok := e.(event.ItemReceivedState); ok {
 				log.Printf("STATE EVENT: Back_Garden_Lighting_Switch received state %+v", ev.State)
 			}
@@ -84,7 +84,7 @@ func main() {
 
 	client.AddRule(
 		openhab.RuleData{Name: "Receiving ON state"},
-		func(client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
+		func(client openhab.RuleClient, ruleData openhab.RuleData, e event.Event) {
 			log.Printf("STATE EVENT: Back_Garden_Lighting_Switch state is now ON")
 		},
 		openhab.OnItemReceivedState("Back_Garden_Lighting_Switch", openhab.SwitchON),
@@ -92,7 +92,7 @@ func main() {
 
 	client.AddRule(
 		openhab.RuleData{Name: "Receiving OFF state"},
-		func(client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
+		func(client openhab.RuleClient, ruleData openhab.RuleData, e event.Event) {
 			log.Printf("STATE EVENT: Back_Garden_Lighting_Switch state is now OFF")
 		},
 		openhab.OnItemReceivedState("Back_Garden_Lighting_Switch", openhab.SwitchOFF),
@@ -100,7 +100,7 @@ func main() {
 
 	client.AddRule(
 		openhab.RuleData{Name: "Receiving state changed"},
-		func(client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
+		func(client openhab.RuleClient, ruleData openhab.RuleData, e event.Event) {
 			if ev, ok := e.(event.ItemStateChanged); ok {
 				log.Printf("STATE CHANGED EVENT: Back_Garden_Lighting_Switch changed to state %+v", ev.NewState)
 			}
@@ -112,8 +112,8 @@ func main() {
 		openhab.RuleData{
 			Name: "Test rule",
 		},
-		func(client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
-			item, err := client.Items().GetItem("Back_Garden_Lighting_Switch")
+		func(client openhab.RuleClient, ruleData openhab.RuleData, e event.Event) {
+			item, err := client.GetItem("Back_Garden_Lighting_Switch")
 			if err != nil {
 				log.Print(err)
 			}
@@ -209,7 +209,7 @@ func TestCalculateZoneTemperature(t *testing.T) {
 		openhab.RuleData{
 			Name: "Test rule",
 		},
-		func(client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
+		func(client openhab.RuleClient, ruleData openhab.RuleData, e event.Event) {
 			// stop the client after receiving this event
 			defer client.Stop()
 

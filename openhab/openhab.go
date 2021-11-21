@@ -27,6 +27,15 @@ const (
 	eventData          = "data: "
 )
 
+// RuleClient is an interface for a Client inside a rule
+type RuleClient interface {
+	Stop()
+	GetItem(name string) (*Item, error)
+	GetMembersOf(groupName string) ([]*Item, error)
+}
+
+var _ RuleClient = &Client{}
+
 // Client for openHAB. It's using openHAB REST API internally.
 type Client struct {
 	config        Config
@@ -88,8 +97,15 @@ func NewClient(config Config) *Client {
 	return client
 }
 
-func (c *Client) Items() *Items {
-	return c.items
+// GetItem returns an openHAB item from its name.
+// The very first call of GetItem will try to load the items collection from openHAB.
+func (c *Client) GetItem(name string) (*Item, error) {
+	return c.items.getItem(name)
+}
+
+// GetMembersOf returns a list of items member of the group
+func (c *Client) GetMembersOf(groupName string) ([]*Item, error) {
+	return c.items.getMembersOf(groupName)
 }
 
 func (c *Client) get(ctx context.Context, URL string) (*http.Response, error) {
@@ -359,7 +375,7 @@ func (c *Client) waitFinishingRules() {
 
 func (c *Client) itemStateUpdated(e event.Event) {
 	if ev, ok := e.(event.ItemReceivedState); ok {
-		item, err := c.items.GetItem(ev.ItemName)
+		item, err := c.items.getItem(ev.ItemName)
 		if err != nil {
 			errorlog.Printf("itemStateUpdated: %s", err)
 			return
