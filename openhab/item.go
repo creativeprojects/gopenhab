@@ -57,17 +57,6 @@ func (i *Item) load() error {
 	return nil
 }
 
-// func (i *Item) hasData() bool {
-// 	return i.data.Name != ""
-// }
-
-// func (i *Item) getData() api.Item {
-// 	if !i.hasData() {
-// 		i.load()
-// 	}
-// 	return i.data
-// }
-
 // Name returns the name of the item (an item name is unique in openHAB)
 func (i *Item) Name() string {
 	return i.name
@@ -98,14 +87,6 @@ func (i *Item) Updated() time.Time {
 	return i.updated
 }
 
-// Members return the list of direct members if the item is a group
-// func (i *Item) Members() []string {
-// 	if !i.IsGroup() {
-// 		return nil
-// 	}
-// 	return i.data.Members
-// }
-
 // State returns an internal cached value if available,
 // or calls the api to return a fresh value from openHAB if not
 //
@@ -114,7 +95,7 @@ func (i *Item) Updated() time.Time {
 //
 // Please note if you just sent a state change command,
 // the new value might not be reflected instantly,
-// but only after openHAB sent a state changed event.
+// but only after openHAB sent a state changed event back.
 func (i *Item) State() (StateValue, error) {
 	internalState := i.getInternalStateValue()
 	if internalState != nil {

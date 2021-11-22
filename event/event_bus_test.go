@@ -9,7 +9,7 @@ import (
 
 func TestOneSubscriberNoTopic(t *testing.T) {
 	done := make(chan Event)
-	eventBus := NewEventBus()
+	eventBus := NewEventBus(true)
 
 	eventBus.Subscribe("", TypeClientDisconnected, func(e Event) {
 		panic("This function should not have been called!")
@@ -32,7 +32,7 @@ func TestOneSubscriberNoTopic(t *testing.T) {
 
 func TestOneSubscriberWithTopic(t *testing.T) {
 	done := make(chan Event, 1)
-	eventBus := NewEventBus()
+	eventBus := NewEventBus(true)
 
 	eventBus.Subscribe("item", TypeItemState, func(e Event) {
 		panic("This function should not have been called!")
@@ -58,7 +58,7 @@ func TestTwoSubscribers(t *testing.T) {
 	second := false
 	done1 := make(chan Event)
 	done2 := make(chan Event)
-	eventBus := NewEventBus()
+	eventBus := NewEventBus(true)
 
 	eventBus.Subscribe("item", TypeItemState, func(e Event) {
 		if first {
@@ -100,7 +100,7 @@ func TestTwoSubscribers(t *testing.T) {
 
 func TestUnsubscribe(t *testing.T) {
 	done := make(chan Event)
-	eventBus := NewEventBus()
+	eventBus := NewEventBus(true)
 
 	eventBus.Subscribe("", TypeClientDisconnected, func(e Event) {
 		panic("This function should not have been called!")
@@ -136,7 +136,7 @@ func TestUnsubscribe(t *testing.T) {
 
 func TestUnsubscribeUnknownID(t *testing.T) {
 	done := make(chan Event)
-	eventBus := NewEventBus()
+	eventBus := NewEventBus(true)
 
 	eventBus.Subscribe("", TypeClientDisconnected, func(e Event) {
 		panic("This function should not have been called!")
@@ -172,7 +172,7 @@ func TestUnsubscribeUnknownID(t *testing.T) {
 }
 
 func TestUnsubscribeWhileRunning(t *testing.T) {
-	eventBus := NewEventBus()
+	eventBus := NewEventBus(true)
 	sub := eventBus.Subscribe("", TypeClientConnected, func(e Event) {
 		time.Sleep(100 * time.Millisecond)
 	})

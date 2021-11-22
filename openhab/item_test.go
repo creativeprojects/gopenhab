@@ -12,6 +12,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestItemDecimalType(t *testing.T) {
+	item := newTestItem(nil, "temperature", "Number", "20.2")
+	assert.Equal(t, ItemType("Number"), item.Type())
+	assert.Equal(t, DecimalState{20.2, ""}, item.state)
+	assert.Equal(t, "20.2", item.state.String())
+}
+
+func TestItemDecimalTypeWithUnit(t *testing.T) {
+	item := newTestItem(nil, "temperature", "Number:Temperature", "20.2 °C")
+	assert.Equal(t, ItemType("Number"), item.Type())
+	assert.Equal(t, DecimalState{20.2, "°C"}, item.state)
+	assert.Equal(t, "20.2 °C", item.state.String())
+}
+
 func TestGetItemAPI(t *testing.T) {
 
 	item := api.Item{
@@ -103,7 +117,7 @@ func TestGetItemAPI(t *testing.T) {
 				go func(i int) {
 					time.Sleep(time.Duration(i+1) * time.Millisecond)
 					ev := event.NewItemReceivedState("TestSwitch", "OnOff", SwitchON.String())
-					item.client.eventBus.Publish(ev)
+					item.client.userEventBus.Publish(ev)
 				}(i)
 				ok, err := item.SendCommandWait(SwitchON, 100*time.Millisecond)
 				assert.NoError(t, err)

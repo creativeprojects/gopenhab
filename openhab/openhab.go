@@ -38,17 +38,18 @@ var _ RuleClient = &Client{}
 
 // Client for openHAB. It's using openHAB REST API internally.
 type Client struct {
-	config        Config
-	baseURL       string
-	client        *http.Client
-	cron          *cron.Cron
-	items         *Items
-	rules         []*rule
-	eventBus      event.PubSub
-	internalRules sync.Once
-	startOnce     sync.Once
-	stopOnce      sync.Once
-	stopChan      chan os.Signal
+	config         Config
+	baseURL        string
+	client         *http.Client
+	cron           *cron.Cron
+	items          *Items
+	rules          []*rule
+	systemEventBus event.PubSub
+	userEventBus   event.PubSub
+	internalRules  sync.Once
+	startOnce      sync.Once
+	stopOnce       sync.Once
+	stopChan       chan os.Signal
 }
 
 // NewClient creates a new client to connect to a openHAB instance
@@ -90,8 +91,9 @@ func NewClient(config Config) *Client {
 			cron.WithParser(
 				cron.NewParser(
 					cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor))),
-		eventBus: event.NewEventBus(),
-		stopChan: make(chan os.Signal, 1),
+		systemEventBus: event.NewEventBus(false),
+		userEventBus:   event.NewEventBus(true),
+		stopChan:       make(chan os.Signal, 1),
 	}
 	client.items = newItems(client)
 	return client
@@ -195,14 +197,14 @@ func (c *Client) listenEvents() error {
 	}
 	if err != nil {
 		// send error event
-		c.eventBus.Publish(event.NewErrorEvent(err))
+		c.userEventBus.Publish(event.NewErrorEvent(err))
 		return err
 	}
 	// send connect event
-	c.eventBus.Publish(event.NewSystemEvent(event.TypeClientConnected))
+	c.userEventBus.Publish(event.NewSystemEvent(event.TypeClientConnected))
 	defer func() {
 		// send disconnect event
-		c.eventBus.Publish(event.NewSystemEvent(event.TypeClientDisconnected))
+		c.userEventBus.Publish(event.NewSystemEvent(event.TypeClientDisconnected))
 	}()
 
 	state := 0
@@ -242,7 +244,7 @@ func (c *Client) listenEvents() error {
 
 	if err := scanner.Err(); err != nil {
 		// send error event
-		c.eventBus.Publish(event.NewErrorEvent(err))
+		c.userEventBus.Publish(event.NewErrorEvent(err))
 		return err
 	}
 	return nil
@@ -254,7 +256,8 @@ func (c *Client) dispatchRawEvent(data string) {
 		errorlog.Printf("event ignored: %s", err)
 		return
 	}
-	c.eventBus.Publish(e)
+	c.systemEventBus.Publish(e)
+	c.userEventBus.Publish(e)
 }
 
 // eventLoop listen to the events from the REST api and send them to the event bus.
@@ -302,14 +305,22 @@ func (c *Client) eventLoop() {
 }
 
 func (c *Client) subscribe(name string, eventType event.Type, callback func(e event.Event)) int {
-	return c.eventBus.Subscribe(name, eventType, func(e event.Event) {
+	return c.userEventBus.Subscribe(name, eventType, func(e event.Event) {
+		defer preventPanic()
+		callback(e)
+	})
+}
+
+// subscribeSystem is a subscription to the system (synchronous) event bus
+func (c *Client) subscribeSystem(name string, eventType event.Type, callback func(e event.Event)) int {
+	return c.systemEventBus.Subscribe(name, eventType, func(e event.Event) {
 		defer preventPanic()
 		callback(e)
 	})
 }
 
 func (c *Client) unsubscribe(subID int) {
-	c.eventBus.Unsubscribe(subID)
+	c.userEventBus.Unsubscribe(subID)
 }
 
 // AddRule adds a rule definition
@@ -347,14 +358,14 @@ func (c *Client) Start() {
 		signal.Notify(c.stopChan, syscall.SIGINT, syscall.SIGABRT, syscall.SIGTERM)
 
 		// Send the started event
-		c.eventBus.Publish(event.NewSystemEvent(event.TypeClientStarted))
+		c.userEventBus.Publish(event.NewSystemEvent(event.TypeClientStarted))
 
 		// Wait until we're politely asked to leave
 		<-c.stopChan
 		signal.Stop(c.stopChan)
 
 		// Send the stopped event
-		c.eventBus.Publish(event.NewSystemEvent(event.TypeClientStopped))
+		c.userEventBus.Publish(event.NewSystemEvent(event.TypeClientStopped))
 
 		debuglog.Printf("shutting down...")
 		ctx := c.cron.Stop()
@@ -376,14 +387,14 @@ func (c *Client) Stop() {
 func (c *Client) addInternalRules() {
 	// make sure the internal rules are only added once
 	c.internalRules.Do(func() {
-		c.subscribe("", event.TypeItemState, func(e event.Event) {
+		c.subscribeSystem("", event.TypeItemState, func(e event.Event) {
 			c.itemStateUpdated(e)
 		})
 	})
 }
 
 func (c *Client) waitFinishingRules() {
-	c.eventBus.Wait()
+	c.userEventBus.Wait()
 }
 
 func (c *Client) itemStateUpdated(e event.Event) {

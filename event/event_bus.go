@@ -12,14 +12,16 @@ type PubSub interface {
 }
 
 type eventBus struct {
+	async      bool
 	subs       []subscription
 	subLock    sync.Locker
 	subIdCount int
 	wg         sync.WaitGroup
 }
 
-func NewEventBus() *eventBus {
+func NewEventBus(async bool) *eventBus {
 	return &eventBus{
+		async:   async,
 		subs:    make([]subscription, 0),
 		subLock: &sync.Mutex{},
 	}
@@ -78,12 +80,17 @@ func (b *eventBus) Publish(e Event) {
 			continue
 		}
 		if sub.name == "" || sub.eventType.Match(e.Topic(), sub.name) {
-			// run the callback in a goroutine
-			b.wg.Add(1)
-			go func(sub subscription, e Event) {
-				defer b.wg.Done()
+			if b.async {
+				// run the callback in a goroutine
+				b.wg.Add(1)
+				go func(sub subscription, e Event) {
+					defer b.wg.Done()
+					sub.callback(e)
+				}(sub, e)
+			} else {
+				// run synchronously
 				sub.callback(e)
-			}(sub, e)
+			}
 		}
 	}
 }
