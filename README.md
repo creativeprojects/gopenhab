@@ -205,13 +205,15 @@ func TestCalculateZoneTemperature(t *testing.T) {
 	)
 
 	// testing rule to verify the calculation
+	wg := sync.WaitGroup{}
+	wg.Add(1)
 	client.AddRule(
 		openhab.RuleData{
 			Name: "Test rule",
 		},
 		func(client openhab.RuleClient, ruleData openhab.RuleData, e event.Event) {
-			// stop the client after receiving this event
-			defer client.Stop()
+			// test is finished after receiving this event
+			defer wg.Done()
 
 			ev, ok := e.(event.ItemReceivedCommand)
 			if !ok {
@@ -223,11 +225,8 @@ func TestCalculateZoneTemperature(t *testing.T) {
 	)
 
 	// start the client in the background so we can send events to it
-	wg := sync.WaitGroup{}
-	wg.Add(1)
 	go func() {
 		client.Start()
-		wg.Done()
 	}()
 
 	// make sure the client is ready (it surely needs less than that)
@@ -236,5 +235,6 @@ func TestCalculateZoneTemperature(t *testing.T) {
 	server.Event(event.NewItemReceivedState(temperatureItem2, "Number", "11.0"))
 
 	wg.Wait()
+	client.Stop()
 }
 ```
