@@ -11,15 +11,15 @@ type PubSub interface {
 	Wait()
 }
 
-type EventBus struct {
+type eventBus struct {
 	subs       []subscription
 	subLock    sync.Locker
 	subIdCount int
 	wg         sync.WaitGroup
 }
 
-func NewEventBus() *EventBus {
-	return &EventBus{
+func NewEventBus() *eventBus {
+	return &eventBus{
 		subs:    make([]subscription, 0),
 		subLock: &sync.Mutex{},
 	}
@@ -30,7 +30,7 @@ func NewEventBus() *EventBus {
 // name is the name of the item/thing/channel you want to follow.
 // eventType is the type of event you want to follow.
 // callback function is called when a matching event occurs.
-func (b *EventBus) Subscribe(name string, eventType Type, callback func(e Event)) int {
+func (b *eventBus) Subscribe(name string, eventType Type, callback func(e Event)) int {
 	b.subLock.Lock()
 	defer b.subLock.Unlock()
 
@@ -47,7 +47,7 @@ func (b *EventBus) Subscribe(name string, eventType Type, callback func(e Event)
 
 // Unsubscribe keeps the order of the subscriptions.
 // For that reason it is a relatively expensive operation
-func (b *EventBus) Unsubscribe(subId int) {
+func (b *eventBus) Unsubscribe(subId int) {
 	b.subLock.Lock()
 	defer b.subLock.Unlock()
 
@@ -59,7 +59,7 @@ func (b *EventBus) Unsubscribe(subId int) {
 
 // findID returns the index in the slice where the sub ID is found,
 // it returns -1 if not found
-func (b *EventBus) findID(id int) int {
+func (b *eventBus) findID(id int) int {
 	for index, sub := range b.subs {
 		if sub.id == id {
 			return index
@@ -69,7 +69,7 @@ func (b *EventBus) findID(id int) int {
 }
 
 // Publish event to all subscribers (in a goroutine each)
-func (b *EventBus) Publish(e Event) {
+func (b *eventBus) Publish(e Event) {
 	b.subLock.Lock()
 	defer b.subLock.Unlock()
 
@@ -89,9 +89,9 @@ func (b *EventBus) Publish(e Event) {
 }
 
 // Wait for all the subscribers to finish their tasks
-func (b *EventBus) Wait() {
+func (b *eventBus) Wait() {
 	b.wg.Wait()
 }
 
 // Verify interface
-var _ PubSub = &EventBus{}
+var _ PubSub = &eventBus{}

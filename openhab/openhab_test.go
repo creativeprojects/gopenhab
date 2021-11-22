@@ -184,6 +184,8 @@ func TestErrorEvent(t *testing.T) {
 				t.Fatal("expected event to be of type SystemEvent")
 			}
 			assert.Equal(t, event.TypeClientError, ev.Type())
+			assert.NotEmpty(t, ev.Topic())
+			t.Log(ev.Topic())
 		},
 		OnError(),
 	)

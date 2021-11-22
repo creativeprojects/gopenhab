@@ -195,7 +195,7 @@ func (c *Client) listenEvents() error {
 	}
 	if err != nil {
 		// send error event
-		c.eventBus.Publish(event.NewSystemEvent(event.TypeClientError))
+		c.eventBus.Publish(event.NewErrorEvent(err.Error()))
 		return err
 	}
 	// send connect event
@@ -241,6 +241,8 @@ func (c *Client) listenEvents() error {
 	}
 
 	if err := scanner.Err(); err != nil {
+		// send error event
+		c.eventBus.Publish(event.NewErrorEvent(err.Error()))
 		return err
 	}
 	return nil
