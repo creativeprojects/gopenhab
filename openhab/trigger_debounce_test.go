@@ -58,6 +58,7 @@ func TestDebounce(t *testing.T) {
 }
 
 func TestDebounceConcurrentRun(t *testing.T) {
+	var count = 10
 	var wg sync.WaitGroup
 
 	var flag uint64
@@ -68,7 +69,7 @@ func TestDebounceConcurrentRun(t *testing.T) {
 		atomic.CompareAndSwapUint64(&flag, 0, 1)
 	}, RuleData{})
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < count; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()

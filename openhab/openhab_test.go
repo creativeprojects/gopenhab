@@ -50,6 +50,24 @@ data: {"topic":"smarthome/items/TestSwitch/statechanged","payload":"{\"type\":\"
 	assert.NoError(t, err)
 }
 
+func TestRuleID(t *testing.T) {
+	client := NewClient(Config{URL: "http://localhost"})
+	id := client.AddRule(
+		RuleData{},
+		func(client RuleClient, ruleData RuleData, e event.Event) {},
+	)
+	assert.NotEmpty(t, id)
+}
+
+func TestGivenRuleID(t *testing.T) {
+	client := NewClient(Config{URL: "http://localhost"})
+	id := client.AddRule(
+		RuleData{ID: "rule-ID"},
+		func(client RuleClient, ruleData RuleData, e event.Event) {},
+	)
+	assert.Equal(t, "rule-ID", id)
+}
+
 func TestStartEvent(t *testing.T) {
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	client := NewClient(Config{
@@ -175,17 +193,22 @@ func TestErrorEvent(t *testing.T) {
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
+
+	// the rule can run twice by the time the client is stopped: make sure we only run it once
+	once := sync.Once{}
 	client.AddRule(
 		RuleData{Name: "Test error rule"},
 		func(client RuleClient, ruleData RuleData, e event.Event) {
-			defer wg.Done()
-			ev, ok := e.(event.SystemEvent)
-			if !ok {
-				t.Fatal("expected event to be of type SystemEvent")
-			}
-			assert.Equal(t, event.TypeClientError, ev.Type())
-			assert.NotEmpty(t, ev.Topic())
-			t.Log(ev.Topic())
+			once.Do(func() {
+				defer wg.Done()
+				ev, ok := e.(event.ErrorEvent)
+				if !ok {
+					t.Fatal("expected event to be of type ErrorEvent")
+				}
+				assert.Equal(t, event.TypeClientError, ev.Type())
+				assert.NotEmpty(t, ev.Error())
+				t.Log(ev.Error())
+			})
 		},
 		OnError(),
 	)

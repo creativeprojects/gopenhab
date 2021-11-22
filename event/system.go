@@ -6,27 +6,19 @@ type SystemEvent struct {
 	message   string
 }
 
-// NewSystemEvent creates ClientStart, ClientConnected, ClientDisconnected and ClientStop event types
+// NewSystemEvent creates ClientStart, ClientConnected and ClientDisconnected event types
 func NewSystemEvent(eventType Type) SystemEvent {
 	return SystemEvent{
 		eventType: eventType,
 	}
 }
 
-// NewErrorEvent creates ClientError event type
-func NewErrorEvent(errorMessage string) SystemEvent {
-	return SystemEvent{
-		eventType: TypeClientError,
-		message:   errorMessage,
-	}
-}
-
-// Topic is empty on most SystemEvent, except for ClientError where it contains the error message
+// Topic is always empty on SystemEvent
 func (e SystemEvent) Topic() string {
 	return e.message
 }
 
-// Type is either ClientStart, ClientConnected, ClientDisconnected, ClientStop or ClientError
+// Type is either ClientStart, ClientConnected, ClientDisconnected or ClientStop
 func (e SystemEvent) Type() Type {
 	return e.eventType
 }
