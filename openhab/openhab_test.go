@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/creativeprojects/gopenhab/api"
 	"github.com/creativeprojects/gopenhab/event"
 	"github.com/creativeprojects/gopenhab/openhabtest"
 	"github.com/stretchr/testify/assert"
@@ -50,7 +51,6 @@ data: {"topic":"smarthome/items/TestSwitch/statechanged","payload":"{\"type\":\"
 }
 
 func TestStartEvent(t *testing.T) {
-	called := false
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	client := NewClient(Config{
 		URL: server.URL(),
@@ -64,7 +64,6 @@ func TestStartEvent(t *testing.T) {
 			ev, ok := e.(event.SystemEvent)
 			assert.True(t, ok)
 			assert.Equal(t, event.TypeClientStarted, ev.Type())
-			called = true
 		},
 		OnStart())
 
@@ -74,7 +73,69 @@ func TestStartEvent(t *testing.T) {
 
 	wg.Wait()
 	client.Stop()
-	assert.True(t, called)
+}
+
+func TestConnectEvent(t *testing.T) {
+	server := openhabtest.NewServer(openhabtest.Config{Log: t})
+	client := NewClient(Config{
+		URL: server.URL(),
+	})
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	client.AddRule(
+		RuleData{},
+		func(client RuleClient, ruleData RuleData, e event.Event) {
+			defer wg.Done()
+			ev, ok := e.(event.SystemEvent)
+			assert.True(t, ok)
+			assert.Equal(t, event.TypeClientConnected, ev.Type())
+		},
+		OnConnect())
+
+	go func() {
+		client.Start()
+	}()
+
+	time.Sleep(10 * time.Millisecond)
+	// send a random event so the client detects the connection
+	server.Event(event.NewItemReceivedState("item", "string", "state"))
+
+	wg.Wait()
+	client.Stop()
+}
+
+func TestDisconnectEvent(t *testing.T) {
+	server := openhabtest.NewServer(openhabtest.Config{Log: t})
+	server.SetItem(api.Item{Name: "item"})
+
+	client := NewClient(Config{
+		URL: server.URL(),
+	})
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	client.AddRule(
+		RuleData{},
+		func(client RuleClient, ruleData RuleData, e event.Event) {
+			defer wg.Done()
+			ev, ok := e.(event.SystemEvent)
+			assert.True(t, ok)
+			assert.Equal(t, event.TypeClientDisconnected, ev.Type())
+		},
+		OnDisconnect())
+
+	go func() {
+		client.Start()
+	}()
+
+	time.Sleep(10 * time.Millisecond)
+	// send a random event so the client detects the connection
+	server.Event(event.NewItemReceivedState("item", "string", "state"))
+	time.Sleep(10 * time.Millisecond)
+	// then disconnect the server
+	server.Close()
+
+	wg.Wait()
+	client.Stop()
 }
 
 func TestStopEvent(t *testing.T) {

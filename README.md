@@ -238,3 +238,8 @@ func TestCalculateZoneTemperature(t *testing.T) {
 	client.Stop()
 }
 ```
+
+# TODO
+
+- authentication: User/Password or APIKey not supported yet
+- many other things but I forgot where I stopped 6 months ago :-)
