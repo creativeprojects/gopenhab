@@ -55,25 +55,25 @@ func TestStartEvent(t *testing.T) {
 	client := NewClient(Config{
 		URL: server.URL(),
 	})
+	wg := sync.WaitGroup{}
+	wg.Add(1)
 	client.AddRule(
 		RuleData{},
 		func(client RuleClient, ruleData RuleData, e event.Event) {
+			defer wg.Done()
 			ev, ok := e.(event.SystemEvent)
 			assert.True(t, ok)
 			assert.Equal(t, event.TypeClientStarted, ev.Type())
 			called = true
-			client.Stop()
 		},
 		OnStart())
 
-	wg := sync.WaitGroup{}
-	wg.Add(1)
 	go func() {
-		defer wg.Done()
 		client.Start()
 	}()
 
 	wg.Wait()
+	client.Stop()
 	assert.True(t, called)
 }
 
@@ -107,4 +107,30 @@ func TestStopEvent(t *testing.T) {
 
 	wg.Wait()
 	assert.True(t, called)
+}
+
+func TestErrorEvent(t *testing.T) {
+	client := NewClient(Config{URL: "http://localhost", TimeoutHTTP: 100 * time.Millisecond})
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	client.AddRule(
+		RuleData{Name: "Test error rule"},
+		func(client RuleClient, ruleData RuleData, e event.Event) {
+			defer wg.Done()
+			ev, ok := e.(event.SystemEvent)
+			if !ok {
+				t.Fatal("expected event to be of type SystemEvent")
+			}
+			assert.Equal(t, event.TypeClientError, ev.Type())
+		},
+		OnError(),
+	)
+
+	go func() {
+		client.Start()
+	}()
+
+	wg.Wait()
+	client.Stop()
 }

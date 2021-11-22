@@ -9,7 +9,7 @@ import (
 
 type Runner func(client RuleClient, ruleData RuleData, e event.Event)
 
-type Rule struct {
+type rule struct {
 	ruleData  RuleData
 	client    *Client
 	runner    Runner
@@ -17,12 +17,12 @@ type Rule struct {
 	runLocker sync.Mutex
 }
 
-func newRule(client *Client, ruleData RuleData, runner Runner, triggers []Trigger) *Rule {
+func newRule(client *Client, ruleData RuleData, runner Runner, triggers []Trigger) *rule {
 	if ruleData.ID == "" {
 		gen := ksuid.New()
 		ruleData.ID = gen.String()
 	}
-	return &Rule{
+	return &rule{
 		ruleData: ruleData,
 		client:   client,
 		runner:   runner,
@@ -30,7 +30,7 @@ func newRule(client *Client, ruleData RuleData, runner Runner, triggers []Trigge
 	}
 }
 
-func (r *Rule) String() string {
+func (r *rule) String() string {
 	if r.ruleData.Name != "" {
 		return r.ruleData.Name
 	}
@@ -40,7 +40,7 @@ func (r *Rule) String() string {
 	return ""
 }
 
-func (r *Rule) activate(client *Client) error {
+func (r *rule) activate(client *Client) error {
 	for _, trigger := range r.triggers {
 		if trigger == nil {
 			errorlog.Printf("nil trigger encountered")
@@ -54,7 +54,7 @@ func (r *Rule) activate(client *Client) error {
 	return nil
 }
 
-func (r *Rule) deactivate(client *Client) {
+func (r *rule) deactivate(client *Client) {
 	for _, trigger := range r.triggers {
 		if trigger == nil {
 			continue
@@ -63,7 +63,7 @@ func (r *Rule) deactivate(client *Client) {
 	}
 }
 
-func (r *Rule) run(e event.Event) {
+func (r *rule) run(e event.Event) {
 	// only run one instance of that rule at any time
 	r.runLocker.Lock()
 	defer r.runLocker.Unlock()

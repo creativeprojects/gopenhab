@@ -17,7 +17,7 @@ func (e SystemEvent) Topic() string {
 	return ""
 }
 
-// Type is either ClientConnected or ClientDisconnected
+// Type is either ClientConnected, ClientDisconnected or ClientError
 func (e SystemEvent) Type() Type {
 	return e.eventType
 }

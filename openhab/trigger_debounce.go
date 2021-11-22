@@ -7,8 +7,8 @@ import (
 	"github.com/creativeprojects/gopenhab/event"
 )
 
-// TriggerDebounce is a special trigger used to debounce a trigger
-type TriggerDebounce struct {
+// triggerDebounce is a special trigger used to debounce a trigger
+type triggerDebounce struct {
 	lock    sync.Locker
 	after   time.Duration
 	timer   *time.Timer
@@ -17,15 +17,15 @@ type TriggerDebounce struct {
 
 // Debounce will trigger the event after some time, in case the subscription is triggered multiple times in a row.
 // Typically this is the case of Connection and Disconnection system events when openHAB is starting
-func Debounce(trigger Trigger, after time.Duration) *TriggerDebounce {
-	return &TriggerDebounce{
+func Debounce(trigger Trigger, after time.Duration) *triggerDebounce {
+	return &triggerDebounce{
 		lock:    &sync.Mutex{},
 		after:   after,
 		trigger: trigger,
 	}
 }
 
-func (c *TriggerDebounce) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
+func (c *triggerDebounce) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
 	debounced := func(ev event.Event) {
 		c.lock.Lock()
 		defer c.lock.Unlock()
@@ -41,7 +41,7 @@ func (c *TriggerDebounce) activate(client *Client, run func(ev event.Event), rul
 	return c.trigger.activate(client, debounced, ruleData)
 }
 
-func (c *TriggerDebounce) deactivate(client *Client) {
+func (c *triggerDebounce) deactivate(client *Client) {
 	c.trigger.deactivate(client)
 
 	c.lock.Lock()
@@ -52,9 +52,9 @@ func (c *TriggerDebounce) deactivate(client *Client) {
 	}
 }
 
-func (c *TriggerDebounce) match(e event.Event) bool {
+func (c *triggerDebounce) match(e event.Event) bool {
 	return c.trigger.match(e)
 }
 
 // Interface
-var _ Trigger = &TriggerDebounce{}
+var _ Trigger = &triggerDebounce{}

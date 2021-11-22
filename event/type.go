@@ -19,6 +19,7 @@ const (
 	TypeClientConnected
 	TypeClientDisconnected
 	TypeClientStopped
+	TypeClientError
 	TypeTimeCron
 	TypeItemAdded              // An item has been added to the item registry.
 	TypeItemRemoved            // An item has been removed from the item registry.
@@ -44,7 +45,8 @@ const (
 // Match returns true if the name matches the topic
 func (t Type) Match(topic, name string) bool {
 	switch t {
-	case TypeUnknown, TypeClientConnected, TypeClientDisconnected, TypeTimeCron:
+	case TypeUnknown, TypeClientStarted, TypeClientConnected, TypeClientDisconnected,
+		TypeClientStopped, TypeClientError, TypeTimeCron:
 		return true
 	case TypeItemAdded:
 		return topic == itemTopicPrefix+name+"/"+api.TopicEventAdded

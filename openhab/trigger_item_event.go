@@ -6,7 +6,7 @@ import (
 	"github.com/creativeprojects/gopenhab/event"
 )
 
-type ItemReceivedCommandTrigger struct {
+type itemReceivedCommandTrigger struct {
 	item  string
 	state StateValue
 	subId int
@@ -17,14 +17,14 @@ type ItemReceivedCommandTrigger struct {
 // This is an equivalent of the DSL rule:
 //
 // Item <item> received command [<command>]
-func OnItemReceivedCommand(item string, state StateValue) *ItemReceivedCommandTrigger {
-	return &ItemReceivedCommandTrigger{
+func OnItemReceivedCommand(item string, state StateValue) *itemReceivedCommandTrigger {
+	return &itemReceivedCommandTrigger{
 		item:  item,
 		state: state,
 	}
 }
 
-func (c *ItemReceivedCommandTrigger) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
+func (c *itemReceivedCommandTrigger) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
 	if c.subId > 0 {
 		return errors.New("rule already activated")
 	}
@@ -39,14 +39,14 @@ func (c *ItemReceivedCommandTrigger) activate(client *Client, run func(ev event.
 	return nil
 }
 
-func (c *ItemReceivedCommandTrigger) deactivate(client *Client) {
+func (c *itemReceivedCommandTrigger) deactivate(client *Client) {
 	if c.subId > 0 {
 		client.unsubscribe(c.subId)
 		c.subId = 0
 	}
 }
 
-func (c *ItemReceivedCommandTrigger) match(e event.Event) bool {
+func (c *itemReceivedCommandTrigger) match(e event.Event) bool {
 	if c.state != nil && c.state.String() != "" {
 		// check for the desired state
 		if ev, ok := e.(event.ItemReceivedCommand); ok {
@@ -63,9 +63,9 @@ func (c *ItemReceivedCommandTrigger) match(e event.Event) bool {
 }
 
 // Interface
-var _ Trigger = &ItemReceivedCommandTrigger{}
+var _ Trigger = &itemReceivedCommandTrigger{}
 
-type ItemReceivedStateTrigger struct {
+type itemReceivedStateTrigger struct {
 	item  string
 	state StateValue
 	subId int
@@ -76,14 +76,14 @@ type ItemReceivedStateTrigger struct {
 // This is an equivalent of the DSL rule:
 //
 // Item <item> received update [<state>]
-func OnItemReceivedState(item string, state StateValue) *ItemReceivedStateTrigger {
-	return &ItemReceivedStateTrigger{
+func OnItemReceivedState(item string, state StateValue) *itemReceivedStateTrigger {
+	return &itemReceivedStateTrigger{
 		item:  item,
 		state: state,
 	}
 }
 
-func (c *ItemReceivedStateTrigger) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
+func (c *itemReceivedStateTrigger) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
 	if c.subId > 0 {
 		return errors.New("rule already activated")
 	}
@@ -98,14 +98,14 @@ func (c *ItemReceivedStateTrigger) activate(client *Client, run func(ev event.Ev
 	return nil
 }
 
-func (c *ItemReceivedStateTrigger) deactivate(client *Client) {
+func (c *itemReceivedStateTrigger) deactivate(client *Client) {
 	if c.subId > 0 {
 		client.unsubscribe(c.subId)
 		c.subId = 0
 	}
 }
 
-func (c *ItemReceivedStateTrigger) match(e event.Event) bool {
+func (c *itemReceivedStateTrigger) match(e event.Event) bool {
 	if c.state != nil && c.state.String() != "" {
 		// check for the desired state
 		if ev, ok := e.(event.ItemReceivedState); ok {
@@ -122,9 +122,9 @@ func (c *ItemReceivedStateTrigger) match(e event.Event) bool {
 }
 
 // Interface
-var _ Trigger = &ItemReceivedStateTrigger{}
+var _ Trigger = &itemReceivedStateTrigger{}
 
-type ItemStateChangedTrigger struct {
+type itemStateChangedTrigger struct {
 	item   string
 	from   StateValue
 	to     StateValue
@@ -136,8 +136,8 @@ type ItemStateChangedTrigger struct {
 // This is an equivalent of the DSL rule:
 //
 // Item <item> changed
-func OnItemStateChanged(item string) *ItemStateChangedTrigger {
-	return &ItemStateChangedTrigger{
+func OnItemStateChanged(item string) *itemStateChangedTrigger {
+	return &itemStateChangedTrigger{
 		item: item,
 	}
 }
@@ -146,8 +146,8 @@ func OnItemStateChanged(item string) *ItemStateChangedTrigger {
 // This is an equivalent of the DSL rule:
 //
 // Item <item> changed from <state>
-func OnItemStateChangedFrom(item string, from StateValue) *ItemStateChangedTrigger {
-	return &ItemStateChangedTrigger{
+func OnItemStateChangedFrom(item string, from StateValue) *itemStateChangedTrigger {
+	return &itemStateChangedTrigger{
 		item: item,
 		from: from,
 	}
@@ -157,8 +157,8 @@ func OnItemStateChangedFrom(item string, from StateValue) *ItemStateChangedTrigg
 // This is an equivalent of the DSL rule:
 //
 // Item <item> changed to <state>
-func OnItemStateChangedTo(item string, to StateValue) *ItemStateChangedTrigger {
-	return &ItemStateChangedTrigger{
+func OnItemStateChangedTo(item string, to StateValue) *itemStateChangedTrigger {
+	return &itemStateChangedTrigger{
 		item: item,
 		to:   to,
 	}
@@ -168,15 +168,15 @@ func OnItemStateChangedTo(item string, to StateValue) *ItemStateChangedTrigger {
 // This is an equivalent of the DSL rule:
 //
 // Item <item> changed from <state> to <state>
-func OnItemStateChangedFromTo(item string, from, to StateValue) *ItemStateChangedTrigger {
-	return &ItemStateChangedTrigger{
+func OnItemStateChangedFromTo(item string, from, to StateValue) *itemStateChangedTrigger {
+	return &itemStateChangedTrigger{
 		item: item,
 		from: from,
 		to:   to,
 	}
 }
 
-func (c *ItemStateChangedTrigger) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
+func (c *itemStateChangedTrigger) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
 	if run == nil {
 		return errors.New("event callback is nil")
 	}
@@ -196,7 +196,7 @@ func (c *ItemStateChangedTrigger) activate(client *Client, run func(ev event.Eve
 	return nil
 }
 
-func (c *ItemStateChangedTrigger) deactivate(client *Client) {
+func (c *itemStateChangedTrigger) deactivate(client *Client) {
 	if c.subId1 > 0 {
 		client.unsubscribe(c.subId1)
 		c.subId1 = 0
@@ -207,7 +207,7 @@ func (c *ItemStateChangedTrigger) deactivate(client *Client) {
 	}
 }
 
-func (c *ItemStateChangedTrigger) match(e event.Event) bool {
+func (c *itemStateChangedTrigger) match(e event.Event) bool {
 	if c.from != nil && c.from.String() != "" {
 		// check for the desired state
 		if ev, ok := e.(event.ItemStateChanged); ok {
@@ -246,4 +246,4 @@ func (c *ItemStateChangedTrigger) match(e event.Event) bool {
 }
 
 // Interface
-var _ Trigger = &ItemStateChangedTrigger{}
+var _ Trigger = &itemStateChangedTrigger{}

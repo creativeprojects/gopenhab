@@ -29,9 +29,9 @@ const (
 
 // RuleClient is an interface for a Client inside a rule
 type RuleClient interface {
-	Stop()
 	GetItem(name string) (*Item, error)
 	GetMembersOf(groupName string) ([]*Item, error)
+	AddRule(ruleData RuleData, run Runner, triggers ...Trigger) (ruleID string)
 }
 
 var _ RuleClient = &Client{}
@@ -43,7 +43,7 @@ type Client struct {
 	client        *http.Client
 	cron          *cron.Cron
 	items         *Items
-	rules         []*Rule
+	rules         []*rule
 	eventBus      event.PubSub
 	internalRules sync.Once
 	startOnce     sync.Once
@@ -194,6 +194,8 @@ func (c *Client) listenEvents() error {
 		defer resp.Body.Close()
 	}
 	if err != nil {
+		// send error event
+		c.eventBus.Publish(event.NewSystemEvent(event.TypeClientError))
 		return err
 	}
 	// send connect event
@@ -257,26 +259,35 @@ func (c *Client) dispatchRawEvent(data string) {
 // the method never returns: if the connection drops it tries to reconnect in a loop
 func (c *Client) eventLoop() {
 	var successTimer *time.Timer
+	var successTimerMutex sync.Mutex
 	backoff := c.config.ReconnectionInitialBackoff
 
 	for {
 		// run a timer in the background to reset the backoff when the connection is stable
 		go func() {
+			successTimerMutex.Lock()
+			defer successTimerMutex.Unlock()
+
 			successTimer = time.AfterFunc(c.config.StableConnectionDuration, func() {
 				backoff = c.config.ReconnectionInitialBackoff
-				successTimer = nil
 				debuglog.Printf("connection to the event bus looks stable")
-				// ==> We could maybe make a new system event when the connection is stable?
+
+				successTimerMutex.Lock()
+				defer successTimerMutex.Unlock()
+				successTimer = nil
+				// ==> We could maybe publish a new system event when the connection is stable?
 			})
 		}()
 		err := c.listenEvents()
 		if err != nil {
-			errorlog.Printf("error connecting or listening to openhab events: %s", err)
+			errorlog.Printf("error connecting or listening to openHAB events: %s", err)
 		}
 		// we just got logged off so we cancel any success timer
+		successTimerMutex.Lock()
 		if successTimer != nil {
 			successTimer.Stop()
 		}
+		successTimerMutex.Unlock()
 		debuglog.Printf("reconnecting in %s...", backoff.String())
 		time.Sleep(backoff)
 
@@ -300,10 +311,10 @@ func (c *Client) unsubscribe(subID int) {
 }
 
 // AddRule adds a rule definition
-func (c *Client) AddRule(ruleData RuleData, run Runner, triggers ...Trigger) *Client {
+func (c *Client) AddRule(ruleData RuleData, run Runner, triggers ...Trigger) (ruleID string) {
 	rule := newRule(c, ruleData, run, triggers)
 	c.rules = append(c.rules, rule)
-	return c
+	return rule.ruleData.ID
 }
 
 // Start the handling of the defined rules.
