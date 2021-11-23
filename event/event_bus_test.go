@@ -8,6 +8,23 @@ import (
 )
 
 func TestOneSubscriberNoTopic(t *testing.T) {
+	call := false
+	eventBus := NewEventBus(false)
+
+	eventBus.Subscribe("", TypeClientDisconnected, func(e Event) {
+		panic("This function should not have been called!")
+	})
+	eventBus.Subscribe("", TypeClientConnected, func(e Event) {
+		assert.IsType(t, mockEvent{}, e)
+		call = true
+	})
+
+	eventBus.Publish(newMockEvent("", TypeClientConnected))
+	assert.True(t, call)
+	eventBus.Wait()
+}
+
+func TestOneSubscriberNoTopicAsync(t *testing.T) {
 	done := make(chan Event)
 	eventBus := NewEventBus(true)
 
@@ -31,6 +48,22 @@ func TestOneSubscriberNoTopic(t *testing.T) {
 }
 
 func TestOneSubscriberWithTopic(t *testing.T) {
+	call := false
+	eventBus := NewEventBus(false)
+
+	eventBus.Subscribe("item", TypeItemState, func(e Event) {
+		panic("This function should not have been called!")
+	})
+	eventBus.Subscribe("item2", TypeItemState, func(e Event) {
+		call = true
+	})
+
+	eventBus.Publish(newMockEvent("smarthome/items/item2/state", TypeItemState))
+	assert.True(t, call)
+	eventBus.Wait()
+}
+
+func TestOneSubscriberWithTopicAsync(t *testing.T) {
 	done := make(chan Event, 1)
 	eventBus := NewEventBus(true)
 
@@ -54,6 +87,31 @@ func TestOneSubscriberWithTopic(t *testing.T) {
 }
 
 func TestTwoSubscribers(t *testing.T) {
+	first := false
+	second := false
+	eventBus := NewEventBus(false)
+
+	eventBus.Subscribe("item", TypeItemState, func(e Event) {
+		assert.IsType(t, mockEvent{}, e)
+		if first {
+			t.Error("function called more than once")
+		}
+		first = true
+	})
+	eventBus.Subscribe("item", TypeItemState, func(e Event) {
+		assert.IsType(t, mockEvent{}, e)
+		if second {
+			t.Error("function called more than once")
+		}
+		second = true
+	})
+
+	eventBus.Publish(newMockEvent("smarthome/items/item/state", TypeItemState))
+	assert.True(t, first)
+	assert.True(t, second)
+}
+
+func TestTwoSubscribersAsync(t *testing.T) {
 	first := false
 	second := false
 	done1 := make(chan Event)
@@ -99,6 +157,29 @@ func TestTwoSubscribers(t *testing.T) {
 }
 
 func TestUnsubscribe(t *testing.T) {
+	call := 0
+	eventBus := NewEventBus(false)
+
+	eventBus.Subscribe("", TypeClientDisconnected, func(e Event) {
+		panic("This function should not have been called!")
+	})
+	sub := eventBus.Subscribe("", TypeClientConnected, func(e Event) {
+		call++
+	})
+
+	eventBus.Publish(newMockEvent("", TypeClientConnected))
+	assert.Equal(t, 1, call)
+	eventBus.Wait()
+
+	eventBus.Unsubscribe(sub)
+
+	// republish an event
+	eventBus.Publish(newMockEvent("", TypeClientConnected))
+	assert.Equal(t, 1, call)
+	eventBus.Wait()
+}
+
+func TestUnsubscribeAsync(t *testing.T) {
 	done := make(chan Event)
 	eventBus := NewEventBus(true)
 
@@ -135,6 +216,30 @@ func TestUnsubscribe(t *testing.T) {
 }
 
 func TestUnsubscribeUnknownID(t *testing.T) {
+	call := 0
+	eventBus := NewEventBus(false)
+
+	eventBus.Subscribe("", TypeClientDisconnected, func(e Event) {
+		panic("This function should not have been called!")
+	})
+	sub := eventBus.Subscribe("", TypeClientConnected, func(e Event) {
+		assert.IsType(t, mockEvent{}, e)
+		call++
+	})
+
+	eventBus.Publish(newMockEvent("", TypeClientConnected))
+	assert.Equal(t, 1, call)
+	eventBus.Wait()
+
+	eventBus.Unsubscribe(sub + 10)
+
+	// republish an event
+	eventBus.Publish(newMockEvent("", TypeClientConnected))
+	assert.Equal(t, 2, call)
+	eventBus.Wait()
+}
+
+func TestUnsubscribeUnknownIDAsync(t *testing.T) {
 	done := make(chan Event)
 	eventBus := NewEventBus(true)
 
@@ -171,7 +276,7 @@ func TestUnsubscribeUnknownID(t *testing.T) {
 	eventBus.Wait()
 }
 
-func TestUnsubscribeWhileRunning(t *testing.T) {
+func TestUnsubscribeWhileRunningAsync(t *testing.T) {
 	eventBus := NewEventBus(true)
 	sub := eventBus.Subscribe("", TypeClientConnected, func(e Event) {
 		time.Sleep(100 * time.Millisecond)

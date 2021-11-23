@@ -243,3 +243,7 @@ func TestCalculateZoneTemperature(t *testing.T) {
 
 - authentication: User/Password or APIKey not supported yet
 - many other things but I forgot where I stopped 6 months ago :-)
+
+# Limitations of the mock openHAB server for testing
+
+- When the server receives a `command` event, it doesn't follow with any corresponding `state` event. You need to publish the `state` events manually if you need them.

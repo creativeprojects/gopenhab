@@ -304,6 +304,7 @@ func (c *Client) eventLoop() {
 	}
 }
 
+// subscribe to the user event bus (events are sent asynchronously)
 func (c *Client) subscribe(name string, eventType event.Type, callback func(e event.Event)) int {
 	return c.userEventBus.Subscribe(name, eventType, func(e event.Event) {
 		defer preventPanic()

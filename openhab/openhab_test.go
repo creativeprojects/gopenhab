@@ -11,6 +11,7 @@ import (
 	"github.com/creativeprojects/gopenhab/event"
 	"github.com/creativeprojects/gopenhab/openhabtest"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestEventMessages(t *testing.T) {
@@ -217,6 +218,44 @@ func TestErrorEvent(t *testing.T) {
 		client.Start()
 	}()
 
+	wg.Wait()
+	client.Stop()
+}
+
+func TestDispathEventSaveStateFirst(t *testing.T) {
+	wg := sync.WaitGroup{}
+	server := openhabtest.NewServer(openhabtest.Config{SendEventsFromAPI: true})
+	server.SetItem(api.Item{
+		Name:  "item",
+		State: "FIRST",
+		Type:  "String",
+	})
+	client := NewClient(Config{URL: server.URL()})
+	client.AddRule(
+		RuleData{},
+		func(client RuleClient, ruleData RuleData, e event.Event) {
+			defer wg.Done()
+			ev, ok := e.(event.ItemReceivedState)
+			require.True(t, ok)
+			item, err := client.GetItem("item")
+			require.NoError(t, err)
+			state, err := item.State()
+			require.NoError(t, err)
+			assert.Equal(t, state.String(), ev.State)
+		},
+		OnItemReceivedState("item", nil),
+	)
+
+	wg.Add(2)
+	go func() {
+		client.Start()
+	}()
+
+	time.Sleep(10 * time.Millisecond)
+	// Manual test using client's internal method
+	client.dispatchRawEvent(`{"topic":"smarthome/items/item/state","payload":"{\"type\":\"String\",\"value\":\"SECOND\"}","type":"ItemStateEvent"}`)
+	// send received event from the server
+	server.Event(event.NewItemReceivedState("item", "String", "THIRD"))
 	wg.Wait()
 	client.Stop()
 }
