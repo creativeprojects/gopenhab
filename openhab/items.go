@@ -23,7 +23,7 @@ func newItems(client *Client) *Items {
 }
 
 // getItem returns an openHAB item from its name.
-// The very first call of GetItem will try to load the items collection from openHAB.
+// The very first call will try to load the items collection from openHAB.
 func (items *Items) getItem(name string) (*Item, error) {
 	items.cacheLocker.Lock()
 	defer items.cacheLocker.Unlock()
@@ -35,9 +35,17 @@ func (items *Items) getItem(name string) (*Item, error) {
 			return nil, err
 		}
 	}
+	// try to get the item from the cache
 	if item, ok := items.cache[name]; ok {
 		return item, nil
 	}
+	// try to call the API to get the item
+	item := newItem(items.client, name)
+	if err := item.load(); err == nil {
+		items.cache[name] = item
+		return item, nil
+	}
+	// item wasn't found
 	return nil, fmt.Errorf("item %q %w", name, ErrorNotFound)
 }
 

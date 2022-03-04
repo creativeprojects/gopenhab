@@ -31,9 +31,10 @@ func NewServer(config Config) *Server {
 		// don't send the events automatically => we don't send the instance of the events bus to handlers
 		autoBus = nil
 	}
+	events := newEventsHandler(bus, done)
 	items := newItemsHandler(config.Log, autoBus)
 	routes := []route{
-		{"events", newEventsHandler(bus, done)},
+		{"events", events},
 		{"items", items},
 	}
 
