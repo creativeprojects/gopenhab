@@ -41,6 +41,8 @@ type Client struct {
 	config         Config
 	baseURL        string
 	client         *http.Client
+	user           string
+	password       string
 	cron           *cron.Cron
 	items          *Items
 	rules          []*rule
@@ -83,10 +85,17 @@ func NewClient(config Config) *Client {
 	if config.Client != nil {
 		httpClient = config.Client
 	}
+	// API token takes precedence over user/password
+	if config.APIToken != "" {
+		config.User = config.APIToken
+		config.Password = ""
+	}
 	client := &Client{
-		config:  config,
-		baseURL: baseURL,
-		client:  httpClient,
+		config:   config,
+		baseURL:  baseURL,
+		client:   httpClient,
+		user:     config.User,
+		password: config.Password,
 		cron: cron.New(
 			cron.WithParser(
 				cron.NewParser(
@@ -110,12 +119,15 @@ func (c *Client) GetMembersOf(groupName string) ([]*Item, error) {
 	return c.items.getMembersOf(groupName)
 }
 
-func (c *Client) get(ctx context.Context, URL string) (*http.Response, error) {
+func (c *Client) get(ctx context.Context, URL, contentType string) (*http.Response, error) {
 	debuglog.Printf("GET: %s", c.baseURL+URL)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+URL, nil)
 	if err != nil {
 		return nil, err
 	}
+	req.SetBasicAuth(c.user, c.password)
+	req.Header.Set("Accept", contentType)
+
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return resp, err
@@ -134,7 +146,7 @@ func (c *Client) get(ctx context.Context, URL string) (*http.Response, error) {
 }
 
 func (c *Client) getString(ctx context.Context, URL string) (string, error) {
-	resp, err := c.get(ctx, URL)
+	resp, err := c.get(ctx, URL, "text/plain")
 	if resp != nil {
 		defer resp.Body.Close()
 	}
@@ -149,7 +161,7 @@ func (c *Client) getString(ctx context.Context, URL string) (string, error) {
 }
 
 func (c *Client) getJSON(ctx context.Context, URL string, result interface{}) error {
-	resp, err := c.get(ctx, URL)
+	resp, err := c.get(ctx, URL, "application/json")
 	if resp != nil {
 		defer resp.Body.Close()
 	}
@@ -169,6 +181,9 @@ func (c *Client) postString(ctx context.Context, URL string, value string) error
 	if err != nil {
 		return err
 	}
+	req.SetBasicAuth(c.user, c.password)
+	req.Header.Set("Content-Type", "text/plain")
+
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return err
@@ -191,7 +206,7 @@ func (c *Client) postString(ctx context.Context, URL string, value string) error
 // listenEvents listen to the events from the REST api and send them to the event bus.
 // the method returns after the HTTP connection dropped
 func (c *Client) listenEvents() error {
-	resp, err := c.get(context.Background(), "events")
+	resp, err := c.get(context.Background(), "events", "text/event-stream")
 	if resp != nil {
 		defer resp.Body.Close()
 	}

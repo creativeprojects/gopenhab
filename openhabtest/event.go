@@ -9,7 +9,7 @@ import (
 )
 
 // EventString returns the event topic and event string to send to the event bus
-func EventString(e event.Event) (string, string) {
+func EventString(e event.Event, prefix string) (string, string) {
 	if e == nil {
 		return "", ""
 	}
@@ -22,15 +22,16 @@ func EventString(e event.Event) (string, string) {
 		if err != nil {
 			panic(err)
 		}
+		topic := prefix + ev.Topic()
 		rawEvent, err := json.Marshal(api.EventMessage{
-			Topic:   ev.Topic(),
+			Topic:   topic,
 			Payload: string(rawPayload),
 			Type:    api.EventItemCommand,
 		})
 		if err != nil {
 			panic(err)
 		}
-		return ev.Topic(), string(rawEvent)
+		return topic, string(rawEvent)
 
 	case event.ItemReceivedState:
 		rawPayload, err := json.Marshal(api.EventState{
@@ -40,15 +41,16 @@ func EventString(e event.Event) (string, string) {
 		if err != nil {
 			panic(err)
 		}
+		topic := prefix + ev.Topic()
 		rawEvent, err := json.Marshal(api.EventMessage{
-			Topic:   ev.Topic(),
+			Topic:   topic,
 			Payload: string(rawPayload),
 			Type:    api.EventItemState,
 		})
 		if err != nil {
 			panic(err)
 		}
-		return ev.Topic(), string(rawEvent)
+		return topic, string(rawEvent)
 
 	case event.ItemStateChanged:
 		rawPayload, err := json.Marshal(api.EventStateChanged{
@@ -60,17 +62,18 @@ func EventString(e event.Event) (string, string) {
 		if err != nil {
 			panic(err)
 		}
+		topic := prefix + ev.Topic()
 		rawEvent, err := json.Marshal(api.EventMessage{
-			Topic:   ev.Topic(),
+			Topic:   topic,
 			Payload: string(rawPayload),
 			Type:    api.EventItemStateChanged,
 		})
 		if err != nil {
 			panic(err)
 		}
-		return ev.Topic(), string(rawEvent)
+		return topic, string(rawEvent)
 
 	default:
-		panic(fmt.Sprintf("event type %d not handled", e.Type()))
+		panic(fmt.Sprintf("event type %d not (yet) handled", e.Type()))
 	}
 }

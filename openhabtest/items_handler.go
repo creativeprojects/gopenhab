@@ -17,13 +17,15 @@ type itemsHandler struct {
 	items       map[string]api.Item
 	itemsLocker sync.Mutex
 	eventBus    *eventBus
+	version     Version
 }
 
-func newItemsHandler(log Logger, bus *eventBus) *itemsHandler {
+func newItemsHandler(log Logger, bus *eventBus, version Version) *itemsHandler {
 	return &itemsHandler{
 		log:      log,
 		items:    make(map[string]api.Item, 10),
 		eventBus: bus,
+		version:  version,
 	}
 }
 
@@ -110,12 +112,12 @@ func (h *itemsHandler) receiveCommand(name string, encoder *json.Encoder, resp h
 			return
 		}
 		// now send the events to the bus
-		topic, ev := EventString(event.NewItemReceivedCommand(name, "Test", newState))
+		topic, ev := EventString(event.NewItemReceivedCommand(name, "Test", newState), topicPrefix(h.version))
 		h.eventBus.Publish(topic, ev)
-		topic, ev = EventString(event.NewItemReceivedState(name, "Test", newState))
+		topic, ev = EventString(event.NewItemReceivedState(name, "Test", newState), topicPrefix(h.version))
 		h.eventBus.Publish(topic, ev)
 		if oldState != newState {
-			topic, ev = EventString(event.NewItemStateChanged(name, "Test", oldState, newState))
+			topic, ev = EventString(event.NewItemStateChanged(name, "Test", oldState, "Test", newState), topicPrefix(h.version))
 			h.eventBus.Publish(topic, ev)
 		}
 		return
@@ -152,10 +154,10 @@ func (h *itemsHandler) receiveState(name string, encoder *json.Encoder, resp htt
 			return
 		}
 		// now send the events to the bus
-		topic, ev := EventString(event.NewItemReceivedState(name, "Test", newState))
+		topic, ev := EventString(event.NewItemReceivedState(name, "Test", newState), topicPrefix(h.version))
 		h.eventBus.Publish(topic, ev)
 		if oldState != newState {
-			topic, ev = EventString(event.NewItemStateChanged(name, "Test", oldState, newState))
+			topic, ev = EventString(event.NewItemStateChanged(name, "Test", oldState, "Test", newState), topicPrefix(h.version))
 			h.eventBus.Publish(topic, ev)
 		}
 		return

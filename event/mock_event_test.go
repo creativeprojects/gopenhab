@@ -5,6 +5,7 @@ type mockEvent struct {
 	eventType Type
 }
 
+// newMockEvent creates a mock event: please start the topic at "items/"
 func newMockEvent(topic string, eventType Type) mockEvent {
 	return mockEvent{
 		topic:     topic,

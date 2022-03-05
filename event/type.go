@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	itemTopicPrefix = "smarthome/items/"
+	itemTopicPrefix = "items/"
 )
 
 type Type int

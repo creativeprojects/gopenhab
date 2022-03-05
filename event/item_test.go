@@ -20,6 +20,8 @@ func TestSplitItemTopic(t *testing.T) {
 		{"smarthome/items/item/event", "item", "", "event"},
 		{"smarthome/items/item/trigger/event", "item", "trigger", "event"},
 		{"smarthome/items/item/trigger/event/toomany", "", "", ""},
+		{"openhab/items/item/event", "item", "", "event"},
+		{"openhab/items/item/trigger/event", "item", "trigger", "event"},
 	}
 
 	for _, testItem := range testData {

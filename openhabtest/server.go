@@ -11,6 +11,7 @@ import (
 // Server is a mock openHAB instance to use in tests.
 type Server struct {
 	log         Logger
+	version     Version
 	server      *httptest.Server
 	eventBus    *eventBus
 	closeLocker sync.Mutex
@@ -32,7 +33,7 @@ func NewServer(config Config) *Server {
 		autoBus = nil
 	}
 	events := newEventsHandler(bus, done)
-	items := newItemsHandler(config.Log, autoBus)
+	items := newItemsHandler(config.Log, autoBus, config.Version)
 	routes := []route{
 		{"events", events},
 		{"items", items},
@@ -41,6 +42,7 @@ func NewServer(config Config) *Server {
 	server := httptest.NewServer(newRootHandler(config.Log, routes))
 	return &Server{
 		log:      config.Log,
+		version:  config.Version,
 		server:   server,
 		eventBus: bus,
 		items:    items,
@@ -90,8 +92,9 @@ func (s *Server) Event(e event.Event) {
 	if e == nil {
 		return
 	}
-	topic, ev := EventString(e)
+	topic, ev := EventString(e, topicPrefix(s.version))
 	if topic != "" && ev != "" {
+		s.log.Logf("sending event %s on topic %s", ev, topic)
 		s.RawEvent(topic, ev)
 	}
 }

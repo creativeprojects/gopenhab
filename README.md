@@ -241,8 +241,7 @@ func TestCalculateZoneTemperature(t *testing.T) {
 
 # TODO
 
-- authentication: User/Password or APIKey not supported yet
-- many other things but I forgot where I stopped 6 months ago :-)
+- handle more events on the openhab test server
 
 # Limitations of the mock openHAB server for testing
 

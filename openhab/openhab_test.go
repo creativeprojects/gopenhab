@@ -224,13 +224,16 @@ func TestErrorEvent(t *testing.T) {
 
 func TestDispathEventSaveStateFirst(t *testing.T) {
 	wg := sync.WaitGroup{}
-	server := openhabtest.NewServer(openhabtest.Config{SendEventsFromAPI: true})
-	server.SetItem(api.Item{
+	server := openhabtest.NewServer(openhabtest.Config{SendEventsFromAPI: true, Log: t})
+	err := server.SetItem(api.Item{
 		Name:  "item",
 		State: "FIRST",
 		Type:  "String",
 	})
+	require.NoError(t, err)
+
 	client := NewClient(Config{URL: server.URL()})
+	wg.Add(1)
 	client.AddRule(
 		RuleData{},
 		func(client RuleClient, ruleData RuleData, e event.Event) {
@@ -246,7 +249,7 @@ func TestDispathEventSaveStateFirst(t *testing.T) {
 		OnItemReceivedState("item", nil),
 	)
 
-	wg.Add(2)
+	wg.Add(1)
 	go func() {
 		client.Start()
 	}()

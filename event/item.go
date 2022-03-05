@@ -82,14 +82,14 @@ type ItemStateChanged struct {
 	PreviousState     string
 }
 
-func NewItemStateChanged(itemName, stateType, previousState, newState string) ItemStateChanged {
+func NewItemStateChanged(itemName, previousStateType, previousState, newStateType, newState string) ItemStateChanged {
 	topic := itemTopicPrefix + itemName + "/" + api.TopicEventStateChanged
 	return ItemStateChanged{
 		topic:             topic,
 		ItemName:          itemName,
-		PreviousStateType: stateType,
+		PreviousStateType: previousStateType,
 		PreviousState:     previousState,
-		NewStateType:      stateType,
+		NewStateType:      newStateType,
 		NewState:          newState,
 	}
 }
@@ -115,15 +115,15 @@ type GroupItemStateChanged struct {
 	PreviousState     string
 }
 
-func NewGroupItemStateChanged(itemName, triggeringItem, stateType, previousState, newState string) GroupItemStateChanged {
-	topic := itemTopicPrefix + itemName + "/" + api.TopicEventStateChanged
+func NewGroupItemStateChanged(itemName, triggeringItem, previousStateType, previousState, newStateType, newState string) GroupItemStateChanged {
+	topic := itemTopicPrefix + itemName + "/" + triggeringItem + "/" + api.TopicEventStateChanged
 	return GroupItemStateChanged{
 		topic:             topic,
 		ItemName:          itemName,
 		TriggeringItem:    triggeringItem,
-		PreviousStateType: stateType,
+		PreviousStateType: previousStateType,
 		PreviousState:     previousState,
-		NewStateType:      stateType,
+		NewStateType:      newStateType,
 		NewState:          newState,
 	}
 }
@@ -144,6 +144,14 @@ type ItemAdded struct {
 	Item  Item
 }
 
+func NewItemAdded(item Item) ItemAdded {
+	topic := itemTopicPrefix + item.Name + "/" + api.TopicEventAdded
+	return ItemAdded{
+		topic: topic,
+		Item:  item,
+	}
+}
+
 func (i ItemAdded) Topic() string {
 	return i.topic
 }
@@ -158,6 +166,14 @@ var _ Event = ItemAdded{}
 type ItemRemoved struct {
 	topic string
 	Item  Item
+}
+
+func NewItemRemoved(item Item) ItemRemoved {
+	topic := itemTopicPrefix + item.Name + "/" + api.TopicEventRemoved
+	return ItemRemoved{
+		topic: topic,
+		Item:  item,
+	}
 }
 
 func (i ItemRemoved) Topic() string {
@@ -177,6 +193,15 @@ type ItemUpdated struct {
 	Item    Item
 }
 
+func NewItemUpdated(oldItem, newItem Item) ItemUpdated {
+	topic := itemTopicPrefix + newItem.Name + "/" + api.TopicEventUpdated
+	return ItemUpdated{
+		topic:   topic,
+		OldItem: oldItem,
+		Item:    newItem,
+	}
+}
+
 func (i ItemUpdated) Topic() string {
 	return i.topic
 }
@@ -190,8 +215,12 @@ var _ Event = ItemUpdated{}
 
 // splitItemTopic returns the item name, triggering item (if any) and the event type
 func splitItemTopic(topic string) (string, string, string) {
+	// "smarthome" was used in openHAB 2.x
+	// "openhab" is used since openHAB 3.0
 	parts := strings.Split(topic, "/")
-	if len(parts) < 4 || len(parts) > 5 || parts[0] != "smarthome" || parts[1] != "items" {
+	if len(parts) < 4 || len(parts) > 5 ||
+		(parts[0] != "smarthome" && parts[0] != "openhab") ||
+		parts[1] != "items" {
 		return "", "", ""
 	}
 	if len(parts) == 5 {

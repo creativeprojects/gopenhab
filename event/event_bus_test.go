@@ -58,7 +58,7 @@ func TestOneSubscriberWithTopic(t *testing.T) {
 		call = true
 	})
 
-	eventBus.Publish(newMockEvent("smarthome/items/item2/state", TypeItemState))
+	eventBus.Publish(newMockEvent("items/item2/state", TypeItemState))
 	assert.True(t, call)
 	eventBus.Wait()
 }
@@ -74,7 +74,7 @@ func TestOneSubscriberWithTopicAsync(t *testing.T) {
 		done <- e
 	})
 
-	eventBus.Publish(newMockEvent("smarthome/items/item2/state", TypeItemState))
+	eventBus.Publish(newMockEvent("items/item2/state", TypeItemState))
 
 	select {
 	case e := <-done:
@@ -106,7 +106,7 @@ func TestTwoSubscribers(t *testing.T) {
 		second = true
 	})
 
-	eventBus.Publish(newMockEvent("smarthome/items/item/state", TypeItemState))
+	eventBus.Publish(newMockEvent("items/item/state", TypeItemState))
 	assert.True(t, first)
 	assert.True(t, second)
 }
@@ -131,7 +131,7 @@ func TestTwoSubscribersAsync(t *testing.T) {
 		done2 <- e
 	})
 
-	eventBus.Publish(newMockEvent("smarthome/items/item/state", TypeItemState))
+	eventBus.Publish(newMockEvent("items/item/state", TypeItemState))
 
 	for {
 		select {

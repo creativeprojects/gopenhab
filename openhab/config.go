@@ -7,11 +7,11 @@ import (
 
 type Config struct {
 	// URL of you openHAB instance. It should detect automatically the REST API URL from the main URL.
-	URL                 string
-	User                string
-	Password            string
-	BasicAuthentication bool
-	APIToken            string
+	URL      string
+	User     string
+	Password string
+	// APIToken takes precedence over User/Password authentication
+	APIToken string
 	// Client is optional. You can specify a custom *http.Client if you need, otherwise it's going to use the http.DefaultClient
 	Client *http.Client
 	// TimeoutHTTP is the maximum time allowed to send or receive commands through the openHAB API. Default is 5 seconds.

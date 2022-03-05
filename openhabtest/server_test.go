@@ -89,7 +89,7 @@ func TestCanEncodeEvents(t *testing.T) {
 			`{"topic":"smarthome/items/TestSwitch/state","payload":"{\"type\":\"OnOff\",\"value\":\"ON\"}","type":"ItemStateEvent"}`,
 		},
 		{
-			event.NewItemStateChanged("TestSwitch", "OnOff", "OFF", "ON"),
+			event.NewItemStateChanged("TestSwitch", "OnOff", "OFF", "OnOff", "ON"),
 			`{"topic":"smarthome/items/TestSwitch/statechanged","payload":"{\"type\":\"OnOff\",\"value\":\"ON\",\"oldType\":\"OnOff\",\"oldValue\":\"OFF\"}","type":"ItemStateChangedEvent"}`,
 		},
 	}

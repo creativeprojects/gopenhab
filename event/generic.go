@@ -1,10 +1,22 @@
 package event
 
+import "strings"
+
 // GenericEvent is used when its type is unknown
 type GenericEvent struct {
 	typeName string
 	topic    string
 	payload  string
+}
+
+func NewGenericEvent(eventType, topic, payload string) GenericEvent {
+	topic = strings.TrimPrefix(topic, "smarthome/")
+	topic = strings.TrimPrefix(topic, "openhab/")
+	return GenericEvent{
+		typeName: eventType,
+		topic:    topic,
+		payload:  payload,
+	}
 }
 
 func (e GenericEvent) Topic() string {
