@@ -23,6 +23,15 @@ func OnConnect() *systemEventTrigger {
 	}
 }
 
+// OnStableConnection is a trigger activated when the connection has been stable for some time.
+// When openHAB restarts, a connection to the API could be disconnected many times until openHAB finished
+// all its initialization process.
+func OnStableConnection() *systemEventTrigger {
+	return &systemEventTrigger{
+		eventType: event.TypeClientConnectionStable,
+	}
+}
+
 // OnDisconnect is a trigger activated when the connection to openHAB is lost
 func OnDisconnect() *systemEventTrigger {
 	return &systemEventTrigger{

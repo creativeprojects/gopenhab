@@ -290,12 +290,12 @@ func (c *Client) eventLoop() {
 
 			successTimer = time.AfterFunc(c.config.StableConnectionDuration, func() {
 				backoff = c.config.ReconnectionInitialBackoff
-				debuglog.Printf("connection to the event bus looks stable")
 
 				successTimerMutex.Lock()
 				defer successTimerMutex.Unlock()
 				successTimer = nil
-				// ==> We could maybe publish a new system event when the connection is stable?
+				// publish stable event
+				c.userEventBus.Publish(event.NewSystemEvent(event.TypeClientConnectionStable))
 			})
 		}()
 		err := c.listenEvents()

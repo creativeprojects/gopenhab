@@ -17,6 +17,7 @@ const (
 	TypeUnknown Type = iota
 	TypeClientStarted
 	TypeClientConnected
+	TypeClientConnectionStable
 	TypeClientDisconnected
 	TypeClientStopped
 	TypeClientError
@@ -45,8 +46,8 @@ const (
 // Match returns true if the name matches the topic
 func (t Type) Match(topic, name string) bool {
 	switch t {
-	case TypeUnknown, TypeClientStarted, TypeClientConnected, TypeClientDisconnected,
-		TypeClientStopped, TypeClientError, TypeTimeCron:
+	case TypeUnknown, TypeClientStarted, TypeClientConnected, TypeClientConnectionStable,
+		TypeClientDisconnected, TypeClientStopped, TypeClientError, TypeTimeCron:
 		return true
 	case TypeItemAdded:
 		return topic == itemTopicPrefix+name+"/"+api.TopicEventAdded
