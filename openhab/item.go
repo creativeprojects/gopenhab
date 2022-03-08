@@ -164,6 +164,8 @@ func (i *Item) stateFromString(state string) StateValue {
 		return SwitchState(state)
 	case ItemTypeNumber:
 		return MustParseDecimalState(state)
+	case ItemTypeDateTime:
+		return MustParseDateTimeState(state)
 	}
 }
 

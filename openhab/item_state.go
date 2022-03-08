@@ -5,7 +5,10 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"time"
 )
+
+const DateTimeFormat = "2006-01-02T15:04:05.999-0700"
 
 type StateValue interface {
 	String() string
@@ -85,5 +88,31 @@ func ParseDecimalState(value string) (DecimalState, error) {
 // MustParseDecimalState does not panic if the string is not a number, it returns 0 instead
 func MustParseDecimalState(value string) DecimalState {
 	number, _ := ParseDecimalState(value)
+	return number
+}
+
+type DateTimeState time.Time
+
+// NewDateTimeState creates a DateState with a unit
+func NewDateTimeState(value time.Time) DateTimeState {
+	return DateTimeState(value)
+}
+
+func (s DateTimeState) String() string {
+	return time.Time(s).Format(DateTimeFormat)
+}
+
+// ParseDateTimeState converts a string to a DateState
+func ParseDateTimeState(value string) (DateTimeState, error) {
+	date, err := time.Parse(DateTimeFormat, value)
+	if err != nil {
+		return DateTimeState{}, err
+	}
+	return NewDateTimeState(date), nil
+}
+
+// MustParseDateTimeState does not panic if the string is not a number, it returns 0 instead
+func MustParseDateTimeState(value string) DateTimeState {
+	number, _ := ParseDateTimeState(value)
 	return number
 }
