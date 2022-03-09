@@ -156,7 +156,7 @@ openhab.RuleData{
 },
 ```
 
-I'm not giving the code of `calculateAverage`, but simply imagine it sends the result to the item in output configuration, from the example the name of the item is `ZoneTemperature`.
+Imagine the `calculateAverage` function simply sends the result to the item in output configuration, from the example the name of the item is `ZoneTemperature`.
 
 Here's how you can test it with the openHAB mock server:
 
@@ -241,8 +241,10 @@ func TestCalculateZoneTemperature(t *testing.T) {
 
 # TODO
 
-- handle more events on the openhab test server
+- Handle all state types. Handled for now are `String`, `Switch`, `Number`, `DateTime`.
+- Ability to update rules
+- Handle more events on the openhab test server
 
 # Limitations of the mock openHAB server for testing
 
-- When the server receives a `command` event, it doesn't follow with any corresponding `state` event. You need to publish the `state` events manually if you need them.
+- When the server receives a `command` event, it doesn't follow with any corresponding `state` event. You need to publish the `state` events manually if you need them in your tests.

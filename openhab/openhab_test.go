@@ -69,6 +69,55 @@ func TestGivenRuleID(t *testing.T) {
 	assert.Equal(t, "rule-ID", id)
 }
 
+func TestAddRuleWithError(t *testing.T) {
+	client := NewClient(Config{URL: "http://localhost"})
+	id := client.AddRule(
+		RuleData{},
+		func(client RuleClient, ruleData RuleData, e event.Event) {},
+		OnTimeCron("0 0 0 ? * * *"), // 7 fields instead of 6
+	)
+	assert.NotEmpty(t, id)
+	client.activateRules()
+}
+
+func TestDeleteNoRule(t *testing.T) {
+	client := NewClient(Config{URL: "http://localhost"})
+	deleted := client.DeleteRule("no rule")
+	assert.Equal(t, 0, deleted)
+}
+
+func TestDeleteOneRule(t *testing.T) {
+	client := NewClient(Config{URL: "http://localhost"})
+	id := client.AddRule(
+		RuleData{},
+		func(client RuleClient, ruleData RuleData, e event.Event) {},
+	)
+	assert.Equal(t, 1, len(client.rules))
+	deleted := client.DeleteRule(id)
+	assert.Equal(t, 1, deleted)
+	assert.Equal(t, 0, len(client.rules))
+}
+
+func TestDeleteTwoRules(t *testing.T) {
+	client := NewClient(Config{URL: "http://localhost"})
+	id := client.AddRule(
+		RuleData{ID: "rule-ID"},
+		func(client RuleClient, ruleData RuleData, e event.Event) {},
+	)
+	client.AddRule(
+		RuleData{ID: "rule-ID"},
+		func(client RuleClient, ruleData RuleData, e event.Event) {},
+	)
+	client.AddRule(
+		RuleData{ID: "another rule"},
+		func(client RuleClient, ruleData RuleData, e event.Event) {},
+	)
+	assert.Equal(t, 3, len(client.rules))
+	deleted := client.DeleteRule(id)
+	assert.Equal(t, 2, deleted)
+	assert.Equal(t, 1, len(client.rules))
+}
+
 func TestStartEvent(t *testing.T) {
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	client := NewClient(Config{

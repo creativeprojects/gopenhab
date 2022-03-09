@@ -29,10 +29,26 @@ const (
 
 // RuleClient is an interface for a Client inside a rule
 type RuleClient interface {
+	// GetItem returns an openHAB item from its name.
+	// The very first call of GetItem will try to load the items collection from openHAB.
 	GetItem(name string) (*Item, error)
+	// GetItemState returns an openHAB item state from its name. It's a shortcut of GetItem() => State().
+	// The very first call of GetItemState will try to load the items collection from openHAB.
 	GetItemState(name string) (State, error)
+	// GetMembersOf returns a list of items member of the group
 	GetMembersOf(groupName string) ([]*Item, error)
+	// SendCommand sends a command to an item. It's a shortcut for GetItem() => SendCommand().
+	SendCommand(itemName string, command State) error
+	// SendCommandWait sends a command to an item and wait until the event bus acknowledge receiving the state, or after a timeout
+	// It returns true if openHAB acknowledge it's setting the desired state to the item (even if it's the same value as before).
+	// It returns false in case the acknowledged value is different than the command, or after timeout.
+	// It's a shortcut for GetItem() => SendCommandWait().
+	SendCommandWait(itemName string, command State, timeout time.Duration) (bool, error)
+	// AddRule adds a rule definition
 	AddRule(ruleData RuleData, run Runner, triggers ...Trigger) (ruleID string)
+	// DeleteRule deletes all the rule definition using their ruleID (it could be 0 to many)
+	// and returns the number of rules deleted
+	DeleteRule(ruleID string) int
 }
 
 var _ RuleClient = &Client{}
@@ -47,6 +63,7 @@ type Client struct {
 	cron           *cron.Cron
 	items          *Items
 	rules          []*rule
+	rulesMutex     sync.Mutex
 	systemEventBus event.PubSub
 	userEventBus   event.PubSub
 	internalRules  sync.Once
@@ -128,6 +145,27 @@ func (c *Client) GetItemState(name string) (State, error) {
 // GetMembersOf returns a list of items member of the group
 func (c *Client) GetMembersOf(groupName string) ([]*Item, error) {
 	return c.items.getMembersOf(groupName)
+}
+
+// SendCommand sends a command to an item. It's a shortcut for GetItem() => SendCommand().
+func (c *Client) SendCommand(itemName string, command State) error {
+	item, err := c.items.getItem(itemName)
+	if err != nil {
+		return err
+	}
+	return item.SendCommand(command)
+}
+
+// SendCommandWait sends a command to an item and wait until the event bus acknowledge receiving the state, or after a timeout
+// It returns true if openHAB acknowledge it's setting the desired state to the item (even if it's the same value as before).
+// It returns false in case the acknowledged value is different than the command, or after timeout.
+// It's a shortcut for GetItem() => SendCommandWait().
+func (c *Client) SendCommandWait(itemName string, command State, timeout time.Duration) (bool, error) {
+	item, err := c.items.getItem(itemName)
+	if err != nil {
+		return false, err
+	}
+	return item.SendCommandWait(command, timeout)
 }
 
 func (c *Client) get(ctx context.Context, URL, contentType string) (*http.Response, error) {
@@ -352,9 +390,32 @@ func (c *Client) unsubscribe(subID int) {
 
 // AddRule adds a rule definition
 func (c *Client) AddRule(ruleData RuleData, run Runner, triggers ...Trigger) (ruleID string) {
+	c.rulesMutex.Lock()
+	defer c.rulesMutex.Unlock()
+
 	rule := newRule(c, ruleData, run, triggers)
 	c.rules = append(c.rules, rule)
 	return rule.ruleData.ID
+}
+
+// DeleteRule deletes all the rule definition using their ruleID (it could be 0 to many)
+// and returns the number of rules deleted
+func (c *Client) DeleteRule(ruleID string) int {
+	c.rulesMutex.Lock()
+	defer c.rulesMutex.Unlock()
+
+	deleted := 0
+	newRules := make([]*rule, 0, len(c.rules))
+	for _, rule := range c.rules {
+		if rule.ruleData.ID == ruleID {
+			rule.deactivate(c)
+			deleted++
+			continue
+		}
+		newRules = append(newRules, rule)
+	}
+	c.rules = newRules
+	return deleted
 }
 
 // Start the handling of the defined rules.
@@ -366,16 +427,7 @@ func (c *Client) Start() {
 	c.startOnce.Do(func() {
 		c.addInternalRules()
 
-		for _, rule := range c.rules {
-			err := rule.activate(c)
-			if err != nil {
-				ruleName := rule.String()
-				if ruleName != "" {
-					ruleName = " \"" + ruleName + "\""
-				}
-				errorlog.Printf("error activating rule%s: %s", ruleName, err)
-			}
-		}
+		c.activateRules()
 		c.cron.Start()
 
 		// start the event bus
@@ -418,6 +470,22 @@ func (c *Client) addInternalRules() {
 			c.itemStateUpdated(e)
 		})
 	})
+}
+
+func (c *Client) activateRules() {
+	c.rulesMutex.Lock()
+	defer c.rulesMutex.Unlock()
+
+	for _, rule := range c.rules {
+		err := rule.activate(c)
+		if err != nil {
+			ruleName := rule.String()
+			if ruleName != "" {
+				ruleName = " \"" + ruleName + "\""
+			}
+			errorlog.Printf("error activating rule%s: %s", ruleName, err)
+		}
+	}
 }
 
 func (c *Client) waitFinishingRules() {
