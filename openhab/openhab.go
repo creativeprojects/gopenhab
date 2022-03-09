@@ -30,6 +30,7 @@ const (
 // RuleClient is an interface for a Client inside a rule
 type RuleClient interface {
 	GetItem(name string) (*Item, error)
+	GetItemState(name string) (State, error)
 	GetMembersOf(groupName string) ([]*Item, error)
 	AddRule(ruleData RuleData, run Runner, triggers ...Trigger) (ruleID string)
 }
@@ -112,6 +113,16 @@ func NewClient(config Config) *Client {
 // The very first call of GetItem will try to load the items collection from openHAB.
 func (c *Client) GetItem(name string) (*Item, error) {
 	return c.items.getItem(name)
+}
+
+// GetItemState returns an openHAB item state from its name. It's a shortcut of GetItem() => State().
+// The very first call of GetItemState will try to load the items collection from openHAB.
+func (c *Client) GetItemState(name string) (State, error) {
+	item, err := c.items.getItem(name)
+	if err != nil {
+		return StringState(""), err
+	}
+	return item.State()
 }
 
 // GetMembersOf returns a list of items member of the group
@@ -420,7 +431,7 @@ func (c *Client) itemStateUpdated(e event.Event) {
 			errorlog.Printf("itemStateUpdated: %s", err)
 			return
 		}
-		item.setInternalState(ev.State)
+		item.setInternalStateString(ev.State)
 		// debuglog.Printf("Item %s received state %s", ev.ItemName, ev.State)
 	}
 }

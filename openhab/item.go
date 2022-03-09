@@ -14,7 +14,7 @@ type Item struct {
 	name        string
 	isGroup     bool
 	data        api.Item
-	state       StateValue
+	state       State
 	mainType    ItemType
 	subType     string
 	client      *Client
@@ -40,7 +40,7 @@ func (i *Item) set(data api.Item) *Item {
 		i.mainType, i.subType = getItemType(i.data.GroupType)
 		i.isGroup = true
 	}
-	i.setInternalState(data.State)
+	i.setInternalStateString(data.State)
 	return i
 }
 
@@ -96,8 +96,8 @@ func (i *Item) Updated() time.Time {
 // Please note if you just sent a state change command,
 // the new value might not be reflected instantly,
 // but only after openHAB sent a state changed event back.
-func (i *Item) State() (StateValue, error) {
-	internalState := i.getInternalStateValue()
+func (i *Item) State() (State, error) {
+	internalState := i.getInternalState()
 	if internalState != nil {
 		return internalState, nil
 	}
@@ -110,12 +110,12 @@ func (i *Item) State() (StateValue, error) {
 		return i.stateFromString(""), err
 	}
 	value := i.stateFromString(state)
-	i.setInternalStateValue(value)
+	i.setInternalState(value)
 	return value, nil
 }
 
 // SendCommand sends a command to an item
-func (i *Item) SendCommand(command StateValue) error {
+func (i *Item) SendCommand(command State) error {
 	i.apiLocker.Lock()
 	defer i.apiLocker.Unlock()
 
@@ -132,7 +132,7 @@ func (i *Item) SendCommand(command StateValue) error {
 // SendCommandWait sends a command to an item and wait until the event bus acknowledge receiving the state, or after a timeout
 // It returns true if openHAB acknowledge it's setting the desired state to the item (even if it's the same value as before).
 // It returns false in case the acknowledged value is different than the command, or after timeout
-func (i *Item) SendCommandWait(command StateValue, timeout time.Duration) (bool, error) {
+func (i *Item) SendCommandWait(command State, timeout time.Duration) (bool, error) {
 	stateChan := make(chan string)
 	subID := i.client.subscribe(i.Name(), event.TypeItemState, func(e event.Event) {
 		if ev, ok := e.(event.ItemReceivedState); ok {
@@ -156,7 +156,7 @@ func (i *Item) SendCommandWait(command StateValue, timeout time.Duration) (bool,
 	}
 }
 
-func (i *Item) stateFromString(state string) StateValue {
+func (i *Item) stateFromString(state string) State {
 	switch i.mainType {
 	default:
 		return StringState(state)
@@ -169,17 +169,17 @@ func (i *Item) stateFromString(state string) StateValue {
 	}
 }
 
-// getInternalStateValue gets the internal state value: it does not trigger an API call to get the state.
-func (i *Item) getInternalStateValue() StateValue {
+// getInternalState gets the internal state value: it does not trigger an API call to get the state.
+func (i *Item) getInternalState() State {
 	i.stateLocker.Lock()
 	defer i.stateLocker.Unlock()
 
 	return i.state
 }
 
-// setInternalStateValue sets the internal state value: it does not trigger an API call to set the state.
+// setInternalState sets the internal state value: it does not trigger an API call to set the state.
 // this method should be used after state received or changed events
-func (i *Item) setInternalStateValue(state StateValue) {
+func (i *Item) setInternalState(state State) {
 	i.stateLocker.Lock()
 	defer i.stateLocker.Unlock()
 
@@ -187,6 +187,6 @@ func (i *Item) setInternalStateValue(state StateValue) {
 	i.updated = time.Now()
 }
 
-func (i *Item) setInternalState(state string) {
-	i.setInternalStateValue(i.stateFromString(state))
+func (i *Item) setInternalStateString(state string) {
+	i.setInternalState(i.stateFromString(state))
 }

@@ -10,9 +10,18 @@ import (
 
 const DateTimeFormat = "2006-01-02T15:04:05.999-0700"
 
-type StateValue interface {
+type State interface {
 	String() string
+	Raw() interface{}
 }
+
+// Verify interfaces
+var (
+	_ State = SwitchState("")
+	_ State = StringState("")
+	_ State = DecimalState{}
+	_ State = DateTimeState{}
+)
 
 type SwitchState string
 
@@ -25,8 +34,9 @@ func (s SwitchState) String() string {
 	return string(s)
 }
 
-// Verify interface
-var _ StateValue = SwitchState("")
+func (s SwitchState) Raw() interface{} {
+	return string(s)
+}
 
 const (
 	StateNULL = "NULL"
@@ -37,6 +47,10 @@ const (
 type StringState string
 
 func (s StringState) String() string {
+	return string(s)
+}
+
+func (s StringState) Raw() interface{} {
 	return string(s)
 }
 
@@ -59,6 +73,10 @@ func (s DecimalState) String() string {
 		return value
 	}
 	return fmt.Sprintf("%s %s", value, s.unit)
+}
+
+func (s DecimalState) Raw() interface{} {
+	return s.value
 }
 
 func (s DecimalState) Float64() float64 {
@@ -93,13 +111,21 @@ func MustParseDecimalState(value string) DecimalState {
 
 type DateTimeState time.Time
 
-// NewDateTimeState creates a DateState with a unit
+// NewDateTimeState creates a DateState
 func NewDateTimeState(value time.Time) DateTimeState {
 	return DateTimeState(value)
 }
 
 func (s DateTimeState) String() string {
 	return time.Time(s).Format(DateTimeFormat)
+}
+
+func (s DateTimeState) Raw() interface{} {
+	return time.Time(s)
+}
+
+func (s DateTimeState) Time() time.Time {
+	return time.Time(s)
 }
 
 // ParseDateTimeState converts a string to a DateState

@@ -84,7 +84,7 @@ func TestGetItemAPI(t *testing.T) {
 		assert.NoError(t, err)
 
 		// fake receiving the item state event
-		item.setInternalStateValue(SwitchON)
+		item.setInternalState(SwitchON)
 
 		state, err := item.State()
 		assert.NoError(t, err)
@@ -95,7 +95,7 @@ func TestGetItemAPI(t *testing.T) {
 		assert.NoError(t, err)
 
 		// fake receiving the item state event
-		item.setInternalStateValue(SwitchOFF)
+		item.setInternalState(SwitchOFF)
 
 		state, err = item.State()
 		assert.NoError(t, err)

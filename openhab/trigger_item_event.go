@@ -8,7 +8,7 @@ import (
 
 type itemReceivedCommandTrigger struct {
 	item  string
-	state StateValue
+	state State
 	subId int
 }
 
@@ -17,7 +17,7 @@ type itemReceivedCommandTrigger struct {
 // This is an equivalent of the DSL rule:
 //
 // Item <item> received command [<command>]
-func OnItemReceivedCommand(item string, state StateValue) *itemReceivedCommandTrigger {
+func OnItemReceivedCommand(item string, state State) *itemReceivedCommandTrigger {
 	return &itemReceivedCommandTrigger{
 		item:  item,
 		state: state,
@@ -67,7 +67,7 @@ var _ Trigger = &itemReceivedCommandTrigger{}
 
 type itemReceivedStateTrigger struct {
 	item  string
-	state StateValue
+	state State
 	subId int
 }
 
@@ -76,7 +76,7 @@ type itemReceivedStateTrigger struct {
 // This is an equivalent of the DSL rule:
 //
 // Item <item> received update [<state>]
-func OnItemReceivedState(item string, state StateValue) *itemReceivedStateTrigger {
+func OnItemReceivedState(item string, state State) *itemReceivedStateTrigger {
 	return &itemReceivedStateTrigger{
 		item:  item,
 		state: state,
@@ -126,8 +126,8 @@ var _ Trigger = &itemReceivedStateTrigger{}
 
 type itemStateChangedTrigger struct {
 	item   string
-	from   StateValue
-	to     StateValue
+	from   State
+	to     State
 	subId1 int
 	subId2 int
 }
@@ -146,7 +146,7 @@ func OnItemStateChanged(item string) *itemStateChangedTrigger {
 // This is an equivalent of the DSL rule:
 //
 // Item <item> changed from <state>
-func OnItemStateChangedFrom(item string, from StateValue) *itemStateChangedTrigger {
+func OnItemStateChangedFrom(item string, from State) *itemStateChangedTrigger {
 	return &itemStateChangedTrigger{
 		item: item,
 		from: from,
@@ -157,7 +157,7 @@ func OnItemStateChangedFrom(item string, from StateValue) *itemStateChangedTrigg
 // This is an equivalent of the DSL rule:
 //
 // Item <item> changed to <state>
-func OnItemStateChangedTo(item string, to StateValue) *itemStateChangedTrigger {
+func OnItemStateChangedTo(item string, to State) *itemStateChangedTrigger {
 	return &itemStateChangedTrigger{
 		item: item,
 		to:   to,
@@ -168,7 +168,7 @@ func OnItemStateChangedTo(item string, to StateValue) *itemStateChangedTrigger {
 // This is an equivalent of the DSL rule:
 //
 // Item <item> changed from <state> to <state>
-func OnItemStateChangedFromTo(item string, from, to StateValue) *itemStateChangedTrigger {
+func OnItemStateChangedFromTo(item string, from, to State) *itemStateChangedTrigger {
 	return &itemStateChangedTrigger{
 		item: item,
 		from: from,
