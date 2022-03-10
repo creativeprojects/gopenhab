@@ -120,6 +120,7 @@ func TestDeleteTwoRules(t *testing.T) {
 
 func TestStartEvent(t *testing.T) {
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
+	defer server.Close()
 	client := NewClient(Config{
 		URL: server.URL(),
 	})
@@ -145,6 +146,7 @@ func TestStartEvent(t *testing.T) {
 
 func TestConnectEvent(t *testing.T) {
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
+	defer server.Close()
 	client := NewClient(Config{
 		URL: server.URL(),
 	})
@@ -209,6 +211,7 @@ func TestDisconnectEvent(t *testing.T) {
 func TestStopEvent(t *testing.T) {
 	called := false
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
+	defer server.Close()
 	client := NewClient(Config{
 		URL: server.URL(),
 	})
@@ -271,9 +274,56 @@ func TestErrorEvent(t *testing.T) {
 	client.Stop()
 }
 
+func TestOnDateTimeEvent(t *testing.T) {
+	server := openhabtest.NewServer(openhabtest.Config{Log: t})
+	defer server.Close()
+	client := NewClient(Config{
+		URL: server.URL(),
+	})
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	client.AddRule(
+		RuleData{},
+		func(client RuleClient, ruleData RuleData, e event.Event) {
+			defer wg.Done()
+			ev, ok := e.(event.SystemEvent)
+			assert.True(t, ok)
+			assert.Equal(t, event.TypeTimeCron, ev.Type())
+		},
+		OnDateTime(time.Now().Add(time.Second)))
+
+	go func() {
+		client.Start()
+	}()
+
+	wg.Wait()
+	client.Stop()
+}
+
+func TestDeleteDateTimeEvent(t *testing.T) {
+	client := NewClient(Config{URL: "http://localhost"})
+	id := client.AddRule(
+		RuleData{},
+		func(client RuleClient, ruleData RuleData, e event.Event) {
+			t.Error("event shouldn't have been fired")
+		},
+		OnDateTime(time.Now().Add(time.Second)),
+	)
+	go func() {
+		client.Start()
+	}()
+	time.Sleep(100 * time.Millisecond)
+	deleted := client.DeleteRule(id)
+	assert.Equal(t, 1, deleted)
+
+	time.Sleep(2 * time.Second)
+	client.Stop()
+}
+
 func TestDispathEventSaveStateFirst(t *testing.T) {
 	wg := sync.WaitGroup{}
 	server := openhabtest.NewServer(openhabtest.Config{SendEventsFromAPI: true, Log: t})
+	defer server.Close()
 	err := server.SetItem(api.Item{
 		Name:  "item",
 		State: "FIRST",

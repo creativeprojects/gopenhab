@@ -21,7 +21,7 @@ const (
 	TypeClientDisconnected
 	TypeClientStopped
 	TypeClientError
-	TypeTimeCron
+	TypeTimeCron               // On a specific date and/or time
 	TypeItemAdded              // An item has been added to the item registry.
 	TypeItemRemoved            // An item has been removed from the item registry.
 	TypeItemUpdated            // An item has been updated in the item registry.

@@ -8,6 +8,7 @@ import (
 
 	"github.com/creativeprojects/gopenhab/event"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type mockTrigger struct {
@@ -42,9 +43,10 @@ func TestDebounce(t *testing.T) {
 
 	trigger := &mockTrigger{}
 	debounced := Debounce(trigger, 100*time.Millisecond)
-	debounced.activate(nil, func(event.Event) {
+	err := debounced.activate(nil, func(event.Event) {
 		atomic.AddUint64(&counter, 1)
 	}, RuleData{})
+	require.NoError(t, err)
 
 	for i := 0; i < 3; i++ {
 		for j := 0; j < 10; j++ {
@@ -65,9 +67,10 @@ func TestDebounceConcurrentRun(t *testing.T) {
 
 	trigger := &mockTrigger{}
 	debounced := Debounce(trigger, 100*time.Millisecond)
-	debounced.activate(nil, func(event.Event) {
+	err := debounced.activate(nil, func(event.Event) {
 		atomic.CompareAndSwapUint64(&flag, 0, 1)
 	}, RuleData{})
+	require.NoError(t, err)
 
 	for i := 0; i < count; i++ {
 		wg.Add(1)
@@ -90,9 +93,10 @@ func TestDebounceDelayed(t *testing.T) {
 
 	trigger := &mockTrigger{}
 	debounced := Debounce(trigger, 100*time.Millisecond)
-	debounced.activate(nil, func(event.Event) {
+	err := debounced.activate(nil, func(event.Event) {
 		atomic.AddUint64(&counter, 1)
 	}, RuleData{})
+	require.NoError(t, err)
 
 	time.Sleep(110 * time.Millisecond)
 
@@ -110,9 +114,10 @@ func TestDebounceCancelled(t *testing.T) {
 
 	trigger := &mockTrigger{}
 	debounced := Debounce(trigger, 100*time.Millisecond)
-	debounced.activate(nil, func(event.Event) {
+	err := debounced.activate(nil, func(event.Event) {
 		atomic.AddUint64(&counter, 1)
 	}, RuleData{})
+	require.NoError(t, err)
 
 	trigger.callback(nil)
 
