@@ -30,10 +30,10 @@ const (
 // RuleClient is an interface for a Client inside a rule
 type RuleClient interface {
 	// GetItem returns an openHAB item from its name.
-	// The very first call of GetItem will try to load the items collection from openHAB.
+	// The very first call to GetItem will try to load the items collection from openHAB.
 	GetItem(name string) (*Item, error)
 	// GetItemState returns an openHAB item state from its name. It's a shortcut of GetItem() => State().
-	// The very first call of GetItemState will try to load the items collection from openHAB.
+	// The very first call to GetItemState will try to load the items collection from openHAB.
 	GetItemState(name string) (State, error)
 	// GetMembersOf returns a list of items member of the group
 	GetMembersOf(groupName string) ([]*Item, error)
@@ -70,6 +70,8 @@ type Client struct {
 	startOnce      sync.Once
 	stopOnce       sync.Once
 	stopChan       chan os.Signal
+	running        bool
+	runningMutex   sync.Mutex
 }
 
 // NewClient creates a new client to connect to a openHAB instance
@@ -121,6 +123,8 @@ func NewClient(config Config) *Client {
 		systemEventBus: event.NewEventBus(false),
 		userEventBus:   event.NewEventBus(true),
 		stopChan:       make(chan os.Signal, 1),
+		running:        false,
+		runningMutex:   sync.Mutex{},
 	}
 	client.items = newItems(client)
 	return client
@@ -395,6 +399,10 @@ func (c *Client) AddRule(ruleData RuleData, run Runner, triggers ...Trigger) (ru
 
 	rule := newRule(c, ruleData, run, triggers)
 	c.rules = append(c.rules, rule)
+	if c.isRunning() {
+		// activate it right away if the client is already running
+		c.activateRule(rule)
+	}
 	return rule.ruleData.ID
 }
 
@@ -439,9 +447,13 @@ func (c *Client) Start() {
 		// Send the started event
 		c.userEventBus.Publish(event.NewSystemEvent(event.TypeClientStarted))
 
+		c.setRunning(true)
+
 		// Wait until we're politely asked to leave
 		<-c.stopChan
 		signal.Stop(c.stopChan)
+
+		c.setRunning(false)
 
 		// Send the stopped event
 		c.userEventBus.Publish(event.NewSystemEvent(event.TypeClientStopped))
@@ -457,10 +469,24 @@ func (c *Client) Start() {
 	})
 }
 
+// Stop will send a ClientStopped event, let all the currently running rules finish, close the client, then return.
+// Stop can only be called once, any subsequent call will be ignored.
 func (c *Client) Stop() {
 	c.stopOnce.Do(func() {
 		close(c.stopChan)
 	})
+}
+
+func (c *Client) setRunning(running bool) {
+	c.runningMutex.Lock()
+	defer c.runningMutex.Unlock()
+	c.running = running
+}
+
+func (c *Client) isRunning() bool {
+	c.runningMutex.Lock()
+	defer c.runningMutex.Unlock()
+	return c.running
 }
 
 func (c *Client) addInternalRules() {
@@ -477,14 +503,18 @@ func (c *Client) activateRules() {
 	defer c.rulesMutex.Unlock()
 
 	for _, rule := range c.rules {
-		err := rule.activate(c)
-		if err != nil {
-			ruleName := rule.String()
-			if ruleName != "" {
-				ruleName = " \"" + ruleName + "\""
-			}
-			errorlog.Printf("error activating rule%s: %s", ruleName, err)
+		c.activateRule(rule)
+	}
+}
+
+func (c *Client) activateRule(rule *rule) {
+	err := rule.activate(c)
+	if err != nil {
+		ruleName := rule.String()
+		if ruleName != "" {
+			ruleName = " \"" + ruleName + "\""
 		}
+		errorlog.Printf("error activating rule%s: %s", ruleName, err)
 	}
 }
 

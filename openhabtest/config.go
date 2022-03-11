@@ -9,7 +9,7 @@ const (
 
 // Config is the configuration object for the mock openhab Server
 type Config struct {
-	// Log is sending debugging information to the test logger (t.Log())
+	// Log is sending debugging information to the test logger (t.Log(), t.Logf())
 	Log Logger
 	// SendEventsFromAPI will send all the events automatically on the event bus when
 	// adding, updating, deleting items, things, channels, etc. from the REST API.

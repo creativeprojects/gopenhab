@@ -320,6 +320,41 @@ func TestDeleteDateTimeEvent(t *testing.T) {
 	client.Stop()
 }
 
+func TestAddRuleOnceStarted(t *testing.T) {
+	called := false
+	server := openhabtest.NewServer(openhabtest.Config{Log: t})
+	defer server.Close()
+	client := NewClient(Config{
+		URL: server.URL(),
+	})
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		client.Start()
+	}()
+
+	time.Sleep(10 * time.Millisecond)
+	client.AddRule(
+		RuleData{},
+		func(client RuleClient, ruleData RuleData, e event.Event) {
+			ev, ok := e.(event.SystemEvent)
+			assert.True(t, ok)
+			assert.Equal(t, event.TypeClientStopped, ev.Type())
+			called = true
+		},
+		OnStop())
+
+	// stop the server in 20ms
+	time.AfterFunc(20*time.Millisecond, func() {
+		client.Stop()
+	})
+
+	wg.Wait()
+	assert.True(t, called)
+}
+
 func TestDispathEventSaveStateFirst(t *testing.T) {
 	wg := sync.WaitGroup{}
 	server := openhabtest.NewServer(openhabtest.Config{SendEventsFromAPI: true, Log: t})
