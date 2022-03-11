@@ -39,7 +39,7 @@ func NewServer(config Config) *Server {
 		{"items", items},
 	}
 
-	server := httptest.NewServer(newRootHandler(config.Log, routes))
+	server := httptest.NewServer(newRootHandler(config.Log, routes, config.Version))
 	return &Server{
 		log:      config.Log,
 		version:  config.Version,

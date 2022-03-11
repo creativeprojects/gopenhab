@@ -33,6 +33,30 @@ func TestCanReceiveNotFoundStatus(t *testing.T) {
 	}
 }
 
+func TestCanLoadIndexV2(t *testing.T) {
+	server := NewServer(Config{Version: V2})
+	defer server.Close()
+
+	resp, err := http.Get(server.URL() + "/rest/")
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+}
+
+func TestCanLoadIndexV3(t *testing.T) {
+	server := NewServer(Config{Version: V3})
+	defer server.Close()
+
+	resp, err := http.Get(server.URL() + "/rest/")
+	assert.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+}
+
 func TestCanReceiveRawEvents(t *testing.T) {
 	rawEvents := []string{
 		`{"topic":"smarthome/things/openweathermap:weather-api:aa/status","payload":"{\"status\":\"ONLINE\",\"statusDetail\":\"NONE\"}","type":"ThingStatusInfoEvent"}`,

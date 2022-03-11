@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall"
@@ -72,6 +73,7 @@ type Client struct {
 	stopChan       chan os.Signal
 	running        bool
 	runningMutex   sync.Mutex
+	apiVersion     int
 }
 
 // NewClient creates a new client to connect to a openHAB instance
@@ -349,6 +351,8 @@ func (c *Client) eventLoop() {
 				successTimer = nil
 				// publish stable event
 				c.userEventBus.Publish(event.NewSystemEvent(event.TypeClientConnectionStable))
+				// load API version information
+				c.loadIndex()
 			})
 		}()
 		err := c.listenEvents()
@@ -390,6 +394,28 @@ func (c *Client) subscribeSystem(name string, eventType event.Type, callback fun
 
 func (c *Client) unsubscribe(subID int) {
 	c.userEventBus.Unsubscribe(subID)
+}
+
+func (c *Client) loadIndex() {
+	index := restIndex{}
+	ctx, cancel := context.WithTimeout(context.Background(), c.config.TimeoutHTTP)
+	defer cancel()
+
+	err := c.getJSON(ctx, "", &index)
+	if err != nil {
+		errorlog.Printf("cannot load information from openHAB: %s", err)
+		return
+	}
+	apiVersion, err := strconv.Atoi(index.APIVersion)
+	if err != nil {
+		errorlog.Printf("invalid API version: %s", err)
+		return
+	}
+	if apiVersion < 3 || apiVersion > 4 {
+		errorlog.Printf("API version %d not supported!")
+		return
+	}
+	c.apiVersion = apiVersion
 }
 
 // AddRule adds a rule definition
