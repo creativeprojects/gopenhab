@@ -42,7 +42,7 @@ func TestDebounce(t *testing.T) {
 	)
 
 	trigger := &mockTrigger{}
-	debounced := Debounce(trigger, 100*time.Millisecond)
+	debounced := Debounce(trigger, 50*time.Millisecond)
 	err := debounced.activate(nil, func(event.Event) {
 		atomic.AddUint64(&counter, 1)
 	}, RuleData{})
