@@ -13,6 +13,7 @@ const DateTimeFormat = "2006-01-02T15:04:05.999-0700"
 type State interface {
 	String() string
 	Raw() interface{}
+	Equal(other string) bool
 }
 
 // Verify interfaces
@@ -31,11 +32,15 @@ const (
 )
 
 func (s SwitchState) String() string {
-	return string(s)
+	return strings.ToUpper(string(s))
 }
 
 func (s SwitchState) Raw() interface{} {
 	return string(s)
+}
+
+func (s SwitchState) Equal(other string) bool {
+	return s.String() == other
 }
 
 const (
@@ -52,6 +57,10 @@ func (s StringState) String() string {
 
 func (s StringState) Raw() interface{} {
 	return string(s)
+}
+
+func (s StringState) Equal(other string) bool {
+	return string(s) == other
 }
 
 type DecimalState struct {
@@ -85,6 +94,14 @@ func (s DecimalState) Float64() float64 {
 
 func (s DecimalState) Unit() string {
 	return s.unit
+}
+
+func (s DecimalState) Equal(other string) bool {
+	compare, err := ParseDecimalState(other)
+	if err != nil {
+		return false
+	}
+	return s.value == compare.value && s.unit == compare.unit
 }
 
 // ParseDecimalState converts a string to a DecimalState
@@ -126,6 +143,14 @@ func (s DateTimeState) Raw() interface{} {
 
 func (s DateTimeState) Time() time.Time {
 	return time.Time(s)
+}
+
+func (s DateTimeState) Equal(other string) bool {
+	compare, err := ParseDateTimeState(other)
+	if err != nil {
+		return false
+	}
+	return s.Time().Equal(compare.Time())
 }
 
 // ParseDateTimeState converts a string to a DateState

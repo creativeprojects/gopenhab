@@ -149,11 +149,8 @@ func (i *Item) SendCommandWait(command State, timeout time.Duration) (bool, erro
 	}
 
 	select {
-	// don't check if both strings match, because when it's a DateTime they actually don't
-	// case state := <-stateChan:
-	// 	return state == command.String(), nil
-	case <-stateChan:
-		return true, nil
+	case state := <-stateChan:
+		return command.Equal(state), nil
 	case <-time.After(timeout):
 		return false, nil
 	}
