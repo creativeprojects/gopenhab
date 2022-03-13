@@ -35,7 +35,7 @@ func main() {
 		func(client openhab.RuleClient, ruleData openhab.RuleData, e event.Event) {
 			log.Printf("SYSTEM EVENT: client connected")
 		},
-		openhab.Debounce(openhab.OnConnect(), 1*time.Minute),
+		openhab.Debounce(1*time.Minute, openhab.OnConnect()),
 	)
 
 	client.AddRule(
@@ -43,7 +43,7 @@ func main() {
 		func(client openhab.RuleClient, ruleData openhab.RuleData, e event.Event) {
 			log.Print("SYSTEM EVENT: client disconnected")
 		},
-		openhab.Debounce(openhab.OnDisconnect(), 10*time.Second),
+		openhab.Debounce(10*time.Second, openhab.OnDisconnect()),
 	)
 
 	client.AddRule(
