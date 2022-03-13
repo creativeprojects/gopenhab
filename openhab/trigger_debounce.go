@@ -9,19 +9,19 @@ import (
 
 // triggerDebounce is a special trigger used to debounce a trigger
 type triggerDebounce struct {
-	lock    sync.Locker
-	after   time.Duration
-	timer   *time.Timer
-	trigger Trigger
+	lock     sync.Locker
+	after    time.Duration
+	timer    *time.Timer
+	triggers []Trigger
 }
 
 // Debounce will trigger the event after some time, in case the subscription is triggered multiple times in a row.
 // Typically this is the case of Connection and Disconnection system events when openHAB is starting
-func Debounce(trigger Trigger, after time.Duration) *triggerDebounce {
+func Debounce(after time.Duration, triggers ...Trigger) *triggerDebounce {
 	return &triggerDebounce{
-		lock:    &sync.Mutex{},
-		after:   after,
-		trigger: trigger,
+		lock:     &sync.Mutex{},
+		after:    after,
+		triggers: triggers,
 	}
 }
 
@@ -38,11 +38,19 @@ func (c *triggerDebounce) activate(client *Client, run func(ev event.Event), rul
 			run(ev)
 		})
 	}
-	return c.trigger.activate(client, debounced, ruleData)
+	for _, trigger := range c.triggers {
+		err := trigger.activate(client, debounced, ruleData)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (c *triggerDebounce) deactivate(client *Client) {
-	c.trigger.deactivate(client)
+	for _, trigger := range c.triggers {
+		trigger.deactivate(client)
+	}
 
 	c.lock.Lock()
 	defer c.lock.Unlock()
@@ -53,7 +61,12 @@ func (c *triggerDebounce) deactivate(client *Client) {
 }
 
 func (c *triggerDebounce) match(e event.Event) bool {
-	return c.trigger.match(e)
+	for _, trigger := range c.triggers {
+		if trigger.match(e) {
+			return true
+		}
+	}
+	return false
 }
 
 // Interface

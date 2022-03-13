@@ -42,7 +42,7 @@ func TestDebounce(t *testing.T) {
 	)
 
 	trigger := &mockTrigger{}
-	debounced := Debounce(trigger, 50*time.Millisecond)
+	debounced := Debounce(50*time.Millisecond, trigger)
 	err := debounced.activate(nil, func(event.Event) {
 		atomic.AddUint64(&counter, 1)
 	}, RuleData{})
@@ -66,7 +66,7 @@ func TestDebounceConcurrentRun(t *testing.T) {
 	var flag uint64
 
 	trigger := &mockTrigger{}
-	debounced := Debounce(trigger, 100*time.Millisecond)
+	debounced := Debounce(100*time.Millisecond, trigger)
 	err := debounced.activate(nil, func(event.Event) {
 		atomic.CompareAndSwapUint64(&flag, 0, 1)
 	}, RuleData{})
@@ -92,7 +92,7 @@ func TestDebounceDelayed(t *testing.T) {
 	)
 
 	trigger := &mockTrigger{}
-	debounced := Debounce(trigger, 100*time.Millisecond)
+	debounced := Debounce(100*time.Millisecond, trigger)
 	err := debounced.activate(nil, func(event.Event) {
 		atomic.AddUint64(&counter, 1)
 	}, RuleData{})
@@ -113,7 +113,7 @@ func TestDebounceCancelled(t *testing.T) {
 	)
 
 	trigger := &mockTrigger{}
-	debounced := Debounce(trigger, 100*time.Millisecond)
+	debounced := Debounce(100*time.Millisecond, trigger)
 	err := debounced.activate(nil, func(event.Event) {
 		atomic.AddUint64(&counter, 1)
 	}, RuleData{})
@@ -127,4 +127,70 @@ func TestDebounceCancelled(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	assert.Equal(t, 0, int(atomic.LoadUint64(&counter)))
+}
+
+func TestDebounceTwoTriggers(t *testing.T) {
+	var (
+		counter uint64
+	)
+
+	trigger1 := &mockTrigger{}
+	trigger2 := &mockTrigger{}
+	debounced := Debounce(50*time.Millisecond, trigger1, trigger2)
+	err := debounced.activate(nil, func(event.Event) {
+		atomic.AddUint64(&counter, 1)
+	}, RuleData{})
+	require.NoError(t, err)
+
+	for i := 0; i < 3; i++ {
+		for j := 0; j < 10; j++ {
+			trigger1.callback(nil)
+			trigger2.callback(nil)
+		}
+
+		time.Sleep(200 * time.Millisecond)
+	}
+
+	assert.Equal(t, 3, int(atomic.LoadUint64(&counter)))
+}
+
+func TestDebounceConcurrentRunOfThreeTriggers(t *testing.T) {
+	var count = 10
+	var wg sync.WaitGroup
+
+	var flag uint64
+
+	trigger1 := &mockTrigger{}
+	trigger2 := &mockTrigger{}
+	trigger3 := &mockTrigger{}
+	debounced := Debounce(100*time.Millisecond, trigger1, trigger2, trigger3)
+	err := debounced.activate(nil, func(event.Event) {
+		atomic.CompareAndSwapUint64(&flag, 0, 1)
+	}, RuleData{})
+	require.NoError(t, err)
+
+	for i := 0; i < count; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			trigger1.callback(nil)
+		}()
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			trigger2.callback(nil)
+		}()
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			trigger3.callback(nil)
+		}()
+	}
+	wg.Wait()
+
+	time.Sleep(500 * time.Millisecond)
+
+	assert.Equal(t, 1, int(atomic.LoadUint64(&flag)), "Flag not set")
 }
