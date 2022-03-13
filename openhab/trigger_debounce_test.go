@@ -102,7 +102,7 @@ func TestDebounceDelayed(t *testing.T) {
 
 	trigger.callback(nil)
 
-	time.Sleep(200 * time.Millisecond)
+	time.Sleep(300 * time.Millisecond)
 
 	assert.Equal(t, 1, int(atomic.LoadUint64(&counter)))
 }
