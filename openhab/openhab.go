@@ -74,6 +74,8 @@ type Client struct {
 	running        bool
 	runningMutex   sync.Mutex
 	apiVersion     int
+	state          ClientState
+	stateMutex     sync.Mutex
 }
 
 // NewClient creates a new client to connect to a openHAB instance
@@ -127,6 +129,8 @@ func NewClient(config Config) *Client {
 		stopChan:       make(chan os.Signal, 1),
 		running:        false,
 		runningMutex:   sync.Mutex{},
+		state:          StateStarting,
+		stateMutex:     sync.Mutex{},
 	}
 	client.items = newItems(client)
 	return client
@@ -174,9 +178,9 @@ func (c *Client) SendCommandWait(itemName string, command State, timeout time.Du
 	return item.SendCommandWait(command, timeout)
 }
 
-func (c *Client) get(ctx context.Context, URL, contentType string) (*http.Response, error) {
-	debuglog.Printf("GET: %s", c.baseURL+URL)
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+URL, nil)
+func (c *Client) get(ctx context.Context, url, contentType string) (*http.Response, error) {
+	debuglog.Printf("GET: %s", c.baseURL+url)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.baseURL+url, http.NoBody)
 	if err != nil {
 		return nil, err
 	}
@@ -200,8 +204,8 @@ func (c *Client) get(ctx context.Context, URL, contentType string) (*http.Respon
 	return resp, nil
 }
 
-func (c *Client) getString(ctx context.Context, URL string) (string, error) {
-	resp, err := c.get(ctx, URL, "text/plain")
+func (c *Client) getString(ctx context.Context, url string) (string, error) {
+	resp, err := c.get(ctx, url, "text/plain")
 	if resp != nil {
 		defer resp.Body.Close()
 	}
@@ -215,8 +219,8 @@ func (c *Client) getString(ctx context.Context, URL string) (string, error) {
 	return string(body), nil
 }
 
-func (c *Client) getJSON(ctx context.Context, URL string, result interface{}) error {
-	resp, err := c.get(ctx, URL, "application/json")
+func (c *Client) getJSON(ctx context.Context, url string, result interface{}) error {
+	resp, err := c.get(ctx, url, "application/json")
 	if resp != nil {
 		defer resp.Body.Close()
 	}
@@ -231,8 +235,8 @@ func (c *Client) getJSON(ctx context.Context, URL string, result interface{}) er
 	return nil
 }
 
-func (c *Client) postString(ctx context.Context, URL string, value string) error {
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+URL, strings.NewReader(value))
+func (c *Client) postString(ctx context.Context, url, value string) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+url, strings.NewReader(value))
 	if err != nil {
 		return err
 	}
@@ -246,7 +250,7 @@ func (c *Client) postString(ctx context.Context, URL string, value string) error
 	// we don't expect any body in the response
 	resp.Body.Close()
 
-	if resp.StatusCode >= 400 {
+	if resp.StatusCode >= http.StatusBadRequest {
 		switch resp.StatusCode {
 		case http.StatusNotFound:
 			return ErrorNotFound
@@ -270,9 +274,11 @@ func (c *Client) listenEvents() error {
 		c.userEventBus.Publish(event.NewErrorEvent(err))
 		return err
 	}
+	c.setState(StateConnected)
 	// send connect event
 	c.userEventBus.Publish(event.NewSystemEvent(event.TypeClientConnected))
 	defer func() {
+		c.setState(StateDisconnected)
 		// send disconnect event
 		c.userEventBus.Publish(event.NewSystemEvent(event.TypeClientDisconnected))
 	}()
@@ -294,9 +300,9 @@ func (c *Client) listenEvents() error {
 			if !strings.HasPrefix(line, eventHeader) {
 				errorlog.Printf("unexpected start of event: %q", line)
 			}
-			event := strings.TrimPrefix(line, eventHeader)
-			if event != "message" {
-				errorlog.Printf("unexpected event: %q", event)
+			ev := strings.TrimPrefix(line, eventHeader)
+			if ev != "message" {
+				errorlog.Printf("unexpected event: %q", ev)
 			}
 			continue
 		}
@@ -338,16 +344,22 @@ func (c *Client) eventLoop() {
 	backoff := c.config.ReconnectionInitialBackoff
 
 	for {
+		c.setState(StateConnecting)
 		// run a timer in the background to reset the backoff when the connection is stable
 		go func() {
 			successTimerMutex.Lock()
 			defer successTimerMutex.Unlock()
 
 			successTimer = time.AfterFunc(c.config.StableConnectionDuration, func() {
-				backoff = c.config.ReconnectionInitialBackoff
-
 				successTimerMutex.Lock()
 				defer successTimerMutex.Unlock()
+				backoff = c.config.ReconnectionInitialBackoff
+
+				if !c.isState(StateConnected) {
+					// still not connected, to we restart the timer
+					successTimer.Reset(c.config.StableConnectionDuration)
+					return
+				}
 				successTimer = nil
 				// publish stable event
 				c.userEventBus.Publish(event.NewSystemEvent(event.TypeClientConnectionStable))
@@ -413,6 +425,7 @@ func (c *Client) loadIndex() {
 		return
 	}
 	c.apiVersion = apiVersion
+	debuglog.Printf("openHAB server API version %d", apiVersion)
 }
 
 // AddRule adds a rule definition
@@ -555,4 +568,16 @@ func (c *Client) itemStateUpdated(e event.Event) {
 		item.setInternalStateString(ev.State)
 		// debuglog.Printf("Item %s received state %s", ev.ItemName, ev.State)
 	}
+}
+
+func (c *Client) setState(state ClientState) {
+	c.stateMutex.Lock()
+	defer c.stateMutex.Unlock()
+	c.state = state
+}
+
+func (c *Client) isState(state ClientState) bool {
+	c.stateMutex.Lock()
+	defer c.stateMutex.Unlock()
+	return c.state == state
 }
