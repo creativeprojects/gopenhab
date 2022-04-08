@@ -369,10 +369,7 @@ func (c *Client) eventLoop() {
 		time.Sleep(backoff)
 
 		// calculate next backoff
-		backoff = time.Duration(float64(backoff) * c.config.ReconnectionMultiplier)
-		if backoff > c.config.ReconnectionMaxBackoff {
-			backoff = c.config.ReconnectionMaxBackoff
-		}
+		backoff = nextBackoff(backoff, c.config)
 	}
 }
 

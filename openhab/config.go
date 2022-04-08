@@ -22,9 +22,9 @@ type Config struct {
 	// ReconnectionMultiplier is the factor with which to multiply backoff after a failed retry.
 	// If undefined, it defaults to 2.0
 	ReconnectionMultiplier float64
-	// ReconnectionJitter represents by how much to randomize backoffs.
+	// ReconnectionJitter represents by how much to randomize backoffs (+/-).
 	// If undefined, it defaults to 0 (linear backoff)
-	ReconnectionJitter float64
+	ReconnectionJitter time.Duration
 	// ReconnectionMaxBackoff is the upper bound on backoff.
 	// If undefined, it defaults to 1 minute
 	ReconnectionMaxBackoff time.Duration
