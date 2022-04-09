@@ -28,32 +28,6 @@ const (
 	eventData          = "data: "
 )
 
-// RuleClient is an interface for a Client inside a rule
-type RuleClient interface {
-	// GetItem returns an openHAB item from its name.
-	// The very first call to GetItem will try to load the items collection from openHAB.
-	GetItem(name string) (*Item, error)
-	// GetItemState returns an openHAB item state from its name. It's a shortcut of GetItem() => State().
-	// The very first call to GetItemState will try to load the items collection from openHAB.
-	GetItemState(name string) (State, error)
-	// GetMembersOf returns a list of items member of the group
-	GetMembersOf(groupName string) ([]*Item, error)
-	// SendCommand sends a command to an item. It's a shortcut for GetItem() => SendCommand().
-	SendCommand(itemName string, command State) error
-	// SendCommandWait sends a command to an item and wait until the event bus acknowledge receiving the state, or after a timeout
-	// It returns true if openHAB acknowledge it's setting the desired state to the item (even if it's the same value as before).
-	// It returns false in case the acknowledged value is different than the command, or after timeout.
-	// It's a shortcut for GetItem() => SendCommandWait().
-	SendCommandWait(itemName string, command State, timeout time.Duration) (bool, error)
-	// AddRule adds a rule definition
-	AddRule(ruleData RuleData, run Runner, triggers ...Trigger) (ruleID string)
-	// DeleteRule deletes all the rule definition using their ruleID (it could be 0 to many)
-	// and returns the number of rules deleted
-	DeleteRule(ruleID string) int
-}
-
-var _ RuleClient = &Client{}
-
 // Client for openHAB. It's using openHAB REST API internally.
 type Client struct {
 	config         Config

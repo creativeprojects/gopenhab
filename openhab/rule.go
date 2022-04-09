@@ -7,7 +7,7 @@ import (
 	"github.com/segmentio/ksuid"
 )
 
-type Runner func(client RuleClient, ruleData RuleData, e event.Event)
+type Runner func(client *Client, ruleData RuleData, e event.Event)
 
 type rule struct {
 	ruleData  RuleData

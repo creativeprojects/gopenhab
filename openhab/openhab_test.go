@@ -55,7 +55,7 @@ func TestRuleID(t *testing.T) {
 	client := NewClient(Config{URL: "http://localhost"})
 	id := client.AddRule(
 		RuleData{},
-		func(client RuleClient, ruleData RuleData, e event.Event) {},
+		func(client *Client, ruleData RuleData, e event.Event) {},
 	)
 	assert.NotEmpty(t, id)
 }
@@ -64,7 +64,7 @@ func TestGivenRuleID(t *testing.T) {
 	client := NewClient(Config{URL: "http://localhost"})
 	id := client.AddRule(
 		RuleData{ID: "rule-ID"},
-		func(client RuleClient, ruleData RuleData, e event.Event) {},
+		func(client *Client, ruleData RuleData, e event.Event) {},
 	)
 	assert.Equal(t, "rule-ID", id)
 }
@@ -73,7 +73,7 @@ func TestAddRuleWithError(t *testing.T) {
 	client := NewClient(Config{URL: "http://localhost"})
 	id := client.AddRule(
 		RuleData{},
-		func(client RuleClient, ruleData RuleData, e event.Event) {},
+		func(client *Client, ruleData RuleData, e event.Event) {},
 		OnTimeCron("0 0 0 ? * * *"), // 7 fields instead of 6
 	)
 	assert.NotEmpty(t, id)
@@ -90,7 +90,7 @@ func TestDeleteOneRule(t *testing.T) {
 	client := NewClient(Config{URL: "http://localhost"})
 	id := client.AddRule(
 		RuleData{},
-		func(client RuleClient, ruleData RuleData, e event.Event) {},
+		func(client *Client, ruleData RuleData, e event.Event) {},
 	)
 	assert.Equal(t, 1, len(client.rules))
 	deleted := client.DeleteRule(id)
@@ -102,15 +102,15 @@ func TestDeleteTwoRules(t *testing.T) {
 	client := NewClient(Config{URL: "http://localhost"})
 	id := client.AddRule(
 		RuleData{ID: "rule-ID"},
-		func(client RuleClient, ruleData RuleData, e event.Event) {},
+		func(client *Client, ruleData RuleData, e event.Event) {},
 	)
 	client.AddRule(
 		RuleData{ID: "rule-ID"},
-		func(client RuleClient, ruleData RuleData, e event.Event) {},
+		func(client *Client, ruleData RuleData, e event.Event) {},
 	)
 	client.AddRule(
 		RuleData{ID: "another rule"},
-		func(client RuleClient, ruleData RuleData, e event.Event) {},
+		func(client *Client, ruleData RuleData, e event.Event) {},
 	)
 	assert.Equal(t, 3, len(client.rules))
 	deleted := client.DeleteRule(id)
@@ -128,7 +128,7 @@ func TestStartEvent(t *testing.T) {
 	wg.Add(1)
 	client.AddRule(
 		RuleData{},
-		func(client RuleClient, ruleData RuleData, e event.Event) {
+		func(client *Client, ruleData RuleData, e event.Event) {
 			defer wg.Done()
 			ev, ok := e.(event.SystemEvent)
 			assert.True(t, ok)
@@ -154,7 +154,7 @@ func TestConnectEvent(t *testing.T) {
 	wg.Add(1)
 	client.AddRule(
 		RuleData{},
-		func(client RuleClient, ruleData RuleData, e event.Event) {
+		func(client *Client, ruleData RuleData, e event.Event) {
 			defer wg.Done()
 			ev, ok := e.(event.SystemEvent)
 			assert.True(t, ok)
@@ -185,7 +185,7 @@ func TestDisconnectEvent(t *testing.T) {
 	wg.Add(1)
 	client.AddRule(
 		RuleData{},
-		func(client RuleClient, ruleData RuleData, e event.Event) {
+		func(client *Client, ruleData RuleData, e event.Event) {
 			defer wg.Done()
 			ev, ok := e.(event.SystemEvent)
 			assert.True(t, ok)
@@ -217,7 +217,7 @@ func TestStopEvent(t *testing.T) {
 	})
 	client.AddRule(
 		RuleData{},
-		func(client RuleClient, ruleData RuleData, e event.Event) {
+		func(client *Client, ruleData RuleData, e event.Event) {
 			ev, ok := e.(event.SystemEvent)
 			assert.True(t, ok)
 			assert.Equal(t, event.TypeClientStopped, ev.Type())
@@ -251,7 +251,7 @@ func TestErrorEvent(t *testing.T) {
 	once := sync.Once{}
 	client.AddRule(
 		RuleData{Name: "Test error rule"},
-		func(client RuleClient, ruleData RuleData, e event.Event) {
+		func(client *Client, ruleData RuleData, e event.Event) {
 			once.Do(func() {
 				defer wg.Done()
 				ev, ok := e.(event.ErrorEvent)
@@ -284,7 +284,7 @@ func TestOnDateTimeEvent(t *testing.T) {
 	wg.Add(1)
 	client.AddRule(
 		RuleData{},
-		func(client RuleClient, ruleData RuleData, e event.Event) {
+		func(client *Client, ruleData RuleData, e event.Event) {
 			defer wg.Done()
 			ev, ok := e.(event.SystemEvent)
 			assert.True(t, ok)
@@ -304,7 +304,7 @@ func TestDeleteDateTimeEvent(t *testing.T) {
 	client := NewClient(Config{URL: "http://localhost"})
 	id := client.AddRule(
 		RuleData{},
-		func(client RuleClient, ruleData RuleData, e event.Event) {
+		func(client *Client, ruleData RuleData, e event.Event) {
 			t.Error("event shouldn't have been fired")
 		},
 		OnDateTime(time.Now().Add(time.Second)),
@@ -338,7 +338,7 @@ func TestAddRuleOnceStarted(t *testing.T) {
 	time.Sleep(10 * time.Millisecond)
 	client.AddRule(
 		RuleData{},
-		func(client RuleClient, ruleData RuleData, e event.Event) {
+		func(client *Client, ruleData RuleData, e event.Event) {
 			ev, ok := e.(event.SystemEvent)
 			assert.True(t, ok)
 			assert.Equal(t, event.TypeClientStopped, ev.Type())
@@ -370,7 +370,7 @@ func TestDispathEventSaveStateFirst(t *testing.T) {
 	wg.Add(1)
 	client.AddRule(
 		RuleData{},
-		func(client RuleClient, ruleData RuleData, e event.Event) {
+		func(client *Client, ruleData RuleData, e event.Event) {
 			defer wg.Done()
 			ev, ok := e.(event.ItemReceivedState)
 			require.True(t, ok)
