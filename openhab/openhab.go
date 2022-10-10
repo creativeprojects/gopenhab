@@ -20,12 +20,16 @@ import (
 )
 
 const (
-	eventStateWaiting  = 0
-	eventStateBanner   = 1
-	eventStateData     = 2
-	eventStateFinished = 3
-	eventHeader        = "event: "
-	eventData          = "data: "
+	eventStateWaiting   = 0
+	eventStateBanner    = 1
+	eventStateData      = 2
+	eventStateFinished  = 3
+	eventHeader         = "event: "
+	eventData           = "data: "
+	eventTypeMessage    = "message"
+	eventTypeEvent      = "event"
+	minSupportedVersion = 3
+	maxSupportedVersion = 5
 )
 
 // Client for openHAB. It's using openHAB REST API internally.
@@ -275,8 +279,9 @@ func (c *Client) listenEvents() error {
 				errorlog.Printf("unexpected start of event: %q", line)
 			}
 			ev := strings.TrimPrefix(line, eventHeader)
-			if ev != "message" {
-				errorlog.Printf("unexpected event: %q", ev)
+			// "event" seems to send this data: "{\"type\":\"ALIVE\"}"
+			if ev != eventTypeMessage && ev != eventTypeEvent {
+				errorlog.Printf("unexpected event type %q", ev)
 			}
 			continue
 		}
@@ -394,8 +399,8 @@ func (c *Client) loadIndex() {
 		errorlog.Printf("invalid API version: %s", err)
 		return
 	}
-	if apiVersion < 3 || apiVersion > 4 {
-		errorlog.Printf("API version %d not supported!")
+	if apiVersion < minSupportedVersion || apiVersion > maxSupportedVersion {
+		errorlog.Printf("API version %d not supported!", apiVersion)
 		return
 	}
 	c.apiVersion = apiVersion
