@@ -1,8 +1,6 @@
 package event
 
 import (
-	"strings"
-
 	"github.com/creativeprojects/gopenhab/api"
 )
 
@@ -212,19 +210,3 @@ func (i ItemUpdated) Type() Type {
 
 // Verify interface
 var _ Event = ItemUpdated{}
-
-// splitItemTopic returns the item name, triggering item (if any) and the event type
-func splitItemTopic(topic string) (string, string, string) {
-	// "smarthome" was used in openHAB 2.x
-	// "openhab" is used since openHAB 3.0
-	parts := strings.Split(topic, "/")
-	if len(parts) < 4 || len(parts) > 5 ||
-		(parts[0] != "smarthome" && parts[0] != "openhab") ||
-		parts[1] != "items" {
-		return "", "", ""
-	}
-	if len(parts) == 5 {
-		return parts[2], parts[3], parts[4]
-	}
-	return parts[2], "", parts[3]
-}

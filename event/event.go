@@ -131,6 +131,18 @@ func New(data string) (Event, error) {
 			},
 		), nil
 
+	case api.EventThingStatusInfo:
+		data := api.ThingStatusInfo{}
+		err := json.Unmarshal([]byte(message.Payload), &data)
+		if err != nil {
+			return nil, fmt.Errorf("error decoding message: %w", err)
+		}
+		thingName, _ := splitThingTopic(message.Topic)
+		return NewThingStatusInfoEvent(thingName, data.Status, data.StatusDetail), nil
+
+	case api.EventTypeAlive:
+		return NewAliveEvent(), nil
+
 	default:
 		return NewGenericEvent(message.Type, message.Topic, message.Payload), nil
 	}

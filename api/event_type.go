@@ -20,6 +20,8 @@ const (
 	EventItemChannelLinkAdded   = "ItemChannelLinkAddedEvent"   // An item channel link has been added to the registry.
 	EventItemChannelLinkRemoved = "ItemChannelLinkRemovedEvent" // An item channel link has been removed from the registry.
 	EventChannelTriggered       = "ChannelTriggeredEvent"       // A channel has been triggered.
+	// event added in API v5
+	EventTypeAlive = "ALIVE"
 )
 
 const (

@@ -8,7 +8,8 @@ import (
 )
 
 const (
-	itemTopicPrefix = "items/"
+	itemTopicPrefix  = "items/"
+	thingTopicPrefix = "things/"
 )
 
 type Type int
@@ -21,6 +22,7 @@ const (
 	TypeClientDisconnected
 	TypeClientStopped
 	TypeClientError
+	TypeServerAlive
 	TypeTimeCron               // On a specific date and/or time
 	TypeItemAdded              // An item has been added to the item registry.
 	TypeItemRemoved            // An item has been removed from the item registry.
@@ -64,6 +66,8 @@ func (t Type) Match(topic, name string) bool {
 	case TypeGroupItemStateChanged:
 		return strings.HasPrefix(topic, itemTopicPrefix+name+"/") &&
 			strings.HasSuffix(topic, "/"+api.TopicEventStateChanged)
+	case TypeThingStatusInfo:
+		return topic == thingTopicPrefix+name+"/"+api.TopicEventStatus
 	default:
 		panic(fmt.Sprintf("event.Type %d Match undefined", t))
 	}

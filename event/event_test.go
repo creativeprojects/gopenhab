@@ -52,6 +52,14 @@ func TestCreateEventFromJSON(t *testing.T) {
 				OldItem: Item{Name: "TestSwitch", Label: "TestSwitch", Type: "Switch", Category: "Switch", Tags: []string{}, GroupNames: []string{}, Members: []string(nil), GroupType: ""},
 			},
 		},
+		{
+			`{"topic":"openhab/things/mqtt:homie300:6a75cc6119:test/status","payload":"{\"status\":\"ONLINE\",\"statusDetail\":\"DUTY_CYCLE\"}","type":"ThingStatusInfoEvent"}`,
+			ThingStatusInfoEvent{topic: "things/mqtt:homie300:6a75cc6119:test/status", ThingName: "mqtt:homie300:6a75cc6119:test", Status: "ONLINE", StatusDetail: "DUTY_CYCLE"},
+		},
+		{
+			`{"type":"ALIVE"}`,
+			AliveEvent{},
+		},
 		// {`{"topic":"smarthome/channels/astro:sun:local:set#event/triggered","payload":"{\"event\":\"START\",\"channel\":\"astro:sun:local:set#event\"}","type":"ChannelTriggeredEvent"}`,
 		// },
 		// {`{"topic":"smarthome/links/Presence_Mobile_Fred-network:pingdevice:3aadd7c9:online/added","payload":"{\"channelUID\":\"network:pingdevice:3aadd7c9:online\",\"configuration\":{\"profile\":\"system:default\"},\"itemName\":\"Presence_Mobile_Fred\"}","type":"ItemChannelLinkAddedEvent"}`,

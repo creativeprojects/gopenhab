@@ -311,6 +311,9 @@ func (c *Client) dispatchRawEvent(data string) {
 		errorlog.Printf("event ignored: %s", err)
 		return
 	}
+	if ev, ok := e.(event.GenericEvent); ok {
+		debuglog.Printf("generic event type %q topic %q payload %q (%+v)", ev.TypeName(), ev.Topic(), ev.Payload(), data)
+	}
 	c.systemEventBus.Publish(e)
 	c.userEventBus.Publish(e)
 }
