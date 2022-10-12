@@ -57,6 +57,14 @@ func TestCreateEventFromJSON(t *testing.T) {
 			ThingStatusInfoEvent{topic: "things/mqtt:homie300:6a75cc6119:test/status", ThingName: "mqtt:homie300:6a75cc6119:test", Status: "ONLINE", StatusDetail: "DUTY_CYCLE"},
 		},
 		{
+			`{"topic":"openhab/things/mqtt:homie300:6a75cc6119:test/statuschanged","payload":"[{\"status\":\"ONLINE\",\"statusDetail\":\"CONFIGURATION_PENDING\"},{\"status\":\"OFFLINE\",\"statusDetail\":\"COMMUNICATION_ERROR\",\"description\":\"Did not receive all required topics\"}]","type":"ThingStatusInfoChangedEvent"}`,
+			ThingStatusInfoChangedEvent{topic: "things/mqtt:homie300:6a75cc6119:test/statuschanged", ThingName: "mqtt:homie300:6a75cc6119:test", PreviousStatus: "OFFLINE", PreviousStatusDetail: "COMMUNICATION_ERROR", PreviousDescription: "Did not receive all required topics", NewStatus: "ONLINE", NewStatusDetail: "CONFIGURATION_PENDING"},
+		},
+		{
+			`{"topic":"openhab/things/mqtt:homie300:6a75cc6119:test/statuschanged","payload":"[{\"status\":\"ONLINE\",\"statusDetail\":\"DUTY_CYCLE\"},{\"status\":\"ONLINE\",\"statusDetail\":\"CONFIGURATION_PENDING\"}]","type":"ThingStatusInfoChangedEvent"}`,
+			ThingStatusInfoChangedEvent{topic: "things/mqtt:homie300:6a75cc6119:test/statuschanged", ThingName: "mqtt:homie300:6a75cc6119:test", PreviousStatus: "ONLINE", PreviousStatusDetail: "CONFIGURATION_PENDING", NewStatus: "ONLINE", NewStatusDetail: "DUTY_CYCLE"},
+		},
+		{
 			`{"type":"ALIVE"}`,
 			AliveEvent{},
 		},

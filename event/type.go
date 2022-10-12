@@ -22,7 +22,7 @@ const (
 	TypeClientDisconnected
 	TypeClientStopped
 	TypeClientError
-	TypeServerAlive
+	TypeServerAlive            // API version >=5 sends ALIVE messages (every minute or so)
 	TypeTimeCron               // On a specific date and/or time
 	TypeItemAdded              // An item has been added to the item registry.
 	TypeItemRemoved            // An item has been removed from the item registry.

@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMatchingEvent(t *testing.T) {
+func TestMatchingItemEvent(t *testing.T) {
 	testEvents := []struct {
 		e       event.Event
 		trigger Trigger

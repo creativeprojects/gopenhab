@@ -10,4 +10,5 @@ type Thing struct {
 type ThingStatusInfo struct {
 	Status       string `json:"status"`
 	StatusDetail string `json:"statusDetail"`
+	Description  string `json:"description"`
 }

@@ -4,6 +4,12 @@ import (
 	"github.com/creativeprojects/gopenhab/api"
 )
 
+type ThingStatus struct {
+	Status       string
+	StatusDetail string
+	Description  string
+}
+
 type ThingStatusInfoEvent struct {
 	topic        string
 	ThingName    string
@@ -12,16 +18,14 @@ type ThingStatusInfoEvent struct {
 }
 
 // NewThingStatusInfoEvent create a ThingStatusInfoEvent.
-// Please note the name of the thing is not present
-// in the payload so we pass the topic as first argument.
-func NewThingStatusInfoEvent(thingName, status, statusDetail string) ThingStatusInfoEvent {
+func NewThingStatusInfoEvent(thingName string, status ThingStatus) ThingStatusInfoEvent {
 	topic := thingTopicPrefix + thingName + "/" + api.TopicEventStatus
 
 	return ThingStatusInfoEvent{
 		topic:        topic,
 		ThingName:    thingName,
-		Status:       status,
-		StatusDetail: statusDetail,
+		Status:       status.Status,
+		StatusDetail: status.StatusDetail,
 	}
 }
 
@@ -35,3 +39,41 @@ func (i ThingStatusInfoEvent) Type() Type {
 
 // Verify interface
 var _ Event = ThingStatusInfoEvent{}
+
+type ThingStatusInfoChangedEvent struct {
+	topic                string
+	ThingName            string
+	PreviousStatus       string
+	PreviousStatusDetail string
+	PreviousDescription  string
+	NewStatus            string
+	NewStatusDetail      string
+	NewDescription       string
+}
+
+// NewThingStatusInfoChangedEvent create a ThingStatusInfoChangedEvent.
+func NewThingStatusInfoChangedEvent(thingName string, previousStatus, newStatus ThingStatus) ThingStatusInfoChangedEvent {
+	topic := thingTopicPrefix + thingName + "/" + api.TopicEventStatusChanged
+
+	return ThingStatusInfoChangedEvent{
+		topic:                topic,
+		ThingName:            thingName,
+		PreviousStatus:       previousStatus.Status,
+		PreviousStatusDetail: previousStatus.StatusDetail,
+		PreviousDescription:  previousStatus.Description,
+		NewStatus:            newStatus.Status,
+		NewStatusDetail:      newStatus.StatusDetail,
+		NewDescription:       newStatus.Description,
+	}
+}
+
+func (i ThingStatusInfoChangedEvent) Topic() string {
+	return i.topic
+}
+
+func (i ThingStatusInfoChangedEvent) Type() Type {
+	return TypeItemCommand
+}
+
+// Verify interface
+var _ Event = ThingStatusInfoChangedEvent{}

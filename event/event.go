@@ -138,7 +138,32 @@ func New(data string) (Event, error) {
 			return nil, fmt.Errorf("error decoding message: %w", err)
 		}
 		thingName, _ := splitThingTopic(message.Topic)
-		return NewThingStatusInfoEvent(thingName, data.Status, data.StatusDetail), nil
+		return NewThingStatusInfoEvent(thingName, ThingStatus{
+			Status:       data.Status,
+			StatusDetail: data.StatusDetail,
+		}), nil
+
+	case api.EventThingStatusInfoChanged:
+		data := make([]api.ThingStatusInfo, 0, 2)
+		err := json.Unmarshal([]byte(message.Payload), &data)
+		if err != nil {
+			return nil, fmt.Errorf("error decoding message: %w", err)
+		}
+		if len(data) != 2 {
+			return nil, fmt.Errorf("error decoding message: expected array with 2 elements, but found %d", len(data))
+		}
+		thingName, _ := splitThingTopic(message.Topic)
+		return NewThingStatusInfoChangedEvent(thingName,
+			ThingStatus{
+				Status:       data[1].Status,
+				StatusDetail: data[1].StatusDetail,
+				Description:  data[1].Description,
+			},
+			ThingStatus{
+				Status:       data[0].Status,
+				StatusDetail: data[0].StatusDetail,
+				Description:  data[0].Description,
+			}), nil
 
 	case api.EventTypeAlive:
 		return NewAliveEvent(), nil

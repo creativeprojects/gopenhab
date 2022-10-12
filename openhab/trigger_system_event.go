@@ -10,7 +10,7 @@ type systemEventTrigger struct {
 
 // OnConnect is a trigger activated when successfully connected (or reconnected) to openHAB.
 //
-// This event is only activated the first time openHAB sends any data to the event bus API
+// # This event is only activated the first time openHAB sends any data to the event bus API
 //
 // Please note when openHAB is starting, the event may be triggered many times:
 // you might want to look at Debounce to avoid too many triggers.
@@ -58,6 +58,13 @@ func OnStop() *systemEventTrigger {
 func OnError() *systemEventTrigger {
 	return &systemEventTrigger{
 		eventType: event.TypeClientError,
+	}
+}
+
+// OnAlive is a trigger activated when the client receives an ALIVE event from the server
+func OnAlive() *systemEventTrigger {
+	return &systemEventTrigger{
+		eventType: event.TypeServerAlive,
 	}
 }
 
