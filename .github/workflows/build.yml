@@ -19,12 +19,12 @@ jobs:
     steps:
 
     - name: Set up Go ${{ matrix.go_version }}
-      uses: actions/setup-go@v2
+      uses: actions/setup-go
       with:
         go-version: ${{ matrix.go_version }}
 
     - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
+      uses: actions/checkout
 
     - name: Get dependencies
       run: |
@@ -38,5 +38,5 @@ jobs:
       shell: bash
 
     - name: Code coverage
-      uses: codecov/codecov-action@v2
+      uses: codecov/codecov-action
 

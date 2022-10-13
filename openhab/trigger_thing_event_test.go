@@ -35,6 +35,56 @@ func TestMatchingThingEvent(t *testing.T) {
 			true,
 		},
 		// thing status changed
+		{
+			event.NewThingStatusInfoChangedEvent("TestItem", event.ThingStatus{}, event.ThingStatus{}),
+			OnThingReceivedStatusInfoChanged("TestItem"),
+			true,
+		},
+		{
+			event.NewThingStatusInfoChangedEvent("TestItem", event.ThingStatus{Status: string(ThingStatusOffline)}, event.ThingStatus{Status: string(ThingStatusOnline)}),
+			OnThingReceivedStatusInfoChanged("TestItem"),
+			true,
+		},
+		{
+			event.NewThingStatusInfoChangedEvent("TestItem", event.ThingStatus{Status: string(ThingStatusOffline)}, event.ThingStatus{Status: string(ThingStatusOnline)}),
+			OnThingReceivedStatusInfoChangedFrom("TestItem", ThingStatusOffline),
+			true,
+		},
+		{
+			event.NewThingStatusInfoChangedEvent("TestItem", event.ThingStatus{Status: string(ThingStatusOffline)}, event.ThingStatus{Status: string(ThingStatusOnline)}),
+			OnThingReceivedStatusInfoChangedFrom("TestItem", ThingStatusOnline),
+			false,
+		},
+		{
+			event.NewThingStatusInfoChangedEvent("TestItem", event.ThingStatus{Status: string(ThingStatusOffline)}, event.ThingStatus{Status: string(ThingStatusOnline)}),
+			OnThingReceivedStatusInfoChangedTo("TestItem", ThingStatusOnline),
+			true,
+		},
+		{
+			event.NewThingStatusInfoChangedEvent("TestItem", event.ThingStatus{Status: string(ThingStatusOffline)}, event.ThingStatus{Status: string(ThingStatusOnline)}),
+			OnThingReceivedStatusInfoChangedTo("TestItem", ThingStatusOffline),
+			false,
+		},
+		{
+			event.NewThingStatusInfoChangedEvent("TestItem", event.ThingStatus{Status: string(ThingStatusOffline)}, event.ThingStatus{Status: string(ThingStatusOnline)}),
+			OnThingReceivedStatusInfoChangedFromTo("TestItem", ThingStatusOnline, ThingStatusOffline),
+			false,
+		},
+		{
+			event.NewThingStatusInfoChangedEvent("TestItem", event.ThingStatus{Status: string(ThingStatusOffline)}, event.ThingStatus{Status: string(ThingStatusOnline)}),
+			OnThingReceivedStatusInfoChangedFromTo("TestItem", ThingStatusOnline, ThingStatusOnline),
+			false,
+		},
+		{
+			event.NewThingStatusInfoChangedEvent("TestItem", event.ThingStatus{Status: string(ThingStatusOffline)}, event.ThingStatus{Status: string(ThingStatusOnline)}),
+			OnThingReceivedStatusInfoChangedFromTo("TestItem", ThingStatusOffline, ThingStatusOffline),
+			false,
+		},
+		{
+			event.NewThingStatusInfoChangedEvent("TestItem", event.ThingStatus{Status: string(ThingStatusOffline)}, event.ThingStatus{Status: string(ThingStatusOnline)}),
+			OnThingReceivedStatusInfoChangedFromTo("TestItem", ThingStatusOffline, ThingStatusOnline),
+			true,
+		},
 	}
 
 	for _, testEvent := range testEvents {

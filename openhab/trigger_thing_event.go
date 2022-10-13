@@ -7,6 +7,7 @@ import (
 )
 
 type thingReceivedStatusInfoTrigger struct {
+	baseTrigger
 	thing  string
 	status ThingStatus
 	subId  int
@@ -29,14 +30,7 @@ func (c *thingReceivedStatusInfoTrigger) activate(client *Client, run func(ev ev
 	if c.subId > 0 {
 		return errors.New("rule already activated")
 	}
-	c.subId = client.subscribe(c.thing, event.TypeItemState, func(e event.Event) {
-		if run == nil {
-			return
-		}
-		if c.match(e) {
-			run(e)
-		}
-	})
+	c.subId = c.subscribe(client, c.thing, event.TypeThingStatusInfo, run, c.match)
 	return nil
 }
 
@@ -67,6 +61,7 @@ func (c *thingReceivedStatusInfoTrigger) match(e event.Event) bool {
 var _ Trigger = &thingReceivedStatusInfoChangedTrigger{}
 
 type thingReceivedStatusInfoChangedTrigger struct {
+	baseTrigger
 	thing string
 	from  ThingStatus
 	to    ThingStatus
@@ -123,14 +118,7 @@ func (c *thingReceivedStatusInfoChangedTrigger) activate(client *Client, run fun
 	if c.subId > 0 {
 		return errors.New("rule already activated")
 	}
-	c.subId = client.subscribe(c.thing, event.TypeItemState, func(e event.Event) {
-		if run == nil {
-			return
-		}
-		if c.match(e) {
-			run(e)
-		}
-	})
+	c.subId = c.subscribe(client, c.thing, event.TypeThingStatusInfoChanged, run, c.match)
 	return nil
 }
 
@@ -150,7 +138,7 @@ func (c *thingReceivedStatusInfoChangedTrigger) match(e event.Event) bool {
 				return false
 			}
 		} else {
-			panic("expected event of type event.ThingStatusInfoEvent")
+			panic("expected event of type event.ThingStatusInfoChangedEvent")
 			// return false
 		}
 	}
@@ -162,7 +150,7 @@ func (c *thingReceivedStatusInfoChangedTrigger) match(e event.Event) bool {
 				return false
 			}
 		} else {
-			panic("expected event of type event.ThingStatusInfoEvent")
+			panic("expected event of type event.ThingStatusInfoChangedEvent")
 			// return false
 		}
 	}

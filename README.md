@@ -242,6 +242,7 @@ func TestCalculateZoneTemperature(t *testing.T) {
 # TODO
 
 - Handle all state types. Handled for now are `String`, `Switch`, `Number`, `DateTime`.
+- Add triggers for more events. All `item` events have triggers, and some `thing` events (but not all)
 - Ability to update rules
 - Handle more events on the openhab test server
 

@@ -15,11 +15,11 @@ func TestOneSubscriberNoTopic(t *testing.T) {
 		panic("This function should not have been called!")
 	})
 	eventBus.Subscribe("", TypeClientConnected, func(e Event) {
-		assert.IsType(t, mockEvent{}, e)
+		assert.IsType(t, fakeEvent{}, e)
 		call = true
 	})
 
-	eventBus.Publish(newMockEvent("", TypeClientConnected))
+	eventBus.Publish(newFakeEvent("", TypeClientConnected))
 	assert.True(t, call)
 	eventBus.Wait()
 }
@@ -35,11 +35,11 @@ func TestOneSubscriberNoTopicAsync(t *testing.T) {
 		done <- e
 	})
 
-	eventBus.Publish(newMockEvent("", TypeClientConnected))
+	eventBus.Publish(newFakeEvent("", TypeClientConnected))
 
 	select {
 	case e := <-done:
-		assert.IsType(t, mockEvent{}, e)
+		assert.IsType(t, fakeEvent{}, e)
 	case <-time.After(100 * time.Millisecond):
 		// fail the test after 100ms
 		t.Fatal("timeout!")
@@ -58,7 +58,7 @@ func TestOneSubscriberWithTopic(t *testing.T) {
 		call = true
 	})
 
-	eventBus.Publish(newMockEvent("items/item2/state", TypeItemState))
+	eventBus.Publish(newFakeEvent("items/item2/state", TypeItemState))
 	assert.True(t, call)
 	eventBus.Wait()
 }
@@ -74,11 +74,11 @@ func TestOneSubscriberWithTopicAsync(t *testing.T) {
 		done <- e
 	})
 
-	eventBus.Publish(newMockEvent("items/item2/state", TypeItemState))
+	eventBus.Publish(newFakeEvent("items/item2/state", TypeItemState))
 
 	select {
 	case e := <-done:
-		assert.IsType(t, mockEvent{}, e)
+		assert.IsType(t, fakeEvent{}, e)
 	case <-time.After(100 * time.Millisecond):
 		// fail the test after 100ms
 		t.Fatal("timeout!")
@@ -92,21 +92,21 @@ func TestTwoSubscribers(t *testing.T) {
 	eventBus := NewEventBus(false)
 
 	eventBus.Subscribe("item", TypeItemState, func(e Event) {
-		assert.IsType(t, mockEvent{}, e)
+		assert.IsType(t, fakeEvent{}, e)
 		if first {
 			t.Error("function called more than once")
 		}
 		first = true
 	})
 	eventBus.Subscribe("item", TypeItemState, func(e Event) {
-		assert.IsType(t, mockEvent{}, e)
+		assert.IsType(t, fakeEvent{}, e)
 		if second {
 			t.Error("function called more than once")
 		}
 		second = true
 	})
 
-	eventBus.Publish(newMockEvent("items/item/state", TypeItemState))
+	eventBus.Publish(newFakeEvent("items/item/state", TypeItemState))
 	assert.True(t, first)
 	assert.True(t, second)
 }
@@ -131,19 +131,19 @@ func TestTwoSubscribersAsync(t *testing.T) {
 		done2 <- e
 	})
 
-	eventBus.Publish(newMockEvent("items/item/state", TypeItemState))
+	eventBus.Publish(newFakeEvent("items/item/state", TypeItemState))
 
 	for {
 		select {
 		case e := <-done1:
-			assert.IsType(t, mockEvent{}, e)
+			assert.IsType(t, fakeEvent{}, e)
 			if second {
 				return
 			}
 			first = true
 
 		case e := <-done2:
-			assert.IsType(t, mockEvent{}, e)
+			assert.IsType(t, fakeEvent{}, e)
 			if first {
 				return
 			}
@@ -167,14 +167,14 @@ func TestUnsubscribe(t *testing.T) {
 		call++
 	})
 
-	eventBus.Publish(newMockEvent("", TypeClientConnected))
+	eventBus.Publish(newFakeEvent("", TypeClientConnected))
 	assert.Equal(t, 1, call)
 	eventBus.Wait()
 
 	eventBus.Unsubscribe(sub)
 
 	// republish an event
-	eventBus.Publish(newMockEvent("", TypeClientConnected))
+	eventBus.Publish(newFakeEvent("", TypeClientConnected))
 	assert.Equal(t, 1, call)
 	eventBus.Wait()
 }
@@ -190,11 +190,11 @@ func TestUnsubscribeAsync(t *testing.T) {
 		done <- e
 	})
 
-	eventBus.Publish(newMockEvent("", TypeClientConnected))
+	eventBus.Publish(newFakeEvent("", TypeClientConnected))
 
 	select {
 	case e := <-done:
-		assert.IsType(t, mockEvent{}, e)
+		assert.IsType(t, fakeEvent{}, e)
 	case <-time.After(100 * time.Millisecond):
 		// fail the test after 100ms
 		t.Fatal("timeout!")
@@ -204,7 +204,7 @@ func TestUnsubscribeAsync(t *testing.T) {
 	eventBus.Unsubscribe(sub)
 
 	// republish an event
-	eventBus.Publish(newMockEvent("", TypeClientConnected))
+	eventBus.Publish(newFakeEvent("", TypeClientConnected))
 
 	select {
 	case <-done:
@@ -223,18 +223,18 @@ func TestUnsubscribeUnknownID(t *testing.T) {
 		panic("This function should not have been called!")
 	})
 	sub := eventBus.Subscribe("", TypeClientConnected, func(e Event) {
-		assert.IsType(t, mockEvent{}, e)
+		assert.IsType(t, fakeEvent{}, e)
 		call++
 	})
 
-	eventBus.Publish(newMockEvent("", TypeClientConnected))
+	eventBus.Publish(newFakeEvent("", TypeClientConnected))
 	assert.Equal(t, 1, call)
 	eventBus.Wait()
 
 	eventBus.Unsubscribe(sub + 10)
 
 	// republish an event
-	eventBus.Publish(newMockEvent("", TypeClientConnected))
+	eventBus.Publish(newFakeEvent("", TypeClientConnected))
 	assert.Equal(t, 2, call)
 	eventBus.Wait()
 }
@@ -250,11 +250,11 @@ func TestUnsubscribeUnknownIDAsync(t *testing.T) {
 		done <- e
 	})
 
-	eventBus.Publish(newMockEvent("", TypeClientConnected))
+	eventBus.Publish(newFakeEvent("", TypeClientConnected))
 
 	select {
 	case e := <-done:
-		assert.IsType(t, mockEvent{}, e)
+		assert.IsType(t, fakeEvent{}, e)
 	case <-time.After(100 * time.Millisecond):
 		// fail the test after 100ms
 		t.Fatal("timeout!")
@@ -264,11 +264,11 @@ func TestUnsubscribeUnknownIDAsync(t *testing.T) {
 	eventBus.Unsubscribe(sub + 10)
 
 	// republish an event
-	eventBus.Publish(newMockEvent("", TypeClientConnected))
+	eventBus.Publish(newFakeEvent("", TypeClientConnected))
 
 	select {
 	case e := <-done:
-		assert.IsType(t, mockEvent{}, e)
+		assert.IsType(t, fakeEvent{}, e)
 	case <-time.After(100 * time.Millisecond):
 		// fail the test after 100ms
 		t.Fatal("timeout!")
@@ -282,7 +282,7 @@ func TestUnsubscribeWhileRunningAsync(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 	})
 	// publish an event
-	eventBus.Publish(newMockEvent("", TypeClientConnected))
+	eventBus.Publish(newFakeEvent("", TypeClientConnected))
 
 	eventBus.Unsubscribe(sub)
 }

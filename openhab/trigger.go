@@ -12,3 +12,27 @@ type Trigger interface {
 	// This method should NOT be used outside of unit tests
 	match(e event.Event) bool
 }
+
+//go:generate mockery --name subscriber --inpackage
+type subscriber interface {
+	subscribe(name string, eventType event.Type, callback func(e event.Event)) int
+}
+
+type baseTrigger struct{}
+
+func (t baseTrigger) subscribe(
+	client subscriber,
+	thing string,
+	eventType event.Type,
+	run func(ev event.Event),
+	match func(e event.Event) bool,
+) int {
+	return client.subscribe(thing, eventType, func(e event.Event) {
+		if run == nil {
+			return
+		}
+		if match(e) {
+			run(e)
+		}
+	})
+}
