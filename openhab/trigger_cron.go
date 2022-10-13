@@ -23,8 +23,8 @@ func OnTimeCron(spec string) *timeCronTrigger {
 }
 
 // activate schedules the run function in the context of a *Client
-func (c *timeCronTrigger) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
-	entryID, err := client.cron.AddFunc(c.spec, func() {
+func (c *timeCronTrigger) activate(client subscriber, run func(ev event.Event), ruleData RuleData) error {
+	entryID, err := client.getCron().AddFunc(c.spec, func() {
 		defer preventPanic()
 
 		run(event.NewSystemEvent(event.TypeTimeCron))
@@ -36,9 +36,9 @@ func (c *timeCronTrigger) activate(client *Client, run func(ev event.Event), rul
 	return nil
 }
 
-func (c *timeCronTrigger) deactivate(client *Client) {
+func (c *timeCronTrigger) deactivate(client subscriber) {
 	if c.entryID > 0 {
-		client.cron.Remove(c.entryID)
+		client.getCron().Remove(c.entryID)
 		c.entryID = 0
 	}
 }

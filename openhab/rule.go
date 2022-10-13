@@ -40,7 +40,7 @@ func (r *rule) String() string {
 	return ""
 }
 
-func (r *rule) activate(client *Client) error {
+func (r *rule) activate(client subscriber) error {
 	for _, trigger := range r.triggers {
 		if trigger == nil {
 			errorlog.Printf("nil trigger encountered")
@@ -54,7 +54,7 @@ func (r *rule) activate(client *Client) error {
 	return nil
 }
 
-func (r *rule) deactivate(client *Client) {
+func (r *rule) deactivate(client subscriber) {
 	for _, trigger := range r.triggers {
 		if trigger == nil {
 			continue

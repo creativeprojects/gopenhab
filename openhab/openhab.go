@@ -563,3 +563,7 @@ func (c *Client) isState(state ClientState) bool {
 	defer c.stateMutex.Unlock()
 	return c.state == state
 }
+
+func (c *Client) getCron() *cron.Cron {
+	return c.cron
+}

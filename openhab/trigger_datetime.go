@@ -21,8 +21,8 @@ func OnDateTime(dateTime time.Time) *dateTimeTrigger {
 }
 
 // activate schedules the run function in the context of a *Client
-func (c *dateTimeTrigger) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
-	entryID := client.cron.Schedule(c.schedule, cron.FuncJob(func() {
+func (c *dateTimeTrigger) activate(client subscriber, run func(ev event.Event), ruleData RuleData) error {
+	entryID := client.getCron().Schedule(c.schedule, cron.FuncJob(func() {
 		defer preventPanic()
 
 		run(event.NewSystemEvent(event.TypeTimeCron))
@@ -31,9 +31,9 @@ func (c *dateTimeTrigger) activate(client *Client, run func(ev event.Event), rul
 	return nil
 }
 
-func (c *dateTimeTrigger) deactivate(client *Client) {
+func (c *dateTimeTrigger) deactivate(client subscriber) {
 	if c.entryID > 0 {
-		client.cron.Remove(c.entryID)
+		client.getCron().Remove(c.entryID)
 		c.entryID = 0
 	}
 }

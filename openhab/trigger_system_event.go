@@ -69,7 +69,7 @@ func OnAlive() *systemEventTrigger {
 }
 
 // activate subscribes to the corresponding event
-func (c *systemEventTrigger) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
+func (c *systemEventTrigger) activate(client subscriber, run func(ev event.Event), ruleData RuleData) error {
 	c.subId = client.subscribe("", c.eventType, func(e event.Event) {
 		if run == nil {
 			return
@@ -79,7 +79,7 @@ func (c *systemEventTrigger) activate(client *Client, run func(ev event.Event), 
 	return nil
 }
 
-func (c *systemEventTrigger) deactivate(client *Client) {
+func (c *systemEventTrigger) deactivate(client subscriber) {
 	if c.subId > 0 {
 		client.unsubscribe(c.subId)
 		c.subId = 0

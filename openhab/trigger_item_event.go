@@ -24,7 +24,7 @@ func OnItemReceivedCommand(item string, state State) *itemReceivedCommandTrigger
 	}
 }
 
-func (c *itemReceivedCommandTrigger) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
+func (c *itemReceivedCommandTrigger) activate(client subscriber, run func(ev event.Event), ruleData RuleData) error {
 	if c.subId > 0 {
 		return errors.New("rule already activated")
 	}
@@ -39,7 +39,7 @@ func (c *itemReceivedCommandTrigger) activate(client *Client, run func(ev event.
 	return nil
 }
 
-func (c *itemReceivedCommandTrigger) deactivate(client *Client) {
+func (c *itemReceivedCommandTrigger) deactivate(client subscriber) {
 	if c.subId > 0 {
 		client.unsubscribe(c.subId)
 		c.subId = 0
@@ -83,7 +83,7 @@ func OnItemReceivedState(item string, state State) *itemReceivedStateTrigger {
 	}
 }
 
-func (c *itemReceivedStateTrigger) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
+func (c *itemReceivedStateTrigger) activate(client subscriber, run func(ev event.Event), ruleData RuleData) error {
 	if c.subId > 0 {
 		return errors.New("rule already activated")
 	}
@@ -98,7 +98,7 @@ func (c *itemReceivedStateTrigger) activate(client *Client, run func(ev event.Ev
 	return nil
 }
 
-func (c *itemReceivedStateTrigger) deactivate(client *Client) {
+func (c *itemReceivedStateTrigger) deactivate(client subscriber) {
 	if c.subId > 0 {
 		client.unsubscribe(c.subId)
 		c.subId = 0
@@ -176,7 +176,7 @@ func OnItemStateChangedFromTo(item string, from, to State) *itemStateChangedTrig
 	}
 }
 
-func (c *itemStateChangedTrigger) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
+func (c *itemStateChangedTrigger) activate(client subscriber, run func(ev event.Event), ruleData RuleData) error {
 	if run == nil {
 		return errors.New("event callback is nil")
 	}
@@ -196,7 +196,7 @@ func (c *itemStateChangedTrigger) activate(client *Client, run func(ev event.Eve
 	return nil
 }
 
-func (c *itemStateChangedTrigger) deactivate(client *Client) {
+func (c *itemStateChangedTrigger) deactivate(client subscriber) {
 	if c.subId1 > 0 {
 		client.unsubscribe(c.subId1)
 		c.subId1 = 0

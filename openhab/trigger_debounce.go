@@ -25,7 +25,7 @@ func Debounce(after time.Duration, triggers ...Trigger) *triggerDebounce {
 	}
 }
 
-func (c *triggerDebounce) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
+func (c *triggerDebounce) activate(client subscriber, run func(ev event.Event), ruleData RuleData) error {
 	debounced := func(ev event.Event) {
 		c.lock.Lock()
 		defer c.lock.Unlock()
@@ -47,7 +47,7 @@ func (c *triggerDebounce) activate(client *Client, run func(ev event.Event), rul
 	return nil
 }
 
-func (c *triggerDebounce) deactivate(client *Client) {
+func (c *triggerDebounce) deactivate(client subscriber) {
 	for _, trigger := range c.triggers {
 		trigger.deactivate(client)
 	}

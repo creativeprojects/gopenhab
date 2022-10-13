@@ -26,7 +26,7 @@ func OnThingReceivedStatusInfo(thing string, status ThingStatus) *thingReceivedS
 	}
 }
 
-func (c *thingReceivedStatusInfoTrigger) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
+func (c *thingReceivedStatusInfoTrigger) activate(client subscriber, run func(ev event.Event), ruleData RuleData) error {
 	if c.subId > 0 {
 		return errors.New("rule already activated")
 	}
@@ -34,7 +34,7 @@ func (c *thingReceivedStatusInfoTrigger) activate(client *Client, run func(ev ev
 	return nil
 }
 
-func (c *thingReceivedStatusInfoTrigger) deactivate(client *Client) {
+func (c *thingReceivedStatusInfoTrigger) deactivate(client subscriber) {
 	if c.subId > 0 {
 		client.unsubscribe(c.subId)
 		c.subId = 0
@@ -114,7 +114,7 @@ func OnThingReceivedStatusInfoChangedFromTo(thing string, from, to ThingStatus) 
 	}
 }
 
-func (c *thingReceivedStatusInfoChangedTrigger) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
+func (c *thingReceivedStatusInfoChangedTrigger) activate(client subscriber, run func(ev event.Event), ruleData RuleData) error {
 	if c.subId > 0 {
 		return errors.New("rule already activated")
 	}
@@ -122,7 +122,7 @@ func (c *thingReceivedStatusInfoChangedTrigger) activate(client *Client, run fun
 	return nil
 }
 
-func (c *thingReceivedStatusInfoChangedTrigger) deactivate(client *Client) {
+func (c *thingReceivedStatusInfoChangedTrigger) deactivate(client subscriber) {
 	if c.subId > 0 {
 		client.unsubscribe(c.subId)
 		c.subId = 0

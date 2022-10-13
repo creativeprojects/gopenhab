@@ -17,7 +17,7 @@ type mockTrigger struct {
 	OnDeactivation func()
 }
 
-func (t *mockTrigger) activate(client *Client, run func(ev event.Event), ruleData RuleData) error {
+func (t *mockTrigger) activate(client subscriber, run func(ev event.Event), ruleData RuleData) error {
 	t.callback = run
 	if t.OnActivation != nil {
 		t.OnActivation()
@@ -25,7 +25,7 @@ func (t *mockTrigger) activate(client *Client, run func(ev event.Event), ruleDat
 	return nil
 }
 
-func (t *mockTrigger) deactivate(client *Client) {
+func (t *mockTrigger) deactivate(client subscriber) {
 	t.callback = nil
 	if t.OnDeactivation != nil {
 		t.OnDeactivation()
