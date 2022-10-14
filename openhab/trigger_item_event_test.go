@@ -5,6 +5,7 @@ import (
 
 	"github.com/creativeprojects/gopenhab/event"
 	"github.com/stretchr/testify/assert"
+	mock "github.com/stretchr/testify/mock"
 )
 
 func TestMatchingItemEvent(t *testing.T) {
@@ -132,6 +133,116 @@ func TestMatchingItemEvent(t *testing.T) {
 	for _, testEvent := range testEvents {
 		t.Run("", func(t *testing.T) {
 			assert.Equal(t, testEvent.match, testEvent.trigger.match(testEvent.e))
+		})
+	}
+}
+
+func TestItemSubscription(t *testing.T) {
+	testFixtures := []struct {
+		trigger    Trigger
+		event      event.Event
+		eventTypes []event.Type
+		calls      int
+	}{
+		{
+			OnItemReceivedCommand("item", SwitchON),
+			event.NewItemReceivedCommand("item", "OnOff", string(SwitchOFF)),
+			[]event.Type{event.TypeItemCommand},
+			0,
+		},
+		{
+			OnItemReceivedCommand("item", SwitchON),
+			event.NewItemReceivedCommand("item", "OnOff", string(SwitchON)),
+			[]event.Type{event.TypeItemCommand},
+			1,
+		},
+		{
+			OnItemReceivedState("item", SwitchON),
+			event.NewItemReceivedState("item", "OnOff", string(SwitchOFF)),
+			[]event.Type{event.TypeItemState},
+			0,
+		},
+		{
+			OnItemReceivedState("item", SwitchON),
+			event.NewItemReceivedState("item", "OnOff", string(SwitchON)),
+			[]event.Type{event.TypeItemState},
+			1,
+		},
+		{
+			OnItemStateChanged("item"),
+			event.NewItemStateChanged("item", "OnOff", string(SwitchOFF), "OnOff", string(SwitchON)),
+			[]event.Type{event.TypeItemStateChanged, event.TypeGroupItemStateChanged},
+			2,
+		},
+		{
+			OnItemStateChangedFrom("item", SwitchOFF),
+			event.NewItemStateChanged("item", "OnOff", string(SwitchOFF), "OnOff", string(SwitchON)),
+			[]event.Type{event.TypeItemStateChanged, event.TypeGroupItemStateChanged},
+			2,
+		},
+		{
+			OnItemStateChangedFrom("item", SwitchON),
+			event.NewItemStateChanged("item", "OnOff", string(SwitchOFF), "OnOff", string(SwitchON)),
+			[]event.Type{event.TypeItemStateChanged, event.TypeGroupItemStateChanged},
+			0,
+		},
+		{
+			OnItemStateChangedTo("item", SwitchON),
+			event.NewItemStateChanged("item", "OnOff", string(SwitchOFF), "OnOff", string(SwitchON)),
+			[]event.Type{event.TypeItemStateChanged, event.TypeGroupItemStateChanged},
+			2,
+		},
+		{
+			OnItemStateChangedTo("item", SwitchOFF),
+			event.NewItemStateChanged("item", "OnOff", string(SwitchOFF), "OnOff", string(SwitchON)),
+			[]event.Type{event.TypeItemStateChanged, event.TypeGroupItemStateChanged},
+			0,
+		},
+		{
+			OnItemStateChangedFromTo("item", SwitchOFF, SwitchON),
+			event.NewItemStateChanged("item", "OnOff", string(SwitchOFF), "OnOff", string(SwitchON)),
+			[]event.Type{event.TypeItemStateChanged, event.TypeGroupItemStateChanged},
+			2,
+		},
+		{
+			OnItemStateChangedFromTo("item", SwitchON, SwitchOFF),
+			event.NewItemStateChanged("item", "OnOff", string(SwitchOFF), "OnOff", string(SwitchON)),
+			[]event.Type{event.TypeItemStateChanged, event.TypeGroupItemStateChanged},
+			0,
+		},
+	}
+
+	for _, testFixture := range testFixtures {
+		const subID = 11
+
+		t.Run("", func(t *testing.T) {
+			calls := 0
+
+			run := func(ev event.Event) {
+				calls++
+			}
+
+			subscribedCallbacks := make([]func(e event.Event), 0, len(testFixture.eventTypes))
+
+			client := newMockSubscriber(t)
+			for _, eventType := range testFixture.eventTypes {
+				client.On("subscribe", "item", eventType, mock.Anything).
+					Return(func(name string, eventType event.Type, callback func(e event.Event)) int {
+						subscribedCallbacks = append(subscribedCallbacks, callback)
+						return subID
+					})
+			}
+
+			trigger := testFixture.trigger
+			err := trigger.activate(client, run, RuleData{})
+			assert.NoError(t, err)
+			assert.Equal(t, 0, calls)
+			assert.Equal(t, len(testFixture.eventTypes), len(subscribedCallbacks))
+
+			for _, subscribedCallback := range subscribedCallbacks {
+				subscribedCallback(testFixture.event)
+			}
+			assert.Equal(t, testFixture.calls, calls)
 		})
 	}
 }

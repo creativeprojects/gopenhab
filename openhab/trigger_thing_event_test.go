@@ -95,7 +95,7 @@ func TestMatchingThingEvent(t *testing.T) {
 	}
 }
 
-func TestSubscription(t *testing.T) {
+func TestThingSubscription(t *testing.T) {
 	testFixtures := []struct {
 		trigger   Trigger
 		eventType event.Type
@@ -178,7 +178,6 @@ func TestSubscription(t *testing.T) {
 			assert.Equal(t, 0, calls)
 			assert.NotNil(t, subscribedCallback)
 
-			// non matching event
 			subscribedCallback(testFixture.event)
 			assert.Equal(t, testFixture.calls, calls)
 		})

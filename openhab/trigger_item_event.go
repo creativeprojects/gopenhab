@@ -7,6 +7,7 @@ import (
 )
 
 type itemReceivedCommandTrigger struct {
+	baseTrigger
 	item  string
 	state State
 	subId int
@@ -28,14 +29,7 @@ func (c *itemReceivedCommandTrigger) activate(client subscriber, run func(ev eve
 	if c.subId > 0 {
 		return errors.New("rule already activated")
 	}
-	c.subId = client.subscribe(c.item, event.TypeItemCommand, func(e event.Event) {
-		if run == nil {
-			return
-		}
-		if c.match(e) {
-			run(e)
-		}
-	})
+	c.subId = c.subscribe(client, c.item, event.TypeItemCommand, run, c.match)
 	return nil
 }
 
@@ -66,6 +60,7 @@ func (c *itemReceivedCommandTrigger) match(e event.Event) bool {
 var _ Trigger = &itemReceivedCommandTrigger{}
 
 type itemReceivedStateTrigger struct {
+	baseTrigger
 	item  string
 	state State
 	subId int
@@ -87,14 +82,7 @@ func (c *itemReceivedStateTrigger) activate(client subscriber, run func(ev event
 	if c.subId > 0 {
 		return errors.New("rule already activated")
 	}
-	c.subId = client.subscribe(c.item, event.TypeItemState, func(e event.Event) {
-		if run == nil {
-			return
-		}
-		if c.match(e) {
-			run(e)
-		}
-	})
+	c.subId = c.subscribe(client, c.item, event.TypeItemState, run, c.match)
 	return nil
 }
 
@@ -125,6 +113,7 @@ func (c *itemReceivedStateTrigger) match(e event.Event) bool {
 var _ Trigger = &itemReceivedStateTrigger{}
 
 type itemStateChangedTrigger struct {
+	baseTrigger
 	item   string
 	from   State
 	to     State
@@ -183,16 +172,8 @@ func (c *itemStateChangedTrigger) activate(client subscriber, run func(ev event.
 	if c.subId1 > 0 || c.subId2 > 0 {
 		return errors.New("rule already activated")
 	}
-	c.subId1 = client.subscribe(c.item, event.TypeItemStateChanged, func(e event.Event) {
-		if c.match(e) {
-			run(e)
-		}
-	})
-	c.subId2 = client.subscribe(c.item, event.TypeGroupItemStateChanged, func(e event.Event) {
-		if c.match(e) {
-			run(e)
-		}
-	})
+	c.subId1 = c.subscribe(client, c.item, event.TypeItemStateChanged, run, c.match)
+	c.subId1 = c.subscribe(client, c.item, event.TypeGroupItemStateChanged, run, c.match)
 	return nil
 }
 
