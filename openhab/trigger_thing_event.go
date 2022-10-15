@@ -1,8 +1,6 @@
 package openhab
 
 import (
-	"errors"
-
 	"github.com/creativeprojects/gopenhab/event"
 )
 
@@ -28,7 +26,7 @@ func OnThingReceivedStatusInfo(thing string, status ThingStatus) *thingReceivedS
 
 func (c *thingReceivedStatusInfoTrigger) activate(client subscriber, run func(ev event.Event), ruleData RuleData) error {
 	if c.subId > 0 {
-		return errors.New("rule already activated")
+		return ErrRuleAlreadyActivated
 	}
 	c.subId = c.subscribe(client, c.thing, event.TypeThingStatusInfo, run, c.match)
 	return nil
@@ -116,7 +114,7 @@ func OnThingReceivedStatusInfoChangedFromTo(thing string, from, to ThingStatus) 
 
 func (c *thingReceivedStatusInfoChangedTrigger) activate(client subscriber, run func(ev event.Event), ruleData RuleData) error {
 	if c.subId > 0 {
-		return errors.New("rule already activated")
+		return ErrRuleAlreadyActivated
 	}
 	c.subId = c.subscribe(client, c.thing, event.TypeThingStatusInfoChanged, run, c.match)
 	return nil

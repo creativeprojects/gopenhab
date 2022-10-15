@@ -23,11 +23,11 @@ func New(data string) (Event, error) {
 		data := api.EventCommand{}
 		err := json.Unmarshal([]byte(message.Payload), &data)
 		if err != nil {
-			return nil, fmt.Errorf("error decoding message: %w", err)
+			return nil, errDecodingMessage(err)
 		}
 		itemName, _, _ := splitItemTopic(message.Topic)
 		if itemName == "" {
-			return nil, fmt.Errorf("invalid topic: %q", message.Topic)
+			return nil, errInvalidTopic(message.Topic)
 		}
 		return NewItemReceivedCommand(itemName, data.Type, data.Value), nil
 
@@ -35,11 +35,11 @@ func New(data string) (Event, error) {
 		data := api.EventState{}
 		err := json.Unmarshal([]byte(message.Payload), &data)
 		if err != nil {
-			return nil, fmt.Errorf("error decoding message: %w", err)
+			return nil, errDecodingMessage(err)
 		}
 		itemName, _, _ := splitItemTopic(message.Topic)
 		if itemName == "" {
-			return nil, fmt.Errorf("invalid topic: %q", message.Topic)
+			return nil, errInvalidTopic(message.Topic)
 		}
 		return NewItemReceivedState(itemName, data.Type, data.Value), nil
 
@@ -47,11 +47,11 @@ func New(data string) (Event, error) {
 		data := api.EventStateChanged{}
 		err := json.Unmarshal([]byte(message.Payload), &data)
 		if err != nil {
-			return nil, fmt.Errorf("error decoding message: %w", err)
+			return nil, errDecodingMessage(err)
 		}
 		itemName, _, _ := splitItemTopic(message.Topic)
 		if itemName == "" {
-			return nil, fmt.Errorf("invalid topic: %q", message.Topic)
+			return nil, errInvalidTopic(message.Topic)
 		}
 		return NewItemStateChanged(itemName, data.OldType, data.OldValue, data.Type, data.Value), nil
 
@@ -59,11 +59,11 @@ func New(data string) (Event, error) {
 		data := api.EventStateChanged{}
 		err := json.Unmarshal([]byte(message.Payload), &data)
 		if err != nil {
-			return nil, fmt.Errorf("error decoding message: %w", err)
+			return nil, errDecodingMessage(err)
 		}
 		itemName, triggeringItem, _ := splitItemTopic(message.Topic)
 		if itemName == "" {
-			return nil, fmt.Errorf("invalid topic: %q", message.Topic)
+			return nil, errInvalidTopic(message.Topic)
 		}
 		return NewGroupItemStateChanged(itemName, triggeringItem, data.OldType, data.OldValue, data.Type, data.Value), nil
 
@@ -71,7 +71,7 @@ func New(data string) (Event, error) {
 		data := api.Item{}
 		err := json.Unmarshal([]byte(message.Payload), &data)
 		if err != nil {
-			return nil, fmt.Errorf("error decoding message: %w", err)
+			return nil, errDecodingMessage(err)
 		}
 		return NewItemAdded(Item{
 			Type:       data.Type,
@@ -88,7 +88,7 @@ func New(data string) (Event, error) {
 		data := api.Item{}
 		err := json.Unmarshal([]byte(message.Payload), &data)
 		if err != nil {
-			return nil, fmt.Errorf("error decoding message: %w", err)
+			return nil, errDecodingMessage(err)
 		}
 		return NewItemRemoved(Item{
 			Type:       data.Type,
@@ -105,7 +105,7 @@ func New(data string) (Event, error) {
 		data := make([]api.Item, 2)
 		err := json.Unmarshal([]byte(message.Payload), &data)
 		if err != nil {
-			return nil, fmt.Errorf("error decoding message: %w", err)
+			return nil, errDecodingMessage(err)
 		}
 		if len(data) != 2 {
 			return nil, fmt.Errorf("error decoding message: expected array with 2 elements, but found %d", len(data))
@@ -135,7 +135,7 @@ func New(data string) (Event, error) {
 		data := api.ThingStatusInfo{}
 		err := json.Unmarshal([]byte(message.Payload), &data)
 		if err != nil {
-			return nil, fmt.Errorf("error decoding message: %w", err)
+			return nil, errDecodingMessage(err)
 		}
 		thingName, _ := splitThingTopic(message.Topic)
 		return NewThingStatusInfoEvent(thingName, ThingStatus{
@@ -147,7 +147,7 @@ func New(data string) (Event, error) {
 		data := make([]api.ThingStatusInfo, 0, 2)
 		err := json.Unmarshal([]byte(message.Payload), &data)
 		if err != nil {
-			return nil, fmt.Errorf("error decoding message: %w", err)
+			return nil, errDecodingMessage(err)
 		}
 		if len(data) != 2 {
 			return nil, fmt.Errorf("error decoding message: expected array with 2 elements, but found %d", len(data))
@@ -171,4 +171,12 @@ func New(data string) (Event, error) {
 	default:
 		return NewGenericEvent(message.Type, message.Topic, message.Payload), nil
 	}
+}
+
+func errInvalidTopic(topic string) error {
+	return fmt.Errorf("invalid topic: %q", topic)
+}
+
+func errDecodingMessage(err error) error {
+	return fmt.Errorf("error decoding message: %w", err)
 }

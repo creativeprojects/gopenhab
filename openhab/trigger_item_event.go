@@ -27,7 +27,7 @@ func OnItemReceivedCommand(item string, state State) *itemReceivedCommandTrigger
 
 func (c *itemReceivedCommandTrigger) activate(client subscriber, run func(ev event.Event), ruleData RuleData) error {
 	if c.subId > 0 {
-		return errors.New("rule already activated")
+		return ErrRuleAlreadyActivated
 	}
 	c.subId = c.subscribe(client, c.item, event.TypeItemCommand, run, c.match)
 	return nil
@@ -80,7 +80,7 @@ func OnItemReceivedState(item string, state State) *itemReceivedStateTrigger {
 
 func (c *itemReceivedStateTrigger) activate(client subscriber, run func(ev event.Event), ruleData RuleData) error {
 	if c.subId > 0 {
-		return errors.New("rule already activated")
+		return ErrRuleAlreadyActivated
 	}
 	c.subId = c.subscribe(client, c.item, event.TypeItemState, run, c.match)
 	return nil
@@ -170,7 +170,7 @@ func (c *itemStateChangedTrigger) activate(client subscriber, run func(ev event.
 		return errors.New("event callback is nil")
 	}
 	if c.subId1 > 0 || c.subId2 > 0 {
-		return errors.New("rule already activated")
+		return ErrRuleAlreadyActivated
 	}
 	c.subId1 = c.subscribe(client, c.item, event.TypeItemStateChanged, run, c.match)
 	c.subId1 = c.subscribe(client, c.item, event.TypeGroupItemStateChanged, run, c.match)

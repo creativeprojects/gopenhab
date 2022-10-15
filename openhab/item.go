@@ -9,6 +9,10 @@ import (
 	"github.com/creativeprojects/gopenhab/event"
 )
 
+const (
+	itemsPath = "items/"
+)
+
 // Item represents an item in openHAB
 type Item struct {
 	name        string
@@ -49,7 +53,7 @@ func (i *Item) load() error {
 	ctx, cancel := context.WithTimeout(context.Background(), i.client.config.TimeoutHTTP)
 	defer cancel()
 
-	err := i.client.getJSON(ctx, "items/"+i.name, &data)
+	err := i.client.getJSON(ctx, itemsPath+i.name, &data)
 	if err != nil {
 		return err
 	}
@@ -105,7 +109,7 @@ func (i *Item) State() (State, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), i.client.config.TimeoutHTTP)
 	defer cancel()
 
-	state, err := i.client.getString(ctx, "items/"+i.name+"/state")
+	state, err := i.client.getString(ctx, itemsPath+i.name+"/state")
 	if err != nil {
 		return i.stateFromString(""), err
 	}
@@ -122,7 +126,7 @@ func (i *Item) SendCommand(command State) error {
 	ctx, cancel := context.WithTimeout(context.Background(), i.client.config.TimeoutHTTP)
 	defer cancel()
 
-	err := i.client.postString(ctx, "items/"+i.name, command.String())
+	err := i.client.postString(ctx, itemsPath+i.name, command.String())
 	if err != nil {
 		return err
 	}
