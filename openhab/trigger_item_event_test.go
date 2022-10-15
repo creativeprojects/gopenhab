@@ -137,7 +137,7 @@ func TestMatchingItemEvent(t *testing.T) {
 	}
 }
 
-func TestItemSubscription(t *testing.T) {
+func TestItemEventSubscription(t *testing.T) {
 	testFixtures := []struct {
 		trigger    Trigger
 		event      event.Event

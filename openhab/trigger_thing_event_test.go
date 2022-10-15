@@ -95,7 +95,7 @@ func TestMatchingThingEvent(t *testing.T) {
 	}
 }
 
-func TestThingSubscription(t *testing.T) {
+func TestThingEventSubscription(t *testing.T) {
 	testFixtures := []struct {
 		trigger   Trigger
 		eventType event.Type

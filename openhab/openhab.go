@@ -40,7 +40,7 @@ type Client struct {
 	user           string
 	password       string
 	cron           *cron.Cron
-	items          *Items
+	items          *itemCollection
 	rules          []*rule
 	rulesMutex     sync.Mutex
 	systemEventBus event.PubSub

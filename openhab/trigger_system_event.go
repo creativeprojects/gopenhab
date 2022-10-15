@@ -4,6 +4,7 @@ import "github.com/creativeprojects/gopenhab/event"
 
 // systemEventTrigger for connection or disconnection
 type systemEventTrigger struct {
+	baseTrigger
 	eventType event.Type
 	subId     int
 }
@@ -70,12 +71,7 @@ func OnAlive() *systemEventTrigger {
 
 // activate subscribes to the corresponding event
 func (c *systemEventTrigger) activate(client subscriber, run func(ev event.Event), ruleData RuleData) error {
-	c.subId = client.subscribe("", c.eventType, func(e event.Event) {
-		if run == nil {
-			return
-		}
-		run(e)
-	})
+	c.subId = c.subscribe(client, "", c.eventType, run, c.match)
 	return nil
 }
 
