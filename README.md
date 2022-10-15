@@ -1,6 +1,9 @@
-[![Build](https://github.com/creativeprojects/gopenhab/actions/workflows/build.yml/badge.svg)](https://github.com/creativeprojects/gopenhab/actions/workflows/build.yml)
-[![codecov](https://codecov.io/gh/creativeprojects/gopenhab/branch/main/graph/badge.svg?token=wyzDjPzIO3)](https://codecov.io/gh/creativeprojects/gopenhab)
 [![Go Reference](https://pkg.go.dev/badge/github.com/creativeprojects/gopenhab.svg)](https://pkg.go.dev/github.com/creativeprojects/gopenhab)
+[![Build](https://github.com/creativeprojects/gopenhab/actions/workflows/build.yml/badge.svg)](https://github.com/creativeprojects/gopenhab/actions/workflows/build.yml)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=creativeprojects_gopenhab&metric=coverage)](https://sonarcloud.io/summary/new_code?id=creativeprojects_gopenhab)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=creativeprojects_gopenhab&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=creativeprojects_gopenhab)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=creativeprojects_gopenhab&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=creativeprojects_gopenhab)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=creativeprojects_gopenhab&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=creativeprojects_gopenhab)
 
 # gopenHAB
 
@@ -32,7 +35,7 @@ func main() {
 
 	client.AddRule(
 		openhab.RuleData{Name: "Connected to openHAB events"},
-		func(client openhab.RuleClient, ruleData openhab.RuleData, e event.Event) {
+		func(client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
 			log.Printf("SYSTEM EVENT: client connected")
 		},
 		openhab.Debounce(1*time.Minute, openhab.OnConnect()),
@@ -40,7 +43,7 @@ func main() {
 
 	client.AddRule(
 		openhab.RuleData{Name: "Disconnected from openHAB events"},
-		func(client openhab.RuleClient, ruleData openhab.RuleData, e event.Event) {
+		func(client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
 			log.Print("SYSTEM EVENT: client disconnected")
 		},
 		openhab.Debounce(10*time.Second, openhab.OnDisconnect()),
@@ -48,7 +51,7 @@ func main() {
 
 	client.AddRule(
 		openhab.RuleData{Name: "Receiving item command"},
-		func(client openhab.RuleClient, ruleData openhab.RuleData, e event.Event) {
+		func(client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
 			if ev, ok := e.(event.ItemReceivedCommand); ok {
 				log.Printf("COMMAND EVENT: Back_Garden_Lighting_Switch received command %+v", ev.Command)
 			}
@@ -58,7 +61,7 @@ func main() {
 
 	client.AddRule(
 		openhab.RuleData{Name: "Receiving ON command"},
-		func(client openhab.RuleClient, ruleData openhab.RuleData, e event.Event) {
+		func(client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
 			log.Print("COMMAND EVENT: Back_Garden_Lighting_Switch switched ON")
 		},
 		openhab.OnItemReceivedCommand("Back_Garden_Lighting_Switch", openhab.SwitchON),
@@ -66,7 +69,7 @@ func main() {
 
 	client.AddRule(
 		openhab.RuleData{Name: "Receiving OFF command"},
-		func(client openhab.RuleClient, ruleData openhab.RuleData, e event.Event) {
+		func(client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
 			log.Print("COMMAND EVENT: Back_Garden_Lighting_Switch switched OFF")
 		},
 		openhab.OnItemReceivedCommand("Back_Garden_Lighting_Switch", openhab.SwitchOFF),
@@ -74,7 +77,7 @@ func main() {
 
 	client.AddRule(
 		openhab.RuleData{Name: "Receiving updated state"},
-		func(client openhab.RuleClient, ruleData openhab.RuleData, e event.Event) {
+		func(client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
 			if ev, ok := e.(event.ItemReceivedState); ok {
 				log.Printf("STATE EVENT: Back_Garden_Lighting_Switch received state %+v", ev.State)
 			}
@@ -84,7 +87,7 @@ func main() {
 
 	client.AddRule(
 		openhab.RuleData{Name: "Receiving ON state"},
-		func(client openhab.RuleClient, ruleData openhab.RuleData, e event.Event) {
+		func(client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
 			log.Printf("STATE EVENT: Back_Garden_Lighting_Switch state is now ON")
 		},
 		openhab.OnItemReceivedState("Back_Garden_Lighting_Switch", openhab.SwitchON),
@@ -92,7 +95,7 @@ func main() {
 
 	client.AddRule(
 		openhab.RuleData{Name: "Receiving OFF state"},
-		func(client openhab.RuleClient, ruleData openhab.RuleData, e event.Event) {
+		func(client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
 			log.Printf("STATE EVENT: Back_Garden_Lighting_Switch state is now OFF")
 		},
 		openhab.OnItemReceivedState("Back_Garden_Lighting_Switch", openhab.SwitchOFF),
@@ -100,7 +103,7 @@ func main() {
 
 	client.AddRule(
 		openhab.RuleData{Name: "Receiving state changed"},
-		func(client openhab.RuleClient, ruleData openhab.RuleData, e event.Event) {
+		func(client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
 			if ev, ok := e.(event.ItemStateChanged); ok {
 				log.Printf("STATE CHANGED EVENT: Back_Garden_Lighting_Switch changed to state %+v", ev.NewState)
 			}
@@ -112,7 +115,7 @@ func main() {
 		openhab.RuleData{
 			Name: "Test rule",
 		},
-		func(client openhab.RuleClient, ruleData openhab.RuleData, e event.Event) {
+		func(client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
 			item, err := client.GetItem("Back_Garden_Lighting_Switch")
 			if err != nil {
 				log.Print(err)
@@ -244,7 +247,7 @@ func TestCalculateZoneTemperature(t *testing.T) {
 - Handle all state types. Handled for now are `String`, `Switch`, `Number`, `DateTime`.
 - Add triggers for more events. All `item` events have triggers, and some `thing` events (but not all)
 - Ability to update rules
-- Handle more events on the openhab test server
+- Handle more events on the openhab test server (typically, `things` are not supported yet)
 
 # Limitations of the mock openHAB server for testing
 
