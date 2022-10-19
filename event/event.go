@@ -20,165 +20,205 @@ func New(data string) (Event, error) {
 	}
 	switch message.Type {
 	case api.EventItemCommand:
-		data := api.EventCommand{}
-		err := json.Unmarshal([]byte(message.Payload), &data)
-		if err != nil {
-			return nil, errDecodingMessage(err)
-		}
-		itemName, _, _ := splitItemTopic(message.Topic)
-		if itemName == "" {
-			return nil, errInvalidTopic(message.Topic)
-		}
-		return NewItemReceivedCommand(itemName, data.Type, data.Value), nil
+		return newEventItemCommand(message)
 
 	case api.EventItemState:
-		data := api.EventState{}
-		err := json.Unmarshal([]byte(message.Payload), &data)
-		if err != nil {
-			return nil, errDecodingMessage(err)
-		}
-		itemName, _, _ := splitItemTopic(message.Topic)
-		if itemName == "" {
-			return nil, errInvalidTopic(message.Topic)
-		}
-		return NewItemReceivedState(itemName, data.Type, data.Value), nil
+		return newEventItemState(message)
 
 	case api.EventItemStateChanged:
-		data := api.EventStateChanged{}
-		err := json.Unmarshal([]byte(message.Payload), &data)
-		if err != nil {
-			return nil, errDecodingMessage(err)
-		}
-		itemName, _, _ := splitItemTopic(message.Topic)
-		if itemName == "" {
-			return nil, errInvalidTopic(message.Topic)
-		}
-		return NewItemStateChanged(itemName, data.OldType, data.OldValue, data.Type, data.Value), nil
+		return newEventItemStateChanged(message)
 
 	case api.EventGroupItemStateChanged:
-		data := api.EventStateChanged{}
-		err := json.Unmarshal([]byte(message.Payload), &data)
-		if err != nil {
-			return nil, errDecodingMessage(err)
-		}
-		itemName, triggeringItem, _ := splitItemTopic(message.Topic)
-		if itemName == "" {
-			return nil, errInvalidTopic(message.Topic)
-		}
-		return NewGroupItemStateChanged(itemName, triggeringItem, data.OldType, data.OldValue, data.Type, data.Value), nil
+		return newEventGroupItemStateChanged(message)
 
 	case api.EventItemAdded:
-		data := api.Item{}
-		err := json.Unmarshal([]byte(message.Payload), &data)
-		if err != nil {
-			return nil, errDecodingMessage(err)
-		}
-		return NewItemAdded(Item{
-			Type:       data.Type,
-			GroupType:  data.GroupType,
-			Name:       data.Name,
-			Label:      data.Label,
-			Category:   data.Category,
-			Tags:       data.Tags,
-			GroupNames: data.GroupNames,
-		},
-		), nil
+		return newEventItemAdded(message)
 
 	case api.EventItemRemoved:
-		data := api.Item{}
-		err := json.Unmarshal([]byte(message.Payload), &data)
-		if err != nil {
-			return nil, errDecodingMessage(err)
-		}
-		return NewItemRemoved(Item{
-			Type:       data.Type,
-			GroupType:  data.GroupType,
-			Name:       data.Name,
-			Label:      data.Label,
-			Category:   data.Category,
-			Tags:       data.Tags,
-			GroupNames: data.GroupNames,
-		},
-		), nil
+		return newEventItemRemoved(message)
 
 	case api.EventItemUpdated:
-		data := make([]api.Item, 2)
-		err := json.Unmarshal([]byte(message.Payload), &data)
-		if err != nil {
-			return nil, errDecodingMessage(err)
-		}
-		if len(data) != 2 {
-			return nil, fmt.Errorf("error decoding message: expected array with 2 elements, but found %d", len(data))
-		}
-		return NewItemUpdated(
-			Item{
-				Type:       data[1].Type,
-				GroupType:  data[1].GroupType,
-				Name:       data[1].Name,
-				Label:      data[1].Label,
-				Category:   data[1].Category,
-				Tags:       data[1].Tags,
-				GroupNames: data[1].GroupNames,
-			},
-			Item{
-				Type:       data[0].Type,
-				GroupType:  data[0].GroupType,
-				Name:       data[0].Name,
-				Label:      data[0].Label,
-				Category:   data[0].Category,
-				Tags:       data[0].Tags,
-				GroupNames: data[0].GroupNames,
-			},
-		), nil
+		return newEventItemUpdated(message)
 
 	case api.EventThingStatusInfo:
-		data := api.ThingStatusInfo{}
-		err := json.Unmarshal([]byte(message.Payload), &data)
-		if err != nil {
-			return nil, errDecodingMessage(err)
-		}
-		thingName, _ := splitThingTopic(message.Topic)
-		return NewThingStatusInfoEvent(thingName, ThingStatus{
-			Status:       data.Status,
-			StatusDetail: data.StatusDetail,
-		}), nil
+		return newEventThingStatusInfo(message)
 
 	case api.EventThingStatusInfoChanged:
-		data := make([]api.ThingStatusInfo, 0, 2)
-		err := json.Unmarshal([]byte(message.Payload), &data)
-		if err != nil {
-			return nil, errDecodingMessage(err)
-		}
-		if len(data) != 2 {
-			return nil, fmt.Errorf("error decoding message: expected array with 2 elements, but found %d", len(data))
-		}
-		thingName, _ := splitThingTopic(message.Topic)
-		return NewThingStatusInfoChangedEvent(thingName,
-			ThingStatus{
-				Status:       data[1].Status,
-				StatusDetail: data[1].StatusDetail,
-				Description:  data[1].Description,
-			},
-			ThingStatus{
-				Status:       data[0].Status,
-				StatusDetail: data[0].StatusDetail,
-				Description:  data[0].Description,
-			}), nil
+		return newEventThingStatusInfoChanged(message)
 
 	case api.EventTypeAlive:
 		return NewAliveEvent(), nil
 
 	case api.EventTypeStartlevel:
-		data := api.Startlevel{}
-		err := json.Unmarshal([]byte(message.Payload), &data)
-		if err != nil {
-			return nil, errDecodingMessage(err)
-		}
-		return NewStartlevelEvent(message.Topic, data.Startlevel), nil
+		return newEventTypeStartlevel(message)
 
 	default:
 		return NewGenericEvent(message.Type, message.Topic, message.Payload), nil
 	}
+}
+
+func newEventItemCommand(message api.EventMessage) (Event, error) {
+	data := api.EventCommand{}
+	err := json.Unmarshal([]byte(message.Payload), &data)
+	if err != nil {
+		return nil, errDecodingMessage(err)
+	}
+	itemName, _, _ := splitItemTopic(message.Topic)
+	if itemName == "" {
+		return nil, errInvalidTopic(message.Topic)
+	}
+	return NewItemReceivedCommand(itemName, data.Type, data.Value), nil
+}
+
+func newEventItemState(message api.EventMessage) (Event, error) {
+	data := api.EventState{}
+	err := json.Unmarshal([]byte(message.Payload), &data)
+	if err != nil {
+		return nil, errDecodingMessage(err)
+	}
+	itemName, _, _ := splitItemTopic(message.Topic)
+	if itemName == "" {
+		return nil, errInvalidTopic(message.Topic)
+	}
+	return NewItemReceivedState(itemName, data.Type, data.Value), nil
+}
+
+func newEventItemStateChanged(message api.EventMessage) (Event, error) {
+	data := api.EventStateChanged{}
+	err := json.Unmarshal([]byte(message.Payload), &data)
+	if err != nil {
+		return nil, errDecodingMessage(err)
+	}
+	itemName, _, _ := splitItemTopic(message.Topic)
+	if itemName == "" {
+		return nil, errInvalidTopic(message.Topic)
+	}
+	return NewItemStateChanged(itemName, data.OldType, data.OldValue, data.Type, data.Value), nil
+}
+
+func newEventGroupItemStateChanged(message api.EventMessage) (Event, error) {
+	data := api.EventStateChanged{}
+	err := json.Unmarshal([]byte(message.Payload), &data)
+	if err != nil {
+		return nil, errDecodingMessage(err)
+	}
+	itemName, triggeringItem, _ := splitItemTopic(message.Topic)
+	if itemName == "" {
+		return nil, errInvalidTopic(message.Topic)
+	}
+	return NewGroupItemStateChanged(itemName, triggeringItem, data.OldType, data.OldValue, data.Type, data.Value), nil
+}
+
+func newEventItemAdded(message api.EventMessage) (Event, error) {
+	data := api.Item{}
+	err := json.Unmarshal([]byte(message.Payload), &data)
+	if err != nil {
+		return nil, errDecodingMessage(err)
+	}
+	return NewItemAdded(Item{
+		Type:       data.Type,
+		GroupType:  data.GroupType,
+		Name:       data.Name,
+		Label:      data.Label,
+		Category:   data.Category,
+		Tags:       data.Tags,
+		GroupNames: data.GroupNames,
+	},
+	), nil
+}
+
+func newEventItemRemoved(message api.EventMessage) (Event, error) {
+	data := api.Item{}
+	err := json.Unmarshal([]byte(message.Payload), &data)
+	if err != nil {
+		return nil, errDecodingMessage(err)
+	}
+	return NewItemRemoved(Item{
+		Type:       data.Type,
+		GroupType:  data.GroupType,
+		Name:       data.Name,
+		Label:      data.Label,
+		Category:   data.Category,
+		Tags:       data.Tags,
+		GroupNames: data.GroupNames,
+	},
+	), nil
+}
+
+func newEventItemUpdated(message api.EventMessage) (Event, error) {
+	data := make([]api.Item, 2)
+	err := json.Unmarshal([]byte(message.Payload), &data)
+	if err != nil {
+		return nil, errDecodingMessage(err)
+	}
+	if len(data) != 2 {
+		return nil, fmt.Errorf("error decoding message: expected array with 2 elements, but found %d", len(data))
+	}
+	return NewItemUpdated(
+		Item{
+			Type:       data[1].Type,
+			GroupType:  data[1].GroupType,
+			Name:       data[1].Name,
+			Label:      data[1].Label,
+			Category:   data[1].Category,
+			Tags:       data[1].Tags,
+			GroupNames: data[1].GroupNames,
+		},
+		Item{
+			Type:       data[0].Type,
+			GroupType:  data[0].GroupType,
+			Name:       data[0].Name,
+			Label:      data[0].Label,
+			Category:   data[0].Category,
+			Tags:       data[0].Tags,
+			GroupNames: data[0].GroupNames,
+		},
+	), nil
+}
+
+func newEventThingStatusInfo(message api.EventMessage) (Event, error) {
+	data := api.ThingStatusInfo{}
+	err := json.Unmarshal([]byte(message.Payload), &data)
+	if err != nil {
+		return nil, errDecodingMessage(err)
+	}
+	thingName, _ := splitThingTopic(message.Topic)
+	return NewThingStatusInfoEvent(thingName, ThingStatus{
+		Status:       data.Status,
+		StatusDetail: data.StatusDetail,
+	}), nil
+}
+
+func newEventThingStatusInfoChanged(message api.EventMessage) (Event, error) {
+	data := make([]api.ThingStatusInfo, 0, 2)
+	err := json.Unmarshal([]byte(message.Payload), &data)
+	if err != nil {
+		return nil, errDecodingMessage(err)
+	}
+	if len(data) != 2 {
+		return nil, fmt.Errorf("error decoding message: expected array with 2 elements, but found %d", len(data))
+	}
+	thingName, _ := splitThingTopic(message.Topic)
+	return NewThingStatusInfoChangedEvent(thingName,
+		ThingStatus{
+			Status:       data[1].Status,
+			StatusDetail: data[1].StatusDetail,
+			Description:  data[1].Description,
+		},
+		ThingStatus{
+			Status:       data[0].Status,
+			StatusDetail: data[0].StatusDetail,
+			Description:  data[0].Description,
+		}), nil
+}
+
+func newEventTypeStartlevel(message api.EventMessage) (Event, error) {
+	data := api.Startlevel{}
+	err := json.Unmarshal([]byte(message.Payload), &data)
+	if err != nil {
+		return nil, errDecodingMessage(err)
+	}
+	return NewStartlevelEvent(message.Topic, data.Startlevel), nil
 }
 
 func errInvalidTopic(topic string) error {
