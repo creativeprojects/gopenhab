@@ -90,7 +90,7 @@ func TestCanReceiveRawEvents(t *testing.T) {
 
 	// send some messages
 	for _, rawEvent := range rawEvents {
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(20 * time.Millisecond)
 		server.RawEvent("", rawEvent)
 	}
 
