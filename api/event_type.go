@@ -21,7 +21,8 @@ const (
 	EventItemChannelLinkRemoved = "ItemChannelLinkRemovedEvent" // An item channel link has been removed from the registry.
 	EventChannelTriggered       = "ChannelTriggeredEvent"       // A channel has been triggered.
 	// event added in API v5
-	EventTypeAlive = "ALIVE" // API version >=5 sends ALIVE events (every minute or so)
+	EventTypeAlive      = "ALIVE"           // API version >=5 sends ALIVE events (every minute or so)
+	EventTypeStartlevel = "StartlevelEvent" // Event sent during server startup (typically from 30 to 100)
 )
 
 const (

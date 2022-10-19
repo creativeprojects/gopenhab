@@ -69,6 +69,13 @@ func OnAlive() *systemEventTrigger {
 	}
 }
 
+// OnStartlevel is a trigger activated when the server sends Startlevel events during startup.
+func OnStartlevel() *systemEventTrigger {
+	return &systemEventTrigger{
+		eventType: event.TypeServerStartlevel,
+	}
+}
+
 // activate subscribes to the corresponding event
 func (c *systemEventTrigger) activate(client subscriber, run func(ev event.Event), ruleData RuleData) error {
 	c.subId = c.subscribe(client, "", c.eventType, run, c.match)

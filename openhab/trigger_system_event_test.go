@@ -84,6 +84,16 @@ func TestMatchingSystemEvent(t *testing.T) {
 			OnAlive(),
 			true,
 		},
+		{
+			event.NewAliveEvent(),
+			OnStartlevel(),
+			false,
+		},
+		{
+			event.NewStartlevelEvent("system/startlevel", 30),
+			OnStartlevel(),
+			true,
+		},
 	}
 
 	for _, testEvent := range testEvents {
@@ -182,6 +192,18 @@ func TestSystemEventSubscription(t *testing.T) {
 			OnAlive(),
 			event.TypeServerAlive,
 			event.NewSystemEvent(event.TypeServerAlive),
+			1,
+		},
+		{
+			OnStartlevel(),
+			event.TypeServerStartlevel,
+			event.NewSystemEvent(event.TypeServerAlive),
+			0,
+		},
+		{
+			OnStartlevel(),
+			event.TypeServerStartlevel,
+			event.NewStartlevelEvent("system/startlevel", 30),
 			1,
 		},
 	}

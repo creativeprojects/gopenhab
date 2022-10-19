@@ -68,6 +68,10 @@ func TestCreateEventFromJSON(t *testing.T) {
 			`{"type":"ALIVE"}`,
 			AliveEvent{},
 		},
+		{
+			`{"topic":"openhab/system/startlevel","payload":"{\"startlevel\":30}","type":"StartlevelEvent"}`,
+			StartlevelEvent{topic: "system/startlevel", level: 30},
+		},
 		// {`{"topic":"smarthome/channels/astro:sun:local:set#event/triggered","payload":"{\"event\":\"START\",\"channel\":\"astro:sun:local:set#event\"}","type":"ChannelTriggeredEvent"}`,
 		// },
 		// {`{"topic":"smarthome/links/Presence_Mobile_Fred-network:pingdevice:3aadd7c9:online/added","payload":"{\"channelUID\":\"network:pingdevice:3aadd7c9:online\",\"configuration\":{\"profile\":\"system:default\"},\"itemName\":\"Presence_Mobile_Fred\"}","type":"ItemChannelLinkAddedEvent"}`,

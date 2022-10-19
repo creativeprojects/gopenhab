@@ -23,6 +23,7 @@ const (
 	TypeClientStopped
 	TypeClientError
 	TypeServerAlive            // API version >=5 sends ALIVE messages (every minute or so)
+	TypeServerStartlevel       // API version >=5 sends Startlevel events during startup (typically from 30 to 100)
 	TypeTimeCron               // On a specific date and/or time
 	TypeItemAdded              // An item has been added to the item registry.
 	TypeItemRemoved            // An item has been removed from the item registry.

@@ -168,6 +168,14 @@ func New(data string) (Event, error) {
 	case api.EventTypeAlive:
 		return NewAliveEvent(), nil
 
+	case api.EventTypeStartlevel:
+		data := api.Startlevel{}
+		err := json.Unmarshal([]byte(message.Payload), &data)
+		if err != nil {
+			return nil, errDecodingMessage(err)
+		}
+		return NewStartlevelEvent(message.Topic, data.Startlevel), nil
+
 	default:
 		return NewGenericEvent(message.Type, message.Topic, message.Payload), nil
 	}
