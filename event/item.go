@@ -137,6 +137,34 @@ func (i GroupItemStateChanged) Type() Type {
 // Verify interface
 var _ Event = GroupItemStateChanged{}
 
+type ItemStatePredicted struct {
+	topic          string
+	ItemName       string
+	PredictedType  string
+	PredictedState string
+}
+
+func NewItemStatePredicted(itemName, predictedStateType, predictedState string) ItemStatePredicted {
+	topic := itemTopicPrefix + itemName + "/" + api.TopicEventStatePredicted
+	return ItemStatePredicted{
+		topic:          topic,
+		ItemName:       itemName,
+		PredictedType:  predictedStateType,
+		PredictedState: predictedState,
+	}
+}
+
+func (i ItemStatePredicted) Topic() string {
+	return i.topic
+}
+
+func (i ItemStatePredicted) Type() Type {
+	return TypeItemStatePredicted
+}
+
+// Verify interface
+var _ Event = ItemStatePredicted{}
+
 type ItemAdded struct {
 	topic string
 	Item  Item

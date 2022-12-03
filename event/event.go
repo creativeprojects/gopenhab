@@ -31,6 +31,9 @@ func New(data string) (Event, error) {
 	case api.EventGroupItemStateChanged:
 		return newEventGroupItemStateChanged(message)
 
+	case api.EventItemStatePredicted:
+		return newEventItemStatePredicted(message)
+
 	case api.EventItemAdded:
 		return newEventItemAdded(message)
 
@@ -107,6 +110,19 @@ func newEventGroupItemStateChanged(message api.EventMessage) (Event, error) {
 		return nil, errInvalidTopic(message.Topic)
 	}
 	return NewGroupItemStateChanged(itemName, triggeringItem, data.OldType, data.OldValue, data.Type, data.Value), nil
+}
+
+func newEventItemStatePredicted(message api.EventMessage) (Event, error) {
+	data := api.EventStatePredicted{}
+	err := json.Unmarshal([]byte(message.Payload), &data)
+	if err != nil {
+		return nil, errDecodingMessage(err)
+	}
+	itemName, _, _ := splitItemTopic(message.Topic)
+	if itemName == "" {
+		return nil, errInvalidTopic(message.Topic)
+	}
+	return NewItemStatePredicted(itemName, data.PredictedType, data.PredictedValue), nil
 }
 
 func newEventItemAdded(message api.EventMessage) (Event, error) {
