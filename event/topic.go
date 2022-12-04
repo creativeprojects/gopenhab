@@ -13,6 +13,12 @@ func splitThingTopic(topic string) (string, string) {
 	return name, evType
 }
 
+// splitChannelTopic returns the thing name and the event type
+func splitChannelTopic(topic string) (string, string) {
+	name, _, evType := splitTopic(topic, "channels")
+	return name, evType
+}
+
 func splitTopic(topic, collection string) (string, string, string) {
 	// "smarthome" was used in openHAB 2.x
 	// "openhab" is used since openHAB 3.0

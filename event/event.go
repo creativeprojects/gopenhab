@@ -55,6 +55,9 @@ func New(data string) (Event, error) {
 	case api.EventTypeStartlevel:
 		return newEventTypeStartlevel(message)
 
+	case api.EventChannelTriggered:
+		return newEventChannelTriggered(message)
+
 	default:
 		return NewGenericEvent(message.Type, message.Topic, message.Payload), nil
 	}
@@ -226,6 +229,16 @@ func newEventThingStatusInfoChanged(message api.EventMessage) (Event, error) {
 			StatusDetail: data[0].StatusDetail,
 			Description:  data[0].Description,
 		}), nil
+}
+
+func newEventChannelTriggered(message api.EventMessage) (Event, error) {
+	data := api.EventTriggered{}
+	err := json.Unmarshal([]byte(message.Payload), &data)
+	if err != nil {
+		return nil, errDecodingMessage(err)
+	}
+	channelName, _ := splitChannelTopic(message.Topic)
+	return NewChannelTriggered(channelName, data.Event), nil
 }
 
 func newEventTypeStartlevel(message api.EventMessage) (Event, error) {

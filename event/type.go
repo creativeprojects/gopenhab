@@ -8,8 +8,9 @@ import (
 )
 
 const (
-	itemTopicPrefix  = "items/"
-	thingTopicPrefix = "things/"
+	itemTopicPrefix    = "items/"
+	thingTopicPrefix   = "things/"
+	channelTopicPrefix = "channels/"
 )
 
 type Type int
