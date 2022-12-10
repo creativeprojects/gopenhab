@@ -4,6 +4,15 @@ import (
 	"github.com/creativeprojects/gopenhab/api"
 )
 
+type Thing struct {
+	UID           string
+	Label         string
+	BridgeUID     string
+	Configuration map[string]any
+	Properties    map[string]string
+	ThingTypeUID  string
+}
+
 type ThingStatus struct {
 	Status       string
 	StatusDetail string
@@ -77,3 +86,29 @@ func (i ThingStatusInfoChangedEvent) Type() Type {
 
 // Verify interface
 var _ Event = ThingStatusInfoChangedEvent{}
+
+type ThingUpdated struct {
+	topic    string
+	OldThing Thing
+	Thing    Thing
+}
+
+func NewThingUpdated(oldThing, newThing Thing) ThingUpdated {
+	topic := thingTopicPrefix + newThing.UID + "/" + api.TopicEventUpdated
+	return ThingUpdated{
+		topic:    topic,
+		OldThing: oldThing,
+		Thing:    newThing,
+	}
+}
+
+func (i ThingUpdated) Topic() string {
+	return i.topic
+}
+
+func (i ThingUpdated) Type() Type {
+	return TypeThingUpdated
+}
+
+// Verify interface
+var _ Event = ThingUpdated{}

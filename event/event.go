@@ -43,6 +43,9 @@ func New(data string) (Event, error) {
 	case api.EventItemUpdated:
 		return newEventItemUpdated(message)
 
+	case api.EventThingUpdated:
+		return newEventThingUpdated(message)
+
 	case api.EventThingStatusInfo:
 		return newEventThingStatusInfo(message)
 
@@ -191,6 +194,35 @@ func newEventItemUpdated(message api.EventMessage) (Event, error) {
 			Category:   data[0].Category,
 			Tags:       data[0].Tags,
 			GroupNames: data[0].GroupNames,
+		},
+	), nil
+}
+
+func newEventThingUpdated(message api.EventMessage) (Event, error) {
+	data := make([]api.Thing, 2)
+	err := json.Unmarshal([]byte(message.Payload), &data)
+	if err != nil {
+		return nil, errDecodingMessage(err)
+	}
+	if len(data) != 2 {
+		return nil, fmt.Errorf("error decoding message: expected array with 2 elements, but found %d", len(data))
+	}
+	return NewThingUpdated(
+		Thing{
+			UID:           data[1].UID,
+			Label:         data[1].Label,
+			BridgeUID:     data[1].BridgeUID,
+			Configuration: data[1].Configuration,
+			Properties:    data[1].Properties,
+			ThingTypeUID:  data[1].ThingTypeUID,
+		},
+		Thing{
+			UID:           data[0].UID,
+			Label:         data[0].Label,
+			BridgeUID:     data[0].BridgeUID,
+			Configuration: data[0].Configuration,
+			Properties:    data[0].Properties,
+			ThingTypeUID:  data[0].ThingTypeUID,
 		},
 	), nil
 }
