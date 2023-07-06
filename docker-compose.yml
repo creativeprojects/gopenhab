@@ -3,7 +3,6 @@ version: '2.2'
 services:
     openhab30:
         image: "openhab/openhab:3.0.4"
-        restart: always
         ports:
             - "8083:8083"
             - "8343:8443"
