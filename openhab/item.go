@@ -53,6 +53,7 @@ func (i *Item) load() error {
 	ctx, cancel := context.WithTimeout(context.Background(), i.client.config.TimeoutHTTP)
 	defer cancel()
 
+	i.client.addCounter(MetricItemLoad, 1, MetricItemName, i.name)
 	err := i.client.getJSON(ctx, itemsPath+i.name, &data)
 	if err != nil {
 		return err
@@ -109,6 +110,7 @@ func (i *Item) State() (State, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), i.client.config.TimeoutHTTP)
 	defer cancel()
 
+	i.client.addCounter(MetricItemLoadState, 1, MetricItemName, i.name)
 	state, err := i.client.getString(ctx, itemsPath+i.name+"/state")
 	if err != nil {
 		return i.stateFromString(""), err
@@ -126,6 +128,7 @@ func (i *Item) SendCommand(command State) error {
 	ctx, cancel := context.WithTimeout(context.Background(), i.client.config.TimeoutHTTP)
 	defer cancel()
 
+	i.client.addCounter(MetricItemSetState, 1, MetricItemName, i.name)
 	err := i.client.postString(ctx, itemsPath+i.name, command.String())
 	if err != nil {
 		return err

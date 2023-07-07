@@ -37,6 +37,7 @@ func (items *itemCollection) getItem(name string) (*Item, error) {
 	}
 	// try to get the item from the cache
 	if item, ok := items.cache[name]; ok {
+		items.client.addCounter(MetricItemCacheHit, 1, MetricItemName, name)
 		return item, nil
 	}
 	// try to call the API to get the item
@@ -46,6 +47,7 @@ func (items *itemCollection) getItem(name string) (*Item, error) {
 		return item, nil
 	}
 	// item wasn't found
+	items.client.addCounter(MetricItemNotFound, 1, MetricItemName, name)
 	return nil, fmt.Errorf("item %q %w", name, ErrorNotFound)
 }
 
@@ -72,12 +74,13 @@ func (items *itemCollection) getMembersOf(groupName string) ([]*Item, error) {
 }
 
 // loadCache loads all items into the cache.
-// This method is NOT using the cacheLocker: it is the responsability of the caller to do so.
+// This method is NOT using the cacheLocker: it is the responsibility of the caller to do so.
 func (items *itemCollection) loadCache() error {
 	all, err := items.load()
 	if err != nil {
 		return err
 	}
+	items.client.addGauge(MetricItemsCacheSize, int64(len(all)), "", "")
 
 	items.cache = make(map[string]*Item, len(all))
 	for _, item := range all {

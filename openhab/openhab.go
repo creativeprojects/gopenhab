@@ -54,6 +54,8 @@ type Client struct {
 	apiVersion     int
 	state          ClientState
 	stateMutex     sync.Mutex
+	telemetry      Telemetry
+	telemetryWg    sync.WaitGroup
 }
 
 // NewClient creates a new client to connect to a openHAB instance
@@ -109,6 +111,7 @@ func NewClient(config Config) *Client {
 		runningMutex:   sync.Mutex{},
 		state:          StateStarting,
 		stateMutex:     sync.Mutex{},
+		telemetry:      config.Telemetry,
 	}
 	client.items = newItems(client)
 	return client
@@ -422,6 +425,7 @@ func (c *Client) AddRule(ruleData RuleData, run Runner, triggers ...Trigger) (ru
 		// activate it right away if the client is already running
 		c.activateRule(rule)
 	}
+	c.addCounter(MetricRuleAdded, 1, MetricRuleID, rule.ruleData.ID)
 	return rule.ruleData.ID
 }
 
@@ -437,12 +441,25 @@ func (c *Client) DeleteRule(ruleID string) int {
 		if rule.ruleData.ID == ruleID {
 			rule.deactivate(c)
 			deleted++
+			c.addCounter(MetricRuleDeleted, 1, MetricRuleID, rule.ruleData.ID)
 			continue
 		}
 		newRules = append(newRules, rule)
 	}
 	c.rules = newRules
 	return deleted
+}
+
+// GetRulesData returns the list of rules definition
+func (c *Client) GetRulesData() []RuleData {
+	c.rulesMutex.Lock()
+	defer c.rulesMutex.Unlock()
+
+	rules := make([]RuleData, 0, len(c.rules))
+	for _, rule := range c.rules {
+		rules = append(rules, rule.ruleData)
+	}
+	return rules
 }
 
 // Start the handling of the defined rules.
@@ -485,6 +502,9 @@ func (c *Client) Start() {
 
 		// and also all the event based rules
 		c.waitFinishingRules()
+
+		// and wait for the telemetry to finish
+		c.telemetryWg.Wait()
 	})
 }
 
@@ -549,7 +569,7 @@ func (c *Client) itemStateUpdated(e event.Event) {
 			return
 		}
 		item.setInternalStateString(ev.State)
-		// debuglog.Printf("Item %s received state %s", ev.ItemName, ev.State)
+		c.addCounter(MetricItemStateUpdated, 1, MetricItemName, ev.ItemName)
 	}
 }
 
@@ -567,4 +587,37 @@ func (c *Client) isState(state ClientState) bool {
 
 func (c *Client) getCron() *cron.Cron {
 	return c.cron
+}
+
+func (c *Client) addCounter(metricName string, metricValue int64, tagName, tagValue string) {
+	if c.telemetry == nil {
+		return
+	}
+	defer preventPanic()
+
+	c.telemetryWg.Add(1)
+	go func() {
+		defer c.telemetryWg.Done()
+		c.telemetry.AddCounter(metricName, metricValue, getMap(tagName, tagValue))
+	}()
+}
+
+func (c *Client) addGauge(metricName string, metricValue int64, tagName, tagValue string) {
+	if c.telemetry == nil {
+		return
+	}
+	defer preventPanic()
+
+	c.telemetryWg.Add(1)
+	go func() {
+		defer c.telemetryWg.Done()
+		c.telemetry.AddGauge(metricName, metricValue, getMap(tagName, tagValue))
+	}()
+}
+
+func getMap(key, value string) map[string]string {
+	if key == "" && value == "" {
+		return nil
+	}
+	return map[string]string{key: value}
 }
