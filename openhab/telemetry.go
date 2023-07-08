@@ -1,11 +1,5 @@
 package openhab
 
-import (
-	"io"
-	"log"
-	"sync"
-)
-
 const (
 	MetricItemName         = "item_name"
 	MetricRuleID           = "rule_id"
@@ -39,55 +33,4 @@ type Telemetry interface {
 	SubGauge(name string, value int64, tags map[string]string)
 	// AddCounter adds the value to a counter. The callback runs inside its own goroutine
 	AddCounter(name string, value int64, tags map[string]string)
-}
-
-type TelemetryLogger struct {
-	gauges       map[string]int64
-	counters     map[string]int64
-	gaugeMutex   sync.Mutex
-	counterMutex sync.Mutex
-	logger       *log.Logger
-}
-
-func NewTelemetryLogger(writer io.Writer) *TelemetryLogger {
-	logger := log.New(writer, "", log.LstdFlags)
-	return &TelemetryLogger{
-		gauges:   make(map[string]int64),
-		counters: make(map[string]int64),
-		logger:   logger,
-	}
-}
-
-var _ Telemetry = (*TelemetryLogger)(nil)
-
-func (t *TelemetryLogger) SetGauge(name string, value int64, tags map[string]string) {
-	t.gaugeMutex.Lock()
-	defer t.gaugeMutex.Unlock()
-
-	t.gauges[name] = value
-	t.logger.Printf("gauge %s: %d", name, value)
-}
-
-func (t *TelemetryLogger) AddGauge(name string, value int64, tags map[string]string) {
-	t.gaugeMutex.Lock()
-	defer t.gaugeMutex.Unlock()
-
-	t.gauges[name] += value
-	t.logger.Printf("gauge %s: %d", name, value)
-}
-
-func (t *TelemetryLogger) SubGauge(name string, value int64, tags map[string]string) {
-	t.gaugeMutex.Lock()
-	defer t.gaugeMutex.Unlock()
-
-	t.gauges[name] -= value
-	t.logger.Printf("gauge %s: %d", name, value)
-}
-
-func (t *TelemetryLogger) AddCounter(name string, value int64, tags map[string]string) {
-	t.counterMutex.Lock()
-	defer t.counterMutex.Unlock()
-
-	t.counters[name] += value
-	t.logger.Printf("counter %s: %d %v", name, value, tags)
 }
