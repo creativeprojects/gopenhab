@@ -426,6 +426,7 @@ func (c *Client) AddRule(ruleData RuleData, run Runner, triggers ...Trigger) (ru
 		c.activateRule(rule)
 	}
 	c.addCounter(MetricRuleAdded, 1, MetricRuleID, rule.ruleData.ID)
+	c.setGauge(MetricRulesCount, int64(len(c.rules)), "", "")
 	return rule.ruleData.ID
 }
 
@@ -447,6 +448,7 @@ func (c *Client) DeleteRule(ruleID string) int {
 		newRules = append(newRules, rule)
 	}
 	c.rules = newRules
+	c.setGauge(MetricRulesCount, int64(len(c.rules)), "", "")
 	return deleted
 }
 
@@ -602,7 +604,7 @@ func (c *Client) addCounter(metricName string, metricValue int64, tagName, tagVa
 	}()
 }
 
-func (c *Client) addGauge(metricName string, metricValue int64, tagName, tagValue string) {
+func (c *Client) setGauge(metricName string, metricValue int64, tagName, tagValue string) {
 	if c.telemetry == nil {
 		return
 	}
@@ -611,7 +613,7 @@ func (c *Client) addGauge(metricName string, metricValue int64, tagName, tagValu
 	c.telemetryWg.Add(1)
 	go func() {
 		defer c.telemetryWg.Done()
-		c.telemetry.AddGauge(metricName, metricValue, getMap(tagName, tagValue))
+		c.telemetry.SetGauge(metricName, metricValue, getMap(tagName, tagValue))
 	}()
 }
 

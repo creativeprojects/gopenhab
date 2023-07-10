@@ -12,6 +12,7 @@ const (
 	MetricItemsCacheSize   = "items.cache_size"
 	MetricRuleAdded        = "rule.added"
 	MetricRuleDeleted      = "rule.deleted"
+	MetricRulesCount       = "rules.count"
 )
 
 // Telemetry interface to send metrics. Two metrics are available: Gauge and Counter.

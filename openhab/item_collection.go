@@ -80,12 +80,12 @@ func (items *itemCollection) loadCache() error {
 	if err != nil {
 		return err
 	}
-	items.client.addGauge(MetricItemsCacheSize, int64(len(all)), "", "")
 
 	items.cache = make(map[string]*Item, len(all))
 	for _, item := range all {
 		items.cache[item.Name] = newItem(items.client, item.Name).set(item)
 	}
+	items.client.setGauge(MetricItemsCacheSize, int64(len(items.cache)), "", "")
 	return nil
 }
 
