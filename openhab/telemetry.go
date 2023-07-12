@@ -26,6 +26,7 @@ const (
 // e.g. the number of currently running goroutines. Those "counters" are represented by Gauges.
 // A Counter is typically used to count requests served, tasks completed, errors occurred, etc.
 type Telemetry interface {
+	Close()
 	// SetGauge sets the value of a gauge. The callback runs inside its own goroutine
 	SetGauge(name string, value int64, tags map[string]string)
 	// AddGauge adds the value to a gauge. The callback runs inside its own goroutine

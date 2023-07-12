@@ -18,6 +18,8 @@ func NewTelemetryLogger(writer io.Writer) *TelemetryLogger {
 
 var _ Telemetry = (*TelemetryLogger)(nil)
 
+func (t *TelemetryLogger) Close() {}
+
 func (t *TelemetryLogger) SetGauge(name string, value int64, tags map[string]string) {
 	t.logger.Printf("set gauge %s to: %d tags:%v", name, value, tags)
 }
