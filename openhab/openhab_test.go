@@ -29,6 +29,9 @@ data: {"topic":"smarthome/items/TestSwitch/state","payload":"{\"type\":\"OnOff\"
 
 		`event: message
 data: {"topic":"smarthome/items/TestSwitch/statechanged","payload":"{\"type\":\"OnOff\",\"value\":\"ON\",\"oldType\":\"OnOff\",\"oldValue\":\"OFF\"}","type":"ItemStateChangedEvent"}`,
+
+		`event: alive
+data: {"type":"ALIVE","interval":10}`,
 	}
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {

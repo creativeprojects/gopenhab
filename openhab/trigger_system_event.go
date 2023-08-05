@@ -62,7 +62,8 @@ func OnError() *systemEventTrigger {
 	}
 }
 
-// OnAlive is a trigger activated when the client receives an ALIVE event from the server
+// OnAlive is a trigger activated when the client receives an ALIVE event from the server.
+// This event is sent by OpenHAB version 3.4+ (API v5+)
 func OnAlive() *systemEventTrigger {
 	return &systemEventTrigger{
 		eventType: event.TypeServerAlive,

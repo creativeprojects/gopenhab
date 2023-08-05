@@ -28,6 +28,7 @@ const (
 	eventData           = "data: "
 	eventTypeMessage    = "message"
 	eventTypeEvent      = "event"
+	eventTypeAlive      = "alive"
 	minSupportedVersion = 3
 	maxSupportedVersion = 5
 )
@@ -282,8 +283,7 @@ func (c *Client) listenEvents() error {
 				errorlog.Printf("unexpected start of event: %q", line)
 			}
 			ev := strings.TrimPrefix(line, eventHeader)
-			// "event" seems to send this data: "{\"type\":\"ALIVE\"}"
-			if ev != eventTypeMessage && ev != eventTypeEvent {
+			if ev != eventTypeMessage && ev != eventTypeEvent && ev != eventTypeAlive {
 				errorlog.Printf("unexpected event type %q", ev)
 			}
 			continue

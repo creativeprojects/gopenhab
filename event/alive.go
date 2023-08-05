@@ -1,6 +1,6 @@
 package event
 
-// AliveEvent is regularly sent by openHAB (API v5+)
+// AliveEvent is regularly sent by openHAB 3.4+ (API v5+)
 type AliveEvent struct{}
 
 func NewAliveEvent() AliveEvent {
@@ -13,10 +13,6 @@ func (e AliveEvent) Topic() string {
 
 func (e AliveEvent) Type() Type {
 	return TypeServerAlive
-}
-
-func (e AliveEvent) Payload() string {
-	return ""
 }
 
 func (e AliveEvent) TypeName() string {
