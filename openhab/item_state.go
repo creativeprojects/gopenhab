@@ -150,7 +150,10 @@ func (s DateTimeState) Equal(other string) bool {
 	if err != nil {
 		return false
 	}
-	return s.Time().Equal(compare.Time())
+	// remove nanoseconds for the comparison as OpenHAB seems to truncate them
+	left := s.Time().Truncate(time.Millisecond)
+	right := compare.Time().Truncate(time.Millisecond)
+	return left.Equal(right)
 }
 
 // ParseDateTimeState converts a string to a DateState

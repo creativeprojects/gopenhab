@@ -99,7 +99,10 @@ func TestCreateEventFromJSON(t *testing.T) {
 		// {
 		// 	`{\"channelUID\":\"mqtt:homie300:6a75cc6119:feathers2n2:bme280#humidity\",\"configuration\":{},\"itemName\":\"MQTT_FeatherS2_N2_Humidity\"}" ({"topic":"openhab/links/MQTT_FeatherS2_N2_Humidity-mqtt:homie300:6a75cc6119:feathers2n2:bme280#humidity/removed","payload":"{\"channelUID\":\"mqtt:homie300:6a75cc6119:feathers2n2:bme280#humidity\",\"configuration\":{},\"itemName\":\"MQTT_FeatherS2_N2_Humidity\"}","type":"ItemChannelLinkRemovedEvent"})
 		// 	"{\"channelUID\":\"mqtt:homie300:6a75cc6119:envirophat:bmp280#temperature\",\"configuration\":{},\"itemName\":\"MQTTEnvirophatAgent_Bmp280_Temperature\"}" ({"topic":"openhab/links/MQTTEnvirophatAgent_Bmp280_Temperature-mqtt:homie300:6a75cc6119:envirophat:bmp280#temperature/removed","payload":"{\"channelUID\":\"mqtt:homie300:6a75cc6119:envirophat:bmp280#temperature\",\"configuration\":{},\"itemName\":\"MQTTEnvirophatAgent_Bmp280_Temperature\"}","type":"ItemChannelLinkRemovedEvent"}`,
-		// }
+		// },
+		// {
+		// 	`{"topic":"openhab/addons/misc-homekit/installed","payload":"\"misc-homekit\"","type":"AddonEvent"}`,
+		// },
 	}
 
 	for _, testItem := range testData {
