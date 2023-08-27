@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/creativeprojects/gopenhab/event"
+	"github.com/creativeprojects/gopenhab/openhab/internal"
 	"github.com/robfig/cron/v3"
 )
 
@@ -53,6 +54,7 @@ type Client struct {
 	running        bool
 	runningMutex   sync.Mutex
 	apiVersion     int
+	serverVersion  string
 	state          ClientState
 	stateMutex     sync.Mutex
 	telemetry      Telemetry
@@ -392,7 +394,7 @@ func (c *Client) unsubscribe(subID int) {
 }
 
 func (c *Client) loadIndex() {
-	index := restIndex{}
+	index := internal.RestIndex{}
 	ctx, cancel := context.WithTimeout(context.Background(), c.config.TimeoutHTTP)
 	defer cancel()
 
@@ -411,7 +413,12 @@ func (c *Client) loadIndex() {
 		return
 	}
 	c.apiVersion = apiVersion
-	debuglog.Printf("openHAB server API version %d", apiVersion)
+	c.serverVersion = index.RuntimeInfo.Version
+	server := "server"
+	if index.RuntimeInfo.Version != "" {
+		server = "v" + index.RuntimeInfo.Version
+	}
+	debuglog.Printf("openHAB %s API version %d", server, apiVersion)
 }
 
 // AddRule adds a rule definition
@@ -500,12 +507,15 @@ func (c *Client) Start() {
 		ctx := c.cron.Stop()
 
 		// Wait until all the cron tasks finished running
+		debuglog.Printf("waiting for cron tasks to finish...")
 		<-ctx.Done()
 
 		// and also all the event based rules
+		debuglog.Printf("waiting for rules to finish...")
 		c.waitFinishingRules()
 
 		// and wait for the telemetry to finish
+		debuglog.Printf("waiting for telemetry to finish...")
 		c.telemetryWg.Wait()
 	})
 }

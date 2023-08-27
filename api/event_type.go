@@ -6,6 +6,7 @@ const (
 	EventItemUpdated            = "ItemUpdatedEvent"            // An item has been updated in the item registry.
 	EventItemCommand            = "ItemCommandEvent"            // A command is sent to an item via a channel.
 	EventItemState              = "ItemStateEvent"              // The state of an item is updated.
+	EventItemStateUpdated       = "ItemStateUpdatedEvent"       // The state of an item is updated - since OH 4.0
 	EventItemStatePredicted     = "ItemStatePredictedEvent"     // The state of an item predicted to be updated.
 	EventItemStateChanged       = "ItemStateChangedEvent"       // The state of an item has changed.
 	EventGroupItemStateChanged  = "GroupItemStateChangedEvent"  // The state of a group item has changed through a member.
@@ -31,6 +32,7 @@ const (
 	TopicEventUpdated        = "updated"        // item, thing, inbox
 	TopicEventCommand        = "command"        // item
 	TopicEventState          = "state"          // item
+	TopicEventStateUpdated   = "stateupdated"   // item
 	TopicEventStatePredicted = "statepredicted" // item
 	TopicEventStateChanged   = "statechanged"   // item
 	TopicEventStatus         = "status"         // thing

@@ -30,6 +30,9 @@ func TestCreateEventFromJSON(t *testing.T) {
 		{`{"topic":"smarthome/items/TestSwitch/state","payload":"{\"type\":\"OnOff\",\"value\":\"ON\"}","type":"ItemStateEvent"}`,
 			ItemReceivedState{topic: "items/TestSwitch/state", ItemName: "TestSwitch", StateType: "OnOff", State: "ON"}},
 
+		{`{"topic":"smarthome/items/TestTemperature/stateupdated","payload":"{\"type\":\"Quantity\",\"value\":\"20.0 °C\"}","type":"ItemStateUpdatedEvent"}`,
+			ItemStateUpdated{topic: "items/TestTemperature/stateupdated", ItemName: "TestTemperature", StateType: "Quantity", State: "20.0 °C"}},
+
 		{`{"topic":"smarthome/items/TestSwitch/statechanged","payload":"{\"type\":\"OnOff\",\"value\":\"ON\",\"oldType\":\"OnOff\",\"oldValue\":\"OFF\"}","type":"ItemStateChangedEvent"}`,
 			ItemStateChanged{topic: "items/TestSwitch/statechanged", ItemName: "TestSwitch", NewStateType: "OnOff", NewState: "ON", PreviousStateType: "OnOff", PreviousState: "OFF"}},
 

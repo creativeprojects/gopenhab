@@ -25,6 +25,9 @@ func New(data string) (Event, error) {
 	case api.EventItemState:
 		return newEventItemState(message)
 
+	case api.EventItemStateUpdated:
+		return newEventItemStateUpdated(message)
+
 	case api.EventItemStateChanged:
 		return newEventItemStateChanged(message)
 
@@ -90,6 +93,19 @@ func newEventItemState(message api.EventMessage) (Event, error) {
 		return nil, errInvalidTopic(message.Topic)
 	}
 	return NewItemReceivedState(itemName, data.Type, data.Value), nil
+}
+
+func newEventItemStateUpdated(message api.EventMessage) (Event, error) {
+	data := api.EventState{}
+	err := json.Unmarshal([]byte(message.Payload), &data)
+	if err != nil {
+		return nil, errDecodingMessage(err)
+	}
+	itemName, _, _ := splitItemTopic(message.Topic)
+	if itemName == "" {
+		return nil, errInvalidTopic(message.Topic)
+	}
+	return NewItemStateUpdated(itemName, data.Type, data.Value), nil
 }
 
 func newEventItemStateChanged(message api.EventMessage) (Event, error) {

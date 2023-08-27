@@ -43,6 +43,7 @@ func (i ItemReceivedCommand) Type() Type {
 // Verify interface
 var _ Event = ItemReceivedCommand{}
 
+// ItemReceivedState is sent when the state of an item is about to get updated.
 type ItemReceivedState struct {
 	topic     string
 	ItemName  string
@@ -71,6 +72,36 @@ func (i ItemReceivedState) Type() Type {
 // Verify interface
 var _ Event = ItemReceivedState{}
 
+// ItemStateUpdated is sent when the state of an item has been updated.
+type ItemStateUpdated struct {
+	topic     string
+	ItemName  string
+	StateType string
+	State     string
+}
+
+func NewItemStateUpdated(itemName, stateType, state string) ItemStateUpdated {
+	topic := itemTopicPrefix + itemName + "/" + api.TopicEventStateUpdated
+	return ItemStateUpdated{
+		topic:     topic,
+		ItemName:  itemName,
+		StateType: stateType,
+		State:     state,
+	}
+}
+
+func (i ItemStateUpdated) Topic() string {
+	return i.topic
+}
+
+func (i ItemStateUpdated) Type() Type {
+	return TypeItemState
+}
+
+// Verify interface
+var _ Event = ItemStateUpdated{}
+
+// ItemStateChanged is sent when the state of an item has changed.
 type ItemStateChanged struct {
 	topic             string
 	ItemName          string
