@@ -9,6 +9,7 @@ const (
 	EventItemStateUpdated       = "ItemStateUpdatedEvent"       // The state of an item is updated - since OH 4.0
 	EventItemStatePredicted     = "ItemStatePredictedEvent"     // The state of an item predicted to be updated.
 	EventItemStateChanged       = "ItemStateChangedEvent"       // The state of an item has changed.
+	EventGroupItemStateUpdated  = "GroupStateUpdatedEvent"      // The state of a group of items has been updated through a member.
 	EventGroupItemStateChanged  = "GroupItemStateChangedEvent"  // The state of a group item has changed through a member.
 	EventThingAdded             = "ThingAddedEvent"             // A thing has been added to the thing registry.
 	EventThingRemoved           = "ThingRemovedEvent"           // A thing has been removed from the thing registry.

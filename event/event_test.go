@@ -30,11 +30,14 @@ func TestCreateEventFromJSON(t *testing.T) {
 		{`{"topic":"smarthome/items/TestSwitch/state","payload":"{\"type\":\"OnOff\",\"value\":\"ON\"}","type":"ItemStateEvent"}`,
 			ItemReceivedState{topic: "items/TestSwitch/state", ItemName: "TestSwitch", StateType: "OnOff", State: "ON"}},
 
-		{`{"topic":"smarthome/items/TestTemperature/stateupdated","payload":"{\"type\":\"Quantity\",\"value\":\"20.0 °C\"}","type":"ItemStateUpdatedEvent"}`,
+		{`{"topic":"openhab/items/TestTemperature/stateupdated","payload":"{\"type\":\"Quantity\",\"value\":\"20.0 °C\"}","type":"ItemStateUpdatedEvent"}`,
 			ItemStateUpdated{topic: "items/TestTemperature/stateupdated", ItemName: "TestTemperature", StateType: "Quantity", State: "20.0 °C"}},
 
 		{`{"topic":"smarthome/items/TestSwitch/statechanged","payload":"{\"type\":\"OnOff\",\"value\":\"ON\",\"oldType\":\"OnOff\",\"oldValue\":\"OFF\"}","type":"ItemStateChangedEvent"}`,
 			ItemStateChanged{topic: "items/TestSwitch/statechanged", ItemName: "TestSwitch", NewStateType: "OnOff", NewState: "ON", PreviousStateType: "OnOff", PreviousState: "OFF"}},
+
+		{`{"topic":"openhab/items/ChristmasLightsGroup/Back_Garden_Lighting_Switch/stateupdated","payload":"{\"type\":\"OnOff\",\"value\":\"OFF\"}","type":"GroupStateUpdatedEvent"}`,
+			GroupItemStateUpdated{topic: "items/ChristmasLightsGroup/Back_Garden_Lighting_Switch/stateupdated", ItemName: "ChristmasLightsGroup", TriggeringItem: "Back_Garden_Lighting_Switch", StateType: "OnOff", State: "OFF"}},
 
 		{`{"topic":"smarthome/items/HouseTemperature/UpstairsTemperature/statechanged","payload":"{\"type\":\"Decimal\",\"value\":\"18.43\",\"oldType\":\"Decimal\",\"oldValue\":\"18.32\"}","type":"GroupItemStateChangedEvent"}`,
 			GroupItemStateChanged{topic: "items/HouseTemperature/UpstairsTemperature/statechanged", ItemName: "HouseTemperature", TriggeringItem: "UpstairsTemperature", NewStateType: "Decimal", NewState: "18.43", PreviousStateType: "Decimal", PreviousState: "18.32"}},

@@ -95,7 +95,7 @@ func (i ItemStateUpdated) Topic() string {
 }
 
 func (i ItemStateUpdated) Type() Type {
-	return TypeItemState
+	return TypeItemState // should we create a new type for this?
 }
 
 // Verify interface
@@ -133,40 +133,6 @@ func (i ItemStateChanged) Type() Type {
 
 // Verify interface
 var _ Event = ItemStateChanged{}
-
-type GroupItemStateChanged struct {
-	topic             string
-	ItemName          string
-	TriggeringItem    string
-	NewStateType      string
-	NewState          string
-	PreviousStateType string
-	PreviousState     string
-}
-
-func NewGroupItemStateChanged(itemName, triggeringItem, previousStateType, previousState, newStateType, newState string) GroupItemStateChanged {
-	topic := itemTopicPrefix + itemName + "/" + triggeringItem + "/" + api.TopicEventStateChanged
-	return GroupItemStateChanged{
-		topic:             topic,
-		ItemName:          itemName,
-		TriggeringItem:    triggeringItem,
-		PreviousStateType: previousStateType,
-		PreviousState:     previousState,
-		NewStateType:      newStateType,
-		NewState:          newState,
-	}
-}
-
-func (i GroupItemStateChanged) Topic() string {
-	return i.topic
-}
-
-func (i GroupItemStateChanged) Type() Type {
-	return TypeGroupItemStateChanged
-}
-
-// Verify interface
-var _ Event = GroupItemStateChanged{}
 
 type ItemStatePredicted struct {
 	topic          string
