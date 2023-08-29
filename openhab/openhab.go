@@ -421,7 +421,10 @@ func (c *Client) loadIndex() {
 	debuglog.Printf("openHAB %s API version %d", server, apiVersion)
 }
 
-// AddRule adds a rule definition
+// AddRule adds a rule definition.
+//   - ruleData: all fields are optional.
+//   - run: runner function that will be called when the rule is triggered.
+//   - triggers: these are the triggers that will activate the rule.
 func (c *Client) AddRule(ruleData RuleData, run Runner, triggers ...Trigger) (ruleID string) {
 	c.rulesMutex.Lock()
 	defer c.rulesMutex.Unlock()

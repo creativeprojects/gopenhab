@@ -1,9 +1,11 @@
 package openhab
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -58,7 +60,7 @@ func TestRuleID(t *testing.T) {
 	client := NewClient(Config{URL: "http://localhost"})
 	id := client.AddRule(
 		RuleData{},
-		func(client *Client, ruleData RuleData, e event.Event) {},
+		func(ctx context.Context, client *Client, ruleData RuleData, e event.Event) {},
 	)
 	assert.NotEmpty(t, id)
 }
@@ -67,7 +69,7 @@ func TestGivenRuleID(t *testing.T) {
 	client := NewClient(Config{URL: "http://localhost"})
 	id := client.AddRule(
 		RuleData{ID: "rule-ID"},
-		func(client *Client, ruleData RuleData, e event.Event) {},
+		func(ctx context.Context, client *Client, ruleData RuleData, e event.Event) {},
 	)
 	assert.Equal(t, "rule-ID", id)
 }
@@ -76,7 +78,7 @@ func TestAddRuleWithError(t *testing.T) {
 	client := NewClient(Config{URL: "http://localhost"})
 	id := client.AddRule(
 		RuleData{},
-		func(client *Client, ruleData RuleData, e event.Event) {},
+		func(ctx context.Context, client *Client, ruleData RuleData, e event.Event) {},
 		OnTimeCron("0 0 0 ? * * *"), // 7 fields instead of 6
 	)
 	assert.NotEmpty(t, id)
@@ -93,7 +95,7 @@ func TestDeleteOneRule(t *testing.T) {
 	client := NewClient(Config{URL: "http://localhost"})
 	id := client.AddRule(
 		RuleData{},
-		func(client *Client, ruleData RuleData, e event.Event) {},
+		func(ctx context.Context, client *Client, ruleData RuleData, e event.Event) {},
 	)
 	assert.Equal(t, 1, len(client.rules))
 	deleted := client.DeleteRule(id)
@@ -105,15 +107,15 @@ func TestDeleteTwoRules(t *testing.T) {
 	client := NewClient(Config{URL: "http://localhost"})
 	id := client.AddRule(
 		RuleData{ID: "rule-ID"},
-		func(client *Client, ruleData RuleData, e event.Event) {},
+		func(ctx context.Context, client *Client, ruleData RuleData, e event.Event) {},
 	)
 	client.AddRule(
 		RuleData{ID: "rule-ID"},
-		func(client *Client, ruleData RuleData, e event.Event) {},
+		func(ctx context.Context, client *Client, ruleData RuleData, e event.Event) {},
 	)
 	client.AddRule(
 		RuleData{ID: "another rule"},
-		func(client *Client, ruleData RuleData, e event.Event) {},
+		func(ctx context.Context, client *Client, ruleData RuleData, e event.Event) {},
 	)
 	assert.Equal(t, 3, len(client.rules))
 	deleted := client.DeleteRule(id)
@@ -122,6 +124,7 @@ func TestDeleteTwoRules(t *testing.T) {
 }
 
 func TestStartEvent(t *testing.T) {
+	var call int32
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	defer server.Close()
 	client := NewClient(Config{
@@ -131,8 +134,9 @@ func TestStartEvent(t *testing.T) {
 	wg.Add(1)
 	client.AddRule(
 		RuleData{},
-		func(client *Client, ruleData RuleData, e event.Event) {
+		func(ctx context.Context, client *Client, ruleData RuleData, e event.Event) {
 			defer wg.Done()
+			atomic.AddInt32(&call, 1)
 			ev, ok := e.(event.SystemEvent)
 			assert.True(t, ok)
 			assert.Equal(t, event.TypeClientStarted, ev.Type())
@@ -145,9 +149,11 @@ func TestStartEvent(t *testing.T) {
 
 	wg.Wait()
 	client.Stop()
+	assert.Equal(t, int32(1), atomic.LoadInt32(&call))
 }
 
 func TestConnectEvent(t *testing.T) {
+	var call int32
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	defer server.Close()
 	client := NewClient(Config{
@@ -157,8 +163,9 @@ func TestConnectEvent(t *testing.T) {
 	wg.Add(1)
 	client.AddRule(
 		RuleData{},
-		func(client *Client, ruleData RuleData, e event.Event) {
+		func(ctx context.Context, client *Client, ruleData RuleData, e event.Event) {
 			defer wg.Done()
+			atomic.AddInt32(&call, 1)
 			ev, ok := e.(event.SystemEvent)
 			assert.True(t, ok)
 			assert.Equal(t, event.TypeClientConnected, ev.Type())
@@ -175,9 +182,11 @@ func TestConnectEvent(t *testing.T) {
 
 	wg.Wait()
 	client.Stop()
+	assert.Equal(t, int32(1), atomic.LoadInt32(&call))
 }
 
 func TestDisconnectEvent(t *testing.T) {
+	var call int32
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	server.SetItem(api.Item{Name: "item"})
 
@@ -188,8 +197,9 @@ func TestDisconnectEvent(t *testing.T) {
 	wg.Add(1)
 	client.AddRule(
 		RuleData{},
-		func(client *Client, ruleData RuleData, e event.Event) {
+		func(ctx context.Context, client *Client, ruleData RuleData, e event.Event) {
 			defer wg.Done()
+			atomic.AddInt32(&call, 1)
 			ev, ok := e.(event.SystemEvent)
 			assert.True(t, ok)
 			assert.Equal(t, event.TypeClientDisconnected, ev.Type())
@@ -209,10 +219,11 @@ func TestDisconnectEvent(t *testing.T) {
 
 	wg.Wait()
 	client.Stop()
+	assert.Equal(t, int32(1), atomic.LoadInt32(&call))
 }
 
 func TestStopEvent(t *testing.T) {
-	called := false
+	var call int32
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	defer server.Close()
 	client := NewClient(Config{
@@ -220,11 +231,11 @@ func TestStopEvent(t *testing.T) {
 	})
 	client.AddRule(
 		RuleData{},
-		func(client *Client, ruleData RuleData, e event.Event) {
+		func(ctx context.Context, client *Client, ruleData RuleData, e event.Event) {
 			ev, ok := e.(event.SystemEvent)
+			atomic.AddInt32(&call, 1)
 			assert.True(t, ok)
 			assert.Equal(t, event.TypeClientStopped, ev.Type())
-			called = true
 		},
 		OnStop())
 
@@ -241,10 +252,11 @@ func TestStopEvent(t *testing.T) {
 	})
 
 	wg.Wait()
-	assert.True(t, called)
+	assert.Equal(t, int32(1), atomic.LoadInt32(&call))
 }
 
 func TestErrorEvent(t *testing.T) {
+	var call int32
 	client := NewClient(Config{URL: "http://localhost", TimeoutHTTP: 100 * time.Millisecond})
 
 	wg := sync.WaitGroup{}
@@ -254,9 +266,10 @@ func TestErrorEvent(t *testing.T) {
 	once := sync.Once{}
 	client.AddRule(
 		RuleData{Name: "Test error rule"},
-		func(client *Client, ruleData RuleData, e event.Event) {
+		func(ctx context.Context, client *Client, ruleData RuleData, e event.Event) {
 			once.Do(func() {
 				defer wg.Done()
+				atomic.AddInt32(&call, 1)
 				ev, ok := e.(event.ErrorEvent)
 				if !ok {
 					t.Fatal("expected event to be of type ErrorEvent")
@@ -275,9 +288,11 @@ func TestErrorEvent(t *testing.T) {
 
 	wg.Wait()
 	client.Stop()
+	assert.Equal(t, int32(1), atomic.LoadInt32(&call))
 }
 
 func TestOnDateTimeEvent(t *testing.T) {
+	var call int32
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	defer server.Close()
 	client := NewClient(Config{
@@ -287,8 +302,9 @@ func TestOnDateTimeEvent(t *testing.T) {
 	wg.Add(1)
 	client.AddRule(
 		RuleData{},
-		func(client *Client, ruleData RuleData, e event.Event) {
+		func(ctx context.Context, client *Client, ruleData RuleData, e event.Event) {
 			defer wg.Done()
+			atomic.AddInt32(&call, 1)
 			ev, ok := e.(event.SystemEvent)
 			assert.True(t, ok)
 			assert.Equal(t, event.TypeTimeCron, ev.Type())
@@ -301,13 +317,14 @@ func TestOnDateTimeEvent(t *testing.T) {
 
 	wg.Wait()
 	client.Stop()
+	assert.Equal(t, int32(1), atomic.LoadInt32(&call))
 }
 
 func TestDeleteDateTimeEvent(t *testing.T) {
 	client := NewClient(Config{URL: "http://localhost"})
 	id := client.AddRule(
 		RuleData{},
-		func(client *Client, ruleData RuleData, e event.Event) {
+		func(ctx context.Context, client *Client, ruleData RuleData, e event.Event) {
 			t.Error("event shouldn't have been fired")
 		},
 		OnDateTime(time.Now().Add(time.Second)),
@@ -324,7 +341,7 @@ func TestDeleteDateTimeEvent(t *testing.T) {
 }
 
 func TestAddRuleOnceStarted(t *testing.T) {
-	called := false
+	var call int32
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	defer server.Close()
 	client := NewClient(Config{
@@ -341,11 +358,11 @@ func TestAddRuleOnceStarted(t *testing.T) {
 	time.Sleep(10 * time.Millisecond)
 	client.AddRule(
 		RuleData{},
-		func(client *Client, ruleData RuleData, e event.Event) {
+		func(ctx context.Context, client *Client, ruleData RuleData, e event.Event) {
 			ev, ok := e.(event.SystemEvent)
 			assert.True(t, ok)
 			assert.Equal(t, event.TypeClientStopped, ev.Type())
-			called = true
+			atomic.AddInt32(&call, 1)
 		},
 		OnStop())
 
@@ -355,10 +372,11 @@ func TestAddRuleOnceStarted(t *testing.T) {
 	})
 
 	wg.Wait()
-	assert.True(t, called)
+	assert.Equal(t, int32(1), atomic.LoadInt32(&call))
 }
 
 func TestDispathEventSaveStateFirst(t *testing.T) {
+	var call int32
 	wg := sync.WaitGroup{}
 	server := openhabtest.NewServer(openhabtest.Config{SendEventsFromAPI: true, Log: t})
 	defer server.Close()
@@ -373,8 +391,9 @@ func TestDispathEventSaveStateFirst(t *testing.T) {
 	wg.Add(1)
 	client.AddRule(
 		RuleData{},
-		func(client *Client, ruleData RuleData, e event.Event) {
+		func(ctx context.Context, client *Client, ruleData RuleData, e event.Event) {
 			defer wg.Done()
+			atomic.AddInt32(&call, 1)
 			ev, ok := e.(event.ItemReceivedState)
 			require.True(t, ok)
 			item, err := client.GetItem("item")
@@ -398,4 +417,67 @@ func TestDispathEventSaveStateFirst(t *testing.T) {
 	server.Event(event.NewItemReceivedState("item", "String", "THIRD"))
 	wg.Wait()
 	client.Stop()
+	assert.Equal(t, int32(2), atomic.LoadInt32(&call))
+}
+
+func TestCancelEvent(t *testing.T) {
+	var call int32
+	server := openhabtest.NewServer(openhabtest.Config{Log: t})
+	defer server.Close()
+	client := NewClient(Config{
+		URL: server.URL(),
+	})
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	client.AddRule(
+		RuleData{},
+		func(ctx context.Context, client *Client, ruleData RuleData, e event.Event) {
+			defer wg.Done()
+			<-ctx.Done()
+			atomic.AddInt32(&call, 1)
+
+		},
+		OnStart())
+
+	go func() {
+		client.Start()
+	}()
+
+	time.Sleep(100 * time.Millisecond)
+	assert.Equal(t, 1, len(client.rules))
+	client.rules[0].cancel()
+
+	wg.Wait()
+	client.Stop()
+	assert.Equal(t, int32(1), atomic.LoadInt32(&call))
+}
+
+func TestTimeoutEvent(t *testing.T) {
+	var call int32
+	server := openhabtest.NewServer(openhabtest.Config{Log: t})
+	defer server.Close()
+	client := NewClient(Config{
+		URL: server.URL(),
+	})
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	client.AddRule(
+		RuleData{
+			Timeout: 100 * time.Millisecond,
+		},
+		func(ctx context.Context, client *Client, ruleData RuleData, e event.Event) {
+			defer wg.Done()
+			<-ctx.Done()
+			atomic.AddInt32(&call, 1)
+
+		},
+		OnStart())
+
+	go func() {
+		client.Start()
+	}()
+
+	wg.Wait()
+	client.Stop()
+	assert.Equal(t, int32(1), atomic.LoadInt32(&call))
 }

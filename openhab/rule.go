@@ -1,20 +1,23 @@
 package openhab
 
 import (
+	"context"
 	"sync"
 
 	"github.com/creativeprojects/gopenhab/event"
 	"github.com/segmentio/ksuid"
 )
 
-type Runner func(client *Client, ruleData RuleData, e event.Event)
+type Runner func(ctx context.Context, client *Client, ruleData RuleData, e event.Event)
 
 type rule struct {
-	ruleData  RuleData
-	client    *Client
-	runner    Runner
-	triggers  []Trigger
-	runLocker sync.Mutex
+	ruleData     RuleData
+	client       *Client
+	runner       Runner
+	triggers     []Trigger
+	runLocker    sync.Mutex
+	cancelFunc   context.CancelFunc
+	cancelLocker sync.Mutex
 }
 
 func newRule(client *Client, ruleData RuleData, runner Runner, triggers []Trigger) *rule {
@@ -23,10 +26,13 @@ func newRule(client *Client, ruleData RuleData, runner Runner, triggers []Trigge
 		ruleData.ID = gen.String()
 	}
 	return &rule{
-		ruleData: ruleData,
-		client:   client,
-		runner:   runner,
-		triggers: triggers,
+		ruleData:     ruleData,
+		client:       client,
+		runner:       runner,
+		triggers:     triggers,
+		runLocker:    sync.Mutex{},
+		cancelFunc:   nil,
+		cancelLocker: sync.Mutex{},
 	}
 }
 
@@ -64,9 +70,37 @@ func (r *rule) deactivate(client subscriber) {
 }
 
 func (r *rule) run(e event.Event) {
-	// only run one instance of that rule at any time
+	// run only one instance of that rule at any time
 	r.runLocker.Lock()
 	defer r.runLocker.Unlock()
 
-	r.runner(r.client, r.ruleData, e)
+	// make the rule cancellable from the outside
+	var cancelFunc context.CancelFunc
+	ctx := context.Background()
+	if r.ruleData.Timeout > 0 {
+		ctx, cancelFunc = context.WithTimeout(ctx, r.ruleData.Timeout)
+	} else {
+		ctx, cancelFunc = context.WithCancel(context.Background())
+	}
+	r.setCancelFunc(cancelFunc)
+	defer r.cancel()
+
+	r.runner(ctx, r.client, r.ruleData, e)
+}
+
+func (r *rule) cancel() {
+	r.cancelLocker.Lock()
+	defer r.cancelLocker.Unlock()
+
+	if r.cancelFunc != nil {
+		r.cancelFunc()
+		r.cancelFunc = nil
+	}
+}
+
+func (t *rule) setCancelFunc(cancelFunc context.CancelFunc) {
+	t.cancelLocker.Lock()
+	defer t.cancelLocker.Unlock()
+
+	t.cancelFunc = cancelFunc
 }
