@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -78,6 +79,9 @@ func NewClient(config Config) *Client {
 	if config.StableConnectionDuration == 0 {
 		config.StableConnectionDuration = time.Minute
 	}
+	if config.CancellationTimeout == 0 {
+		config.CancellationTimeout = 5 * time.Second
+	}
 	if config.TimeoutHTTP == 0 {
 		config.TimeoutHTTP = 5 * time.Second
 	}
@@ -122,6 +126,7 @@ func NewClient(config Config) *Client {
 
 // GetItem returns an openHAB item from its name.
 // The very first call of GetItem will try to load the items collection from openHAB.
+// If not found, returns an openhab.ErrorNotFound error.
 func (c *Client) GetItem(name string) (*Item, error) {
 	return c.items.getItem(name)
 }
@@ -549,6 +554,9 @@ func (c *Client) addInternalRules() {
 		c.subscribeSystem("", event.TypeItemState, func(e event.Event) {
 			c.itemStateUpdated(e)
 		})
+		c.subscribeSystem("", event.TypeItemRemoved, func(e event.Event) {
+			c.itemRemoved(e)
+		})
 	})
 }
 
@@ -572,7 +580,36 @@ func (c *Client) activateRule(rule *rule) {
 	}
 }
 
+func (c *Client) runningRules() []*rule {
+	c.rulesMutex.Lock()
+	defer c.rulesMutex.Unlock()
+
+	running := make([]*rule, 0, len(c.rules))
+	for _, rule := range c.rules {
+		if rule.isRunning {
+			running = append(running, rule)
+		}
+	}
+	return running
+}
+
 func (c *Client) waitFinishingRules() {
+	notice := time.AfterFunc(c.config.CancellationTimeout, func() {
+		runningRules := c.runningRules()
+		if len(runningRules) > 0 {
+			list := make([]string, 0, len(runningRules))
+			for _, rule := range runningRules {
+				list = append(list, fmt.Sprintf("%q (%s)", rule.ruleData.Name, rule.ruleData.Description))
+				rule.cancel()
+			}
+			debuglog.Printf("cancelling context on %d rule(s) still running: %s", len(runningRules), strings.Join(list, ", "))
+			for _, rule := range runningRules {
+				rule.cancel()
+			}
+		}
+	})
+	defer notice.Stop()
+
 	c.userEventBus.Wait()
 }
 
@@ -585,6 +622,13 @@ func (c *Client) itemStateUpdated(e event.Event) {
 		}
 		item.setInternalStateString(ev.State)
 		c.addCounter(MetricItemStateUpdated, 1, MetricItemName, ev.ItemName)
+	}
+}
+
+func (c *Client) itemRemoved(e event.Event) {
+	if ev, ok := e.(event.ItemRemoved); ok {
+		c.items.removeItem(ev.Item.Name)
+		// c.addCounter(MetricItemRemoved, 1, MetricItemName, ev.Item.Name)
 	}
 }
 

@@ -18,6 +18,8 @@ type rule struct {
 	runLocker    sync.Mutex
 	cancelFunc   context.CancelFunc
 	cancelLocker sync.Mutex
+	count        int // count the number of times the rule has been triggered
+	isRunning    bool
 }
 
 func newRule(client *Client, ruleData RuleData, runner Runner, triggers []Trigger) *rule {
@@ -33,6 +35,8 @@ func newRule(client *Client, ruleData RuleData, runner Runner, triggers []Trigge
 		runLocker:    sync.Mutex{},
 		cancelFunc:   nil,
 		cancelLocker: sync.Mutex{},
+		count:        0,
+		isRunning:    false,
 	}
 }
 
@@ -73,6 +77,12 @@ func (r *rule) run(e event.Event) {
 	// run only one instance of that rule at any time
 	r.runLocker.Lock()
 	defer r.runLocker.Unlock()
+
+	r.count++
+	r.isRunning = true
+	defer func() {
+		r.isRunning = false
+	}()
 
 	// make the rule cancellable from the outside
 	var cancelFunc context.CancelFunc

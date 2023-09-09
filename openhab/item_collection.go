@@ -51,6 +51,13 @@ func (items *itemCollection) getItem(name string) (*Item, error) {
 	return nil, fmt.Errorf("item %q %w", name, ErrorNotFound)
 }
 
+func (items *itemCollection) removeItem(name string) {
+	items.cacheLocker.Lock()
+	defer items.cacheLocker.Unlock()
+
+	delete(items.cache, name)
+}
+
 // getMembersOf returns a list of items member of the group
 func (items *itemCollection) getMembersOf(groupName string) ([]*Item, error) {
 	items.cacheLocker.Lock()

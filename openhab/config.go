@@ -31,6 +31,10 @@ type Config struct {
 	// StableConnectionDuration is the time after which we consider the connection to openHAB to be stable (and resets the backoff timer).
 	// If undefined, it defaults to 1 minute
 	StableConnectionDuration time.Duration
+	// CancellationTimeout is the time to wait for a rule to finish before sending a cancellation to its context.
+	// This timeout is only used when the client is closing down.
+	// If undefined, it defaults to 5 seconds
+	CancellationTimeout time.Duration
 	// Telemetry is used to send metrics to a monitoring system.
 	// If undefined, it defaults to a no-op implementation.
 	Telemetry Telemetry
