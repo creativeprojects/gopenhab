@@ -83,10 +83,10 @@ func (b *eventBus) Publish(e Event) {
 			if b.async {
 				// run the callback in a goroutine
 				b.wg.Add(1)
-				go func(sub subscription, e Event) {
+				go func(b *eventBus, sub subscription, e Event) {
 					defer b.wg.Done()
 					sub.callback(e)
-				}(sub, e)
+				}(b, sub, e)
 			} else {
 				// run synchronously
 				sub.callback(e)
