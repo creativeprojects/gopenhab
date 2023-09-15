@@ -8,6 +8,11 @@ import (
 	"github.com/segmentio/ksuid"
 )
 
+// Runner is the function that will be called when the rule is triggered
+//   - ctx is the context of the rule. Please note the context is cancellable. It will be cancelled when the service is stopped.
+//   - client is the openHAB client
+//   - ruleData is the original data passed to the rule
+//   - e is the event that triggered the rule
 type Runner func(ctx context.Context, client *Client, ruleData RuleData, e event.Event)
 
 type rule struct {
