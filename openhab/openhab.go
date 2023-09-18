@@ -606,6 +606,8 @@ func (c *Client) waitFinishingRules() {
 			for _, rule := range runningRules {
 				rule.cancel()
 			}
+		} else {
+			debuglog.Printf("no rule running")
 		}
 	})
 	defer notice.Stop()
