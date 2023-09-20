@@ -1,6 +1,7 @@
 package openhab
 
 import (
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -28,7 +29,7 @@ func TestItemDecimalTypeWithUnit(t *testing.T) {
 
 func TestGetItemAPI(t *testing.T) {
 
-	item := api.Item{
+	item1 := api.Item{
 		State:      "OFF",
 		Type:       "Switch",
 		Name:       "TestSwitch",
@@ -37,11 +38,21 @@ func TestGetItemAPI(t *testing.T) {
 		Tags:       []string{},
 		GroupNames: []string{},
 	}
+	item2 := api.Item{
+		State:      "20.2",
+		Type:       "Number",
+		Name:       "temperature",
+		Label:      "House Temperature",
+		Category:   "temperature",
+		Tags:       []string{},
+		GroupNames: []string{},
+	}
 
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	defer server.Close()
 
-	server.SetItem(item)
+	server.SetItem(item1)
+	server.SetItem(item2)
 
 	client := NewClient(Config{
 		URL: server.URL(),
@@ -138,6 +149,42 @@ func TestGetItemAPI(t *testing.T) {
 		ok, err := item.SendCommandWait(SwitchOFF, 100*time.Millisecond)
 		assert.NoError(t, err)
 		assert.False(t, ok)
+	})
+
+	t.Run("TestMultipleSendCommandWait", func(t *testing.T) {
+		count := 10
+		initialState := 20.2
+		item := newTestItem(client, "temperature", "Number", "20.2")
+		state, err := item.State()
+		require.NoError(t, err)
+		assert.Equal(t, NewDecimalState(initialState, ""), state)
+
+		wg := sync.WaitGroup{}
+
+		// SendCommandWait shouldn't hit the timeout
+		time.AfterFunc(5*time.Second, func() {
+			t.Error("SendCommandWait is blocked")
+		})
+
+		for i := 0; i < count; i++ {
+			wg.Add(1)
+			go func(i int) {
+				newValue := initialState - float64(i)*0.1
+				// the event bus is not connected so we send an event manually
+				wg.Add(1)
+				go func(i int) {
+					time.Sleep(time.Duration(i) * time.Millisecond)
+					ev := event.NewItemReceivedState("temperature", "Number", strconv.FormatFloat(newValue, 'f', 1, 64))
+					item.client.userEventBus.Publish(ev)
+					wg.Done()
+				}(i)
+				_, err := item.SendCommandWait(NewDecimalState(newValue, ""), 10*time.Second)
+				assert.NoError(t, err)
+				wg.Done()
+			}(i)
+		}
+
+		wg.Wait()
 	})
 }
 
