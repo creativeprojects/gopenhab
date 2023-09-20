@@ -162,9 +162,10 @@ func TestGetItemAPI(t *testing.T) {
 		wg := sync.WaitGroup{}
 
 		// SendCommandWait shouldn't hit the timeout
-		time.AfterFunc(5*time.Second, func() {
+		timeout := time.AfterFunc(5*time.Second, func() {
 			t.Error("SendCommandWait is blocked")
 		})
+		defer timeout.Stop()
 
 		for i := 0; i < count; i++ {
 			wg.Add(1)
