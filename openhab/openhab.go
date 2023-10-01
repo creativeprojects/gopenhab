@@ -101,6 +101,10 @@ func NewClient(config Config) *Client {
 		config.User = config.APIToken
 		config.Password = ""
 	}
+	telemetry := config.Telemetry
+	if telemetry != nil {
+		telemetry.RegisterMetrics(metrics)
+	}
 	client := &Client{
 		config:   config,
 		baseURL:  baseURL,
@@ -118,7 +122,7 @@ func NewClient(config Config) *Client {
 		runningMutex:   sync.Mutex{},
 		state:          StateStarting,
 		stateMutex:     sync.Mutex{},
-		telemetry:      config.Telemetry,
+		telemetry:      telemetry,
 	}
 	client.items = newItems(client)
 	return client
