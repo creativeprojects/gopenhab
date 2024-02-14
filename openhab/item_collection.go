@@ -80,6 +80,15 @@ func (items *itemCollection) getMembersOf(groupName string) ([]*Item, error) {
 	return members, nil
 }
 
+// refreshCache reloads the items from openHAB and updates the cache.
+// This method is thread safe.
+func (items *itemCollection) refreshCache() error {
+	items.cacheLocker.Lock()
+	defer items.cacheLocker.Unlock()
+
+	return items.loadCache()
+}
+
 // loadCache loads all items into the cache.
 // This method is NOT using the cacheLocker: it is the responsibility of the caller to do so.
 func (items *itemCollection) loadCache() error {

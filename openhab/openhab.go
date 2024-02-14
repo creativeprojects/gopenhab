@@ -32,7 +32,7 @@ const (
 	eventTypeEvent      = "event"
 	eventTypeAlive      = "alive"
 	minSupportedVersion = 3
-	maxSupportedVersion = 5
+	maxSupportedVersion = 6
 )
 
 // Client for openHAB. It's using openHAB REST API internally.
@@ -126,6 +126,14 @@ func NewClient(config Config) *Client {
 	}
 	client.items = newItems(client)
 	return client
+}
+
+// RefreshCache will force a reload of all the items from openHAB.
+// You shouldn't need to call this method, as the items are loaded on demand.
+// I've only experienced the need to call this method when the openHAB server was restarted,
+// as the cache was loaded before openHAB finished its initialization.
+func (c *Client) RefreshCache() error {
+	return c.items.refreshCache()
 }
 
 // GetItem returns an openHAB item from its name.
