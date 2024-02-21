@@ -10,13 +10,14 @@ type PubSub interface {
 	Unsubscribe(subID int) int
 	Publish(e Event) int
 	Wait()
+	Subscriptions() []string
 }
 
 type eventBus struct {
 	async      bool
 	subs       []subscription
 	subLock    sync.Locker
-	subIdCount int
+	subIDCount int
 	wg         sync.WaitGroup
 }
 
@@ -50,16 +51,16 @@ func (b *eventBus) subscribe(name string, eventType Type, once bool, callback fu
 	b.subLock.Lock()
 	defer b.subLock.Unlock()
 
-	b.subIdCount++
+	b.subIDCount++
 	sub := subscription{
-		id:        b.subIdCount,
+		id:        b.subIDCount,
 		name:      name,
 		eventType: eventType,
 		callback:  callback,
 		once:      once,
 	}
 	b.subs = append(b.subs, sub)
-	return b.subIdCount
+	return b.subIDCount
 }
 
 // Unsubscribe keeps the order of the subscriptions.
@@ -135,6 +136,17 @@ func (b *eventBus) Publish(event Event) int {
 // Wait for all the subscribers to finish their tasks
 func (b *eventBus) Wait() {
 	b.wg.Wait()
+}
+
+func (b *eventBus) Subscriptions() []string {
+	b.subLock.Lock()
+	defer b.subLock.Unlock()
+
+	var subs []string
+	for _, sub := range b.subs {
+		subs = append(subs, sub.String())
+	}
+	return subs
 }
 
 // Verify interface

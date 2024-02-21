@@ -266,3 +266,11 @@ At some point in time, this library was tested with openHAB version:
 - 3.4
 - 4.0
 - 4.1
+
+# Integration tests
+
+I do have some integrations tests running against a real openHAB server (currently 4.1.1). The server is running an exact copy of my home configuration, with a script sending mock states to the server via MQTT.
+
+I have inserted a Toxiproxy between openHAB and gopenhab.
+
+I might make the tests public at some point, but for now, they are private.

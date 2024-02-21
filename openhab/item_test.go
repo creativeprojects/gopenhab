@@ -163,7 +163,7 @@ func TestGetItemAPI(t *testing.T) {
 
 		// SendCommandWait shouldn't hit the timeout
 		timeout := time.AfterFunc(5*time.Second, func() {
-			t.Error("SendCommandWait is blocked")
+			t.Errorf("SendCommandWait is blocked: %+v", item.client.userEventBus.Subscriptions())
 		})
 		defer timeout.Stop()
 
@@ -174,7 +174,7 @@ func TestGetItemAPI(t *testing.T) {
 				// the event bus is not connected so we send an event manually
 				wg.Add(1)
 				go func(i int) {
-					time.Sleep(time.Duration(i) * time.Microsecond)
+					time.Sleep(time.Duration(i) * time.Millisecond)
 					ev := event.NewItemReceivedState("temperature", "Number", strconv.FormatFloat(newValue, 'f', 1, 64))
 					item.client.userEventBus.Publish(ev)
 					wg.Done()
