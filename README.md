@@ -252,3 +252,17 @@ func TestCalculateZoneTemperature(t *testing.T) {
 # Limitations of the mock openHAB server for testing
 
 - When the server receives a `command` event, it doesn't follow with any corresponding `state` event. You need to publish the `state` events manually if you need them in your tests.
+
+# Compatibility
+
+The library supports API version 3 to 6.
+
+At some point in time, this library was tested with openHAB version:
+- 2.5
+- 3.0
+- 3.1
+- 3.2
+- 3.3
+- 3.4
+- 4.0
+- 4.1

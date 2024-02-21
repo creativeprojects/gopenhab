@@ -174,7 +174,7 @@ func TestGetItemAPI(t *testing.T) {
 				// the event bus is not connected so we send an event manually
 				wg.Add(1)
 				go func(i int) {
-					time.Sleep(time.Duration(i) * time.Millisecond)
+					time.Sleep(time.Duration(i) * time.Microsecond)
 					ev := event.NewItemReceivedState("temperature", "Number", strconv.FormatFloat(newValue, 'f', 1, 64))
 					item.client.userEventBus.Publish(ev)
 					wg.Done()

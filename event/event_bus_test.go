@@ -1,6 +1,7 @@
 package event
 
 import (
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -282,7 +283,59 @@ func TestUnsubscribeWhileRunningAsync(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 	})
 	// publish an event
-	eventBus.Publish(newFakeEvent("", TypeClientConnected))
+	published := eventBus.Publish(newFakeEvent("", TypeClientConnected))
+	assert.Equal(t, 1, published)
 
-	eventBus.Unsubscribe(sub)
+	unsub := eventBus.Unsubscribe(sub)
+	assert.Equal(t, 1, unsub)
+
+	eventBus.Wait()
+}
+
+func TestSubscribeOnce(t *testing.T) {
+	call := 0
+	eventBus := NewEventBus(false)
+
+	eventBus.SubscribeOnce("", TypeClientDisconnected, func(e Event) {
+		panic("This function should not have been called!")
+	})
+	eventBus.SubscribeOnce("", TypeClientConnected, func(e Event) {
+		call++
+	})
+	eventBus.SubscribeOnce("", TypeClientConnected, func(e Event) {
+		call++
+	})
+
+	published := eventBus.Publish(newFakeEvent("", TypeClientConnected))
+	assert.Equal(t, 2, published)
+
+	published = eventBus.Publish(newFakeEvent("", TypeClientConnected))
+	assert.Equal(t, 0, published)
+
+	eventBus.Wait()
+	assert.Equal(t, 2, call)
+}
+
+func TestSubscribeOnceAsync(t *testing.T) {
+	var call int32
+	eventBus := NewEventBus(true)
+
+	eventBus.SubscribeOnce("", TypeClientDisconnected, func(e Event) {
+		panic("This function should not have been called!")
+	})
+	eventBus.SubscribeOnce("", TypeClientConnected, func(e Event) {
+		atomic.AddInt32(&call, 1)
+	})
+	eventBus.SubscribeOnce("", TypeClientConnected, func(e Event) {
+		atomic.AddInt32(&call, 1)
+	})
+
+	published := eventBus.Publish(newFakeEvent("", TypeClientConnected))
+	assert.Equal(t, 2, published)
+
+	published = eventBus.Publish(newFakeEvent("", TypeClientConnected))
+	assert.Equal(t, 0, published)
+
+	eventBus.Wait()
+	assert.Equal(t, int32(2), atomic.LoadInt32(&call))
 }

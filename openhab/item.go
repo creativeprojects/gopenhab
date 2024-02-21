@@ -140,17 +140,18 @@ func (i *Item) SendCommand(command State) error {
 // It returns true if openHAB acknowledge it's setting the desired state to the item (even if it's the same value as before).
 // It returns false in case the acknowledged value is different than the command, or after timeout
 func (i *Item) SendCommandWait(command State, timeout time.Duration) (bool, error) {
-	once := sync.Once{}
-	stateChan := make(chan string)
-	subID := i.client.subscribe(i.Name(), event.TypeItemState, func(e event.Event) {
-		// another event might be arriving before we unsubscribe
-		once.Do(func() {
-			if ev, ok := e.(event.ItemReceivedState); ok {
-				stateChan <- ev.State
+	stateChan := make(chan string, 1)
+	done := make(chan bool, 1)
+	subID := i.client.subscribeOnce(i.Name(), event.TypeItemState, func(e event.Event) {
+		if ev, ok := e.(event.ItemReceivedState); ok {
+			select {
+			case stateChan <- ev.State:
+			case <-done:
 			}
-		})
+		}
 	})
 	defer func() {
+		done <- true
 		i.client.unsubscribe(subID)
 	}()
 
