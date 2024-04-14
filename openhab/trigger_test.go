@@ -9,6 +9,7 @@ import (
 )
 
 func TestBaseTriggerSubscribe(t *testing.T) {
+	t.Parallel()
 	const id = 2
 	call := 0
 
@@ -43,6 +44,7 @@ func TestBaseTriggerSubscribe(t *testing.T) {
 }
 
 func TestBaseTriggerSubscribeNilCallback(t *testing.T) {
+	t.Parallel()
 	const id = 2
 
 	match := func(ev event.Event) bool {

@@ -12,6 +12,7 @@ import (
 )
 
 func TestCanLoadItemCreatedAfterLoading(t *testing.T) {
+	t.Parallel()
 	wg := sync.WaitGroup{}
 	server := openhabtest.NewServer(openhabtest.Config{
 		SendEventsFromAPI: false,
@@ -60,6 +61,7 @@ func TestCanLoadItemCreatedAfterLoading(t *testing.T) {
 }
 
 func TestLoadingUnknownItemReturnsError(t *testing.T) {
+	t.Parallel()
 	wg := sync.WaitGroup{}
 	server := openhabtest.NewServer(openhabtest.Config{
 		SendEventsFromAPI: false,

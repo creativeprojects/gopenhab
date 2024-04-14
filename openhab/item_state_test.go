@@ -8,10 +8,12 @@ import (
 )
 
 func TestOpenHABDate(t *testing.T) {
+	t.Parallel()
 	fixtures := []string{"2022-03-08T07:01:00.123+0000", "2022-03-08T17:38:00.456+0100"}
 
 	for _, date := range fixtures {
 		t.Run(date, func(t *testing.T) {
+			t.Parallel()
 			result, err := ParseDateTimeState(date)
 			assert.NoError(t, err)
 			assert.NotZero(t, result)
@@ -21,6 +23,7 @@ func TestOpenHABDate(t *testing.T) {
 }
 
 func TestItemState(t *testing.T) {
+	t.Parallel()
 	dateTime := time.Date(2022, 3, 8, 7, 1, 0, 0, time.Local)
 	fixtures := []struct {
 		state    State
@@ -36,6 +39,7 @@ func TestItemState(t *testing.T) {
 
 	for _, fixture := range fixtures {
 		t.Run(fixture.state.String(), func(t *testing.T) {
+			t.Parallel()
 			assert.Equal(t, fixture.raw, fixture.state.Raw())
 			assert.Equal(t, fixture.value, fixture.state.String())
 			assert.True(t, fixture.state.Equal(fixture.value))

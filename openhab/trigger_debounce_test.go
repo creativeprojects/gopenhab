@@ -37,6 +37,7 @@ func (t *mockTrigger) match(e event.Event) bool {
 }
 
 func TestDebounce(t *testing.T) {
+	t.Parallel()
 	var (
 		counter uint64
 	)
@@ -60,6 +61,7 @@ func TestDebounce(t *testing.T) {
 }
 
 func TestDebounceConcurrentRun(t *testing.T) {
+	t.Parallel()
 	var count = 10
 	var wg sync.WaitGroup
 
@@ -87,6 +89,7 @@ func TestDebounceConcurrentRun(t *testing.T) {
 }
 
 func TestDebounceDelayed(t *testing.T) {
+	t.Parallel()
 	var (
 		counter uint64
 	)
@@ -108,6 +111,7 @@ func TestDebounceDelayed(t *testing.T) {
 }
 
 func TestDebounceCancelled(t *testing.T) {
+	t.Parallel()
 	var (
 		counter uint64
 	)
@@ -130,6 +134,7 @@ func TestDebounceCancelled(t *testing.T) {
 }
 
 func TestDebounceTwoTriggers(t *testing.T) {
+	t.Parallel()
 	var (
 		counter uint64
 	)
@@ -155,6 +160,7 @@ func TestDebounceTwoTriggers(t *testing.T) {
 }
 
 func TestDebounceConcurrentRunOfThreeTriggers(t *testing.T) {
+	t.Parallel()
 	var count = 10
 	var wg sync.WaitGroup
 

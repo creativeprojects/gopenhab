@@ -7,6 +7,7 @@ import (
 )
 
 func TestSplitItemTopic(t *testing.T) {
+	t.Parallel()
 	testData := []struct {
 		topic          string
 		item           string
@@ -25,7 +26,9 @@ func TestSplitItemTopic(t *testing.T) {
 	}
 
 	for _, testItem := range testData {
+		testItem := testItem // remove after go1.22
 		t.Run(testItem.topic, func(t *testing.T) {
+			t.Parallel()
 			item, triggeringItem, eventType := splitItemTopic(testItem.topic)
 			assert.Equal(t, testItem.item, item)
 			assert.Equal(t, testItem.triggeringItem, triggeringItem)

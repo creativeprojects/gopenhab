@@ -3,8 +3,9 @@ package openhabtest
 type Version int
 
 const (
-	V2 Version = iota
-	V3
+	V2  Version = iota // openHAB v2.*
+	V3                 // openHAB v3.* & v4.0
+	V41                // openHAB v4.1+
 )
 
 // Config is the configuration object for the mock openhab Server
@@ -15,6 +16,6 @@ type Config struct {
 	// adding, updating, deleting items, things, channels, etc. from the REST API.
 	// The default is off meaning the events are to be sent from the unit test
 	SendEventsFromAPI bool
-	// Version of the openHAB API: valid values are V2 or V3
+	// Version of the openHAB server to mock: valid values are V2, V3 or V41
 	Version Version
 }

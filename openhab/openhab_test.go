@@ -17,6 +17,7 @@ import (
 )
 
 func TestEventMessages(t *testing.T) {
+	t.Parallel()
 	events := []string{`event: message
 data: {"topic":"smarthome/items/TestSwitch/command","payload":"{\"type\":\"OnOff\",\"value\":\"OFF\"}","type":"ItemCommandEvent"}`,
 
@@ -57,6 +58,7 @@ data: {"type":"ALIVE","interval":10}`,
 }
 
 func TestRuleID(t *testing.T) {
+	t.Parallel()
 	client := NewClient(Config{URL: "http://localhost"})
 	id := client.AddRule(
 		RuleData{},
@@ -66,6 +68,7 @@ func TestRuleID(t *testing.T) {
 }
 
 func TestGivenRuleID(t *testing.T) {
+	t.Parallel()
 	client := NewClient(Config{URL: "http://localhost"})
 	id := client.AddRule(
 		RuleData{ID: "rule-ID"},
@@ -75,6 +78,7 @@ func TestGivenRuleID(t *testing.T) {
 }
 
 func TestAddRuleWithError(t *testing.T) {
+	t.Parallel()
 	client := NewClient(Config{URL: "http://localhost"})
 	id := client.AddRule(
 		RuleData{},
@@ -86,12 +90,14 @@ func TestAddRuleWithError(t *testing.T) {
 }
 
 func TestDeleteNoRule(t *testing.T) {
+	t.Parallel()
 	client := NewClient(Config{URL: "http://localhost"})
 	deleted := client.DeleteRule("no rule")
 	assert.Equal(t, 0, deleted)
 }
 
 func TestDeleteOneRule(t *testing.T) {
+	t.Parallel()
 	client := NewClient(Config{URL: "http://localhost"})
 	id := client.AddRule(
 		RuleData{},
@@ -104,6 +110,7 @@ func TestDeleteOneRule(t *testing.T) {
 }
 
 func TestDeleteTwoRules(t *testing.T) {
+	t.Parallel()
 	client := NewClient(Config{URL: "http://localhost"})
 	id := client.AddRule(
 		RuleData{ID: "rule-ID"},
@@ -124,6 +131,7 @@ func TestDeleteTwoRules(t *testing.T) {
 }
 
 func TestStartEvent(t *testing.T) {
+	t.Parallel()
 	var call int32
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	defer server.Close()
@@ -153,6 +161,7 @@ func TestStartEvent(t *testing.T) {
 }
 
 func TestConnectEvent(t *testing.T) {
+	t.Parallel()
 	var call int32
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	defer server.Close()
@@ -186,6 +195,7 @@ func TestConnectEvent(t *testing.T) {
 }
 
 func TestDisconnectEvent(t *testing.T) {
+	t.Parallel()
 	var call int32
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	server.SetItem(api.Item{Name: "item"})
@@ -223,6 +233,7 @@ func TestDisconnectEvent(t *testing.T) {
 }
 
 func TestStopEvent(t *testing.T) {
+	t.Parallel()
 	var call int32
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	defer server.Close()
@@ -256,6 +267,7 @@ func TestStopEvent(t *testing.T) {
 }
 
 func TestErrorEvent(t *testing.T) {
+	t.Parallel()
 	var call int32
 	client := NewClient(Config{URL: "http://localhost", TimeoutHTTP: 100 * time.Millisecond})
 
@@ -292,6 +304,7 @@ func TestErrorEvent(t *testing.T) {
 }
 
 func TestOnDateTimeEvent(t *testing.T) {
+	t.Parallel()
 	var call int32
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	defer server.Close()
@@ -321,6 +334,7 @@ func TestOnDateTimeEvent(t *testing.T) {
 }
 
 func TestDeleteDateTimeEvent(t *testing.T) {
+	t.Parallel()
 	client := NewClient(Config{URL: "http://localhost"})
 	id := client.AddRule(
 		RuleData{},
@@ -341,6 +355,7 @@ func TestDeleteDateTimeEvent(t *testing.T) {
 }
 
 func TestAddRuleOnceStarted(t *testing.T) {
+	t.Parallel()
 	var call int32
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	defer server.Close()
@@ -376,6 +391,7 @@ func TestAddRuleOnceStarted(t *testing.T) {
 }
 
 func TestDispathEventSaveStateFirst(t *testing.T) {
+	t.Parallel()
 	var call int32
 	wg := sync.WaitGroup{}
 	server := openhabtest.NewServer(openhabtest.Config{SendEventsFromAPI: true, Log: t})
@@ -422,6 +438,7 @@ func TestDispathEventSaveStateFirst(t *testing.T) {
 
 func TestCancelEvent(t *testing.T) {
 	var call int32
+	t.Parallel()
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	defer server.Close()
 	client := NewClient(Config{
@@ -453,6 +470,7 @@ func TestCancelEvent(t *testing.T) {
 }
 
 func TestTimeoutEvent(t *testing.T) {
+	t.Parallel()
 	var call int32
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	defer server.Close()

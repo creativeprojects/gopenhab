@@ -9,6 +9,7 @@ import (
 )
 
 func TestOneSubscriberNoTopic(t *testing.T) {
+	t.Parallel()
 	call := false
 	eventBus := NewEventBus(false)
 
@@ -26,6 +27,7 @@ func TestOneSubscriberNoTopic(t *testing.T) {
 }
 
 func TestOneSubscriberNoTopicAsync(t *testing.T) {
+	t.Parallel()
 	done := make(chan Event)
 	eventBus := NewEventBus(true)
 
@@ -49,6 +51,7 @@ func TestOneSubscriberNoTopicAsync(t *testing.T) {
 }
 
 func TestOneSubscriberWithTopic(t *testing.T) {
+	t.Parallel()
 	call := false
 	eventBus := NewEventBus(false)
 
@@ -65,6 +68,7 @@ func TestOneSubscriberWithTopic(t *testing.T) {
 }
 
 func TestOneSubscriberWithTopicAsync(t *testing.T) {
+	t.Parallel()
 	done := make(chan Event, 1)
 	eventBus := NewEventBus(true)
 
@@ -88,6 +92,7 @@ func TestOneSubscriberWithTopicAsync(t *testing.T) {
 }
 
 func TestTwoSubscribers(t *testing.T) {
+	t.Parallel()
 	first := false
 	second := false
 	eventBus := NewEventBus(false)
@@ -113,6 +118,7 @@ func TestTwoSubscribers(t *testing.T) {
 }
 
 func TestTwoSubscribersAsync(t *testing.T) {
+	t.Parallel()
 	first := false
 	second := false
 	done1 := make(chan Event)
@@ -158,6 +164,7 @@ func TestTwoSubscribersAsync(t *testing.T) {
 }
 
 func TestUnsubscribe(t *testing.T) {
+	t.Parallel()
 	call := 0
 	eventBus := NewEventBus(false)
 
@@ -181,6 +188,7 @@ func TestUnsubscribe(t *testing.T) {
 }
 
 func TestUnsubscribeAsync(t *testing.T) {
+	t.Parallel()
 	done := make(chan Event)
 	eventBus := NewEventBus(true)
 
@@ -217,6 +225,7 @@ func TestUnsubscribeAsync(t *testing.T) {
 }
 
 func TestUnsubscribeUnknownID(t *testing.T) {
+	t.Parallel()
 	call := 0
 	eventBus := NewEventBus(false)
 
@@ -241,6 +250,7 @@ func TestUnsubscribeUnknownID(t *testing.T) {
 }
 
 func TestUnsubscribeUnknownIDAsync(t *testing.T) {
+	t.Parallel()
 	done := make(chan Event)
 	eventBus := NewEventBus(true)
 
@@ -278,6 +288,7 @@ func TestUnsubscribeUnknownIDAsync(t *testing.T) {
 }
 
 func TestUnsubscribeWhileRunningAsync(t *testing.T) {
+	t.Parallel()
 	eventBus := NewEventBus(true)
 	sub := eventBus.Subscribe("", TypeClientConnected, func(e Event) {
 		time.Sleep(100 * time.Millisecond)
@@ -293,6 +304,7 @@ func TestUnsubscribeWhileRunningAsync(t *testing.T) {
 }
 
 func TestSubscribeOnce(t *testing.T) {
+	t.Parallel()
 	call := 0
 	eventBus := NewEventBus(false)
 
@@ -317,6 +329,7 @@ func TestSubscribeOnce(t *testing.T) {
 }
 
 func TestSubscribeOnceAsync(t *testing.T) {
+	t.Parallel()
 	var call int32
 	eventBus := NewEventBus(true)
 

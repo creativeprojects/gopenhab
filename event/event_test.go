@@ -8,6 +8,7 @@ import (
 )
 
 func TestCreateEventFromJSON(t *testing.T) {
+	t.Parallel()
 	testData := []struct {
 		source string
 		event  Event
@@ -112,7 +113,9 @@ func TestCreateEventFromJSON(t *testing.T) {
 	}
 
 	for _, testItem := range testData {
+		testItem := testItem // remove after go1.22
 		t.Run("", func(t *testing.T) {
+			t.Parallel()
 			e, err := New(testItem.source)
 			require.NoError(t, err)
 			assert.Equal(t, testItem.event, e)
@@ -121,6 +124,7 @@ func TestCreateEventFromJSON(t *testing.T) {
 }
 
 func TestErrorEventFromJSON(t *testing.T) {
+	t.Parallel()
 	testData := []struct {
 		source string
 	}{
@@ -141,7 +145,9 @@ func TestErrorEventFromJSON(t *testing.T) {
 	}
 
 	for _, testItem := range testData {
+		testItem := testItem // remove after go1.22
 		t.Run("", func(t *testing.T) {
+			t.Parallel()
 			_, err := New(testItem.source)
 			t.Log(err)
 			require.Error(t, err)

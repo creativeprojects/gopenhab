@@ -28,7 +28,7 @@ func TestItemDecimalTypeWithUnit(t *testing.T) {
 }
 
 func TestGetItemAPI(t *testing.T) {
-
+	t.Parallel()
 	item1 := api.Item{
 		State:      "OFF",
 		Type:       "Switch",
