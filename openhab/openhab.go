@@ -392,26 +392,17 @@ func (c *Client) eventLoop() {
 
 // subscribe to the user event bus (events are sent asynchronously)
 func (c *Client) subscribe(name string, eventType event.Type, callback func(e event.Event)) int {
-	return c.userEventBus.Subscribe(name, eventType, func(e event.Event) {
-		defer preventPanic()
-		callback(e)
-	})
+	return c.userEventBus.Subscribe(name, eventType, callback)
 }
 
 // subscribeOnce to the user event bus (events are sent asynchronously)
 func (c *Client) subscribeOnce(name string, eventType event.Type, callback func(e event.Event)) int {
-	return c.userEventBus.SubscribeOnce(name, eventType, func(e event.Event) {
-		defer preventPanic()
-		callback(e)
-	})
+	return c.userEventBus.SubscribeOnce(name, eventType, callback)
 }
 
 // subscribeSystem is a subscription to the system (synchronous) event bus
 func (c *Client) subscribeSystem(name string, eventType event.Type, callback func(e event.Event)) int {
-	return c.systemEventBus.Subscribe(name, eventType, func(e event.Event) {
-		defer preventPanic()
-		callback(e)
-	})
+	return c.systemEventBus.Subscribe(name, eventType, callback)
 }
 
 func (c *Client) unsubscribe(subID int) {

@@ -21,4 +21,8 @@ func (e fakeEvent) Type() Type {
 	return e.eventType
 }
 
+func (e fakeEvent) String() string {
+	return "Fake event: topic = " + e.topic
+}
+
 var _ Event = &fakeEvent{}

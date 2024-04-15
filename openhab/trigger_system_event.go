@@ -77,6 +77,15 @@ func OnStartlevel() *systemEventTrigger {
 	}
 }
 
+// OnRulePanic is a trigger activated when the code inside a rule panics.
+// The event is triggered from a different codepath, so there's nothing you can recover at this point.
+// This event is typically used for alerting the user about an issue in the code.
+func OnRulePanic() *systemEventTrigger {
+	return &systemEventTrigger{
+		eventType: event.TypeRulePanic,
+	}
+}
+
 // activate subscribes to the corresponding event
 func (c *systemEventTrigger) activate(client subscriber, run func(ev event.Event), ruleData RuleData) error {
 	c.subId = c.subscribe(client, "", c.eventType, run, c.match)

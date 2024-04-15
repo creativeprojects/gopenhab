@@ -30,6 +30,10 @@ func (i GroupItemStateUpdated) Type() Type {
 	return TypeItemState // should we create a new type for this?
 }
 
+func (i GroupItemStateUpdated) String() string {
+	return "Group " + i.ItemName + " state updated to " + i.State
+}
+
 // Verify interface
 var _ Event = GroupItemStateUpdated{}
 
@@ -62,6 +66,10 @@ func (i GroupItemStateChanged) Topic() string {
 
 func (i GroupItemStateChanged) Type() Type {
 	return TypeGroupItemStateChanged
+}
+
+func (i GroupItemStateChanged) String() string {
+	return "Group " + i.ItemName + " state changed from " + i.PreviousState + " to " + i.NewState
 }
 
 // Verify interface

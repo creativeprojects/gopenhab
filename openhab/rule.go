@@ -79,6 +79,9 @@ func (r *rule) deactivate(client subscriber) {
 }
 
 func (r *rule) run(e event.Event) {
+	// this will catch any panic and sends a panic system event back
+	defer preventRulePanic(r.client, r.ruleData, e)
+
 	// run only one instance of that rule at any time
 	r.runLocker.Lock()
 	defer r.runLocker.Unlock()

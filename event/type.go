@@ -23,6 +23,7 @@ const (
 	TypeClientDisconnected
 	TypeClientStopped
 	TypeClientError
+	TypeRulePanic
 	TypeServerAlive            // API version >=5 sends ALIVE messages (every 10 seconds)
 	TypeServerStartlevel       // API version >=5 sends Startlevel events during startup (typically from 30 to 100)
 	TypeTimeCron               // On a specific date and/or time

@@ -1,6 +1,9 @@
 package event
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 // StartlevelEvent is triggered by the openhab server on startup (typically from 30 to 100).
 // This event was introduced in API version 5.
@@ -27,6 +30,10 @@ func (e StartlevelEvent) Type() Type {
 
 func (e StartlevelEvent) Level() int {
 	return e.level
+}
+
+func (e StartlevelEvent) String() string {
+	return fmt.Sprintf("Received start level %d from server", e.level)
 }
 
 var _ Event = &StartlevelEvent{}

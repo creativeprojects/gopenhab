@@ -40,6 +40,10 @@ func (i ItemReceivedCommand) Type() Type {
 	return TypeItemCommand
 }
 
+func (i ItemReceivedCommand) String() string {
+	return "Item " + i.ItemName + " received command " + i.Command
+}
+
 // Verify interface
 var _ Event = ItemReceivedCommand{}
 
@@ -69,6 +73,10 @@ func (i ItemReceivedState) Type() Type {
 	return TypeItemState
 }
 
+func (i ItemReceivedState) String() string {
+	return "Item " + i.ItemName + " received state " + i.State
+}
+
 // Verify interface
 var _ Event = ItemReceivedState{}
 
@@ -96,6 +104,10 @@ func (i ItemStateUpdated) Topic() string {
 
 func (i ItemStateUpdated) Type() Type {
 	return TypeItemState // should we create a new type for this?
+}
+
+func (i ItemStateUpdated) String() string {
+	return "Item " + i.ItemName + " state updated to " + i.State
 }
 
 // Verify interface
@@ -131,6 +143,10 @@ func (i ItemStateChanged) Type() Type {
 	return TypeItemStateChanged
 }
 
+func (i ItemStateChanged) String() string {
+	return "Item " + i.ItemName + " state changed from " + i.PreviousState + " to " + i.NewState
+}
+
 // Verify interface
 var _ Event = ItemStateChanged{}
 
@@ -159,6 +175,10 @@ func (i ItemStatePredicted) Type() Type {
 	return TypeItemStatePredicted
 }
 
+func (i ItemStatePredicted) String() string {
+	return "Item " + i.ItemName + " state predicted " + i.PredictedState
+}
+
 // Verify interface
 var _ Event = ItemStatePredicted{}
 
@@ -181,6 +201,10 @@ func (i ItemAdded) Topic() string {
 
 func (i ItemAdded) Type() Type {
 	return TypeItemAdded
+}
+
+func (i ItemAdded) String() string {
+	return "Item " + i.Item.Name + " added"
 }
 
 // Verify interface
@@ -207,6 +231,10 @@ func (i ItemRemoved) Type() Type {
 	return TypeItemRemoved
 }
 
+func (i ItemRemoved) String() string {
+	return "Item " + i.Item.Name + " removed"
+}
+
 // Verify interface
 var _ Event = ItemRemoved{}
 
@@ -231,6 +259,10 @@ func (i ItemUpdated) Topic() string {
 
 func (i ItemUpdated) Type() Type {
 	return TypeItemUpdated
+}
+
+func (i ItemUpdated) String() string {
+	return "Item " + i.Item.Name + " updated"
 }
 
 // Verify interface

@@ -10,6 +10,7 @@ import (
 type Event interface {
 	Topic() string
 	Type() Type
+	String() string
 }
 
 func New(data string) (Event, error) {

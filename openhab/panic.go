@@ -5,6 +5,9 @@ import (
 	"os"
 	"runtime"
 	"runtime/debug"
+	"time"
+
+	"github.com/creativeprojects/gopenhab/event"
 )
 
 func preventPanic() {
@@ -15,6 +18,25 @@ func preventPanic() {
 		fmt.Fprintf(os.Stderr, "%s\n\n", r)
 		fmt.Fprintf(os.Stderr, "Stack trace:\n\n%s\n", getStack(3)) // skip calls to getStack - preventPanic - panic
 		fmt.Fprintf(os.Stderr, "*****************\n\n")
+	}
+}
+
+func preventRulePanic(client *Client, ruleData RuleData, e event.Event) {
+	if r := recover(); r != nil {
+		now := time.Now()
+		message := fmt.Sprintf("%v", r)
+		fmt.Fprintf(os.Stderr, "*****************\n")
+		fmt.Fprintf(os.Stderr, "***** PANIC *****\n")
+		fmt.Fprintf(os.Stderr, "*****************\n\n")
+		fmt.Fprintf(os.Stderr, "Timestamp:   %s\n", now.Format(time.RFC1123))
+		fmt.Fprintf(os.Stderr, "Rule ID:     %s\n", ruleData.ID)
+		fmt.Fprintf(os.Stderr, "Rule Name:   %s\n", ruleData.Name)
+		fmt.Fprintf(os.Stderr, "Description: %s\n", ruleData.Description)
+		fmt.Fprintf(os.Stderr, "Event:       %s\n", e.String())
+		fmt.Fprintf(os.Stderr, "Message:     %s\n\n", message)
+		fmt.Fprintf(os.Stderr, "Stack trace:\n*****************\n%s\n", getStack(3)) // skip calls to getStack - preventRulePanic - panic
+		fmt.Fprintf(os.Stderr, "*****************\n\n")
+		client.userEventBus.Publish(event.NewRulePanicEvent(message, ruleData.ID, ruleData.Name, ruleData.Description, e.String(), now))
 	}
 }
 

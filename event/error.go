@@ -29,4 +29,8 @@ func (e ErrorEvent) Error() error {
 	return e.err
 }
 
+func (e ErrorEvent) String() string {
+	return "Received client error: " + e.err.Error()
+}
+
 var _ Event = &ErrorEvent{}

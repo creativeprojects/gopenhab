@@ -19,4 +19,8 @@ func (e AliveEvent) TypeName() string {
 	return "Alive"
 }
 
+func (e AliveEvent) String() string {
+	return "Received Alive message from server"
+}
+
 var _ Event = &AliveEvent{}

@@ -23,8 +23,6 @@ func OnDateTime(dateTime time.Time) *dateTimeTrigger {
 // activate schedules the run function in the context of a *Client
 func (c *dateTimeTrigger) activate(client subscriber, run func(ev event.Event), ruleData RuleData) error {
 	entryID := client.getCron().Schedule(c.schedule, cron.FuncJob(func() {
-		defer preventPanic()
-
 		run(event.NewSystemEvent(event.TypeTimeCron))
 	}))
 	c.entryID = entryID

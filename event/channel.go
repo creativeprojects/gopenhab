@@ -25,5 +25,9 @@ func (i ChannelTriggered) Type() Type {
 	return TypeChannelTriggered
 }
 
+func (i ChannelTriggered) String() string {
+	return "Channel " + i.ChannelName + " triggered " + i.Event
+}
+
 // Verify interface
 var _ Event = ChannelTriggered{}

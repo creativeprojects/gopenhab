@@ -35,4 +35,8 @@ func (e GenericEvent) TypeName() string {
 	return e.typeName
 }
 
+func (e GenericEvent) String() string {
+	return "Received unknown event " + e.typeName + " on topic " + e.topic + " with payload " + e.payload
+}
+
 var _ Event = &GenericEvent{}

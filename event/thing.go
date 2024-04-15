@@ -46,6 +46,10 @@ func (i ThingStatusInfoEvent) Type() Type {
 	return TypeItemCommand
 }
 
+func (i ThingStatusInfoEvent) String() string {
+	return "Thing " + i.ThingName + " status is " + i.Status
+}
+
 // Verify interface
 var _ Event = ThingStatusInfoEvent{}
 
@@ -84,6 +88,10 @@ func (i ThingStatusInfoChangedEvent) Type() Type {
 	return TypeItemCommand
 }
 
+func (i ThingStatusInfoChangedEvent) String() string {
+	return "Thing " + i.ThingName + " status changed from " + i.PreviousStatus + " to " + i.NewStatus
+}
+
 // Verify interface
 var _ Event = ThingStatusInfoChangedEvent{}
 
@@ -108,6 +116,10 @@ func (i ThingUpdated) Topic() string {
 
 func (i ThingUpdated) Type() Type {
 	return TypeThingUpdated
+}
+
+func (i ThingUpdated) String() string {
+	return "Thing " + i.Thing.UID + " updated"
 }
 
 // Verify interface
