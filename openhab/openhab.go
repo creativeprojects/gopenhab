@@ -76,6 +76,9 @@ func NewClient(config Config) *Client {
 	if config.ReconnectionMaxBackoff == 0 {
 		config.ReconnectionMaxBackoff = time.Minute
 	}
+	if config.ReconnectionMinBackoff == 0 {
+		config.ReconnectionMinBackoff = time.Second
+	}
 	if config.StableConnectionDuration == 0 {
 		config.StableConnectionDuration = time.Minute
 	}

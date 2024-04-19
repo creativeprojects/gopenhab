@@ -5,10 +5,6 @@ import (
 	"time"
 )
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
 func nextBackoff(backoff time.Duration, config Config) time.Duration {
 	backoff = time.Duration(float64(backoff) * config.ReconnectionMultiplier)
 	if config.ReconnectionJitter > 0 {
@@ -16,6 +12,9 @@ func nextBackoff(backoff time.Duration, config Config) time.Duration {
 	}
 	if backoff > config.ReconnectionMaxBackoff {
 		backoff = config.ReconnectionMaxBackoff
+	}
+	if backoff < config.ReconnectionMinBackoff {
+		backoff = config.ReconnectionMinBackoff
 	}
 	return backoff
 }

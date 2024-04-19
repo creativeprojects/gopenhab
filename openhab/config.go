@@ -28,6 +28,9 @@ type Config struct {
 	// ReconnectionMaxBackoff is the upper bound on backoff.
 	// If undefined, it defaults to 1 minute
 	ReconnectionMaxBackoff time.Duration
+	// ReconnectionMinBackoff is the lower bound on backoff.
+	// If undefined, it defaults to 1 second
+	ReconnectionMinBackoff time.Duration
 	// StableConnectionDuration is the time after which we consider the connection to openHAB to be stable (and resets the backoff timer).
 	// If undefined, it defaults to 1 minute
 	StableConnectionDuration time.Duration
