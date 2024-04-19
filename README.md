@@ -14,7 +14,11 @@ My first thought was to make a REST API to make this external system accessible 
 
 In theory, everything you can do in a DSL rule or in Jython should be available.
 
-This is work in progress, but here's an example of what you can already do with it:
+Notes:
+- I do fully use it on my home automation platform: I did move all my DSL rules to gopenhab.
+- This is still work in progress: you might need some events that are not yet implemented, or some features that are not yet available.
+
+Here's an example of what you can do with it right now:
 
 ```go
 package main
@@ -257,7 +261,7 @@ func TestCalculateZoneTemperature(t *testing.T) {
 
 The library supports API version 3 to 6.
 
-At some point in time, this library was tested with openHAB version:
+At some point in time, this library was tested (and running in production) with these versions of openHAB:
 - 2.5
 - 3.0
 - 3.1
@@ -269,8 +273,8 @@ At some point in time, this library was tested with openHAB version:
 
 # Integration tests
 
-I do have some integrations tests running against a real openHAB server (currently 4.1.1). The server is running an exact copy of my home configuration, with a script sending mock states to the server via MQTT.
+I do have some integrations tests running against a real openHAB server (currently 4.1.2). The server is running an exact copy of my home configuration, with a script sending mock states to the server via MQTT.
 
-I have inserted a Toxiproxy between openHAB and gopenhab.
+For reliability testing, I also have a Toxiproxy between openHAB and gopenhab.
 
-I might make the tests public at some point, but for now, they are private.
+I might publish some of these tests at some point.

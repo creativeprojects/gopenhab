@@ -130,8 +130,10 @@ func NewClient(config Config) *Client {
 
 // RefreshCache will force a reload of all the items from openHAB.
 // You shouldn't need to call this method, as the items are loaded on demand.
+//
 // I've only experienced the need to call this method when the openHAB server was restarted,
-// as the cache was loaded before openHAB finished its initialization.
+// and gopenhab loaded the cache before openHAB finished its initialization.
+// For that matter you can call RefreshCache() on a OnStableConnection() event rule.
 func (c *Client) RefreshCache() error {
 	return c.items.refreshCache()
 }
