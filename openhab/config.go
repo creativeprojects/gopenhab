@@ -6,7 +6,7 @@ import (
 )
 
 type Config struct {
-	// URL of you openHAB instance. It should detect automatically the REST API URL from the main URL.
+	// URL of your openHAB instance. It should detect automatically the REST API URL from the main URL.
 	URL      string
 	User     string
 	Password string

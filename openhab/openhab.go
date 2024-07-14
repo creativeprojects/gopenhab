@@ -387,7 +387,7 @@ func (c *Client) eventLoop() {
 			successTimer.Stop()
 		}
 		successTimerMutex.Unlock()
-		debuglog.Printf("reconnecting in %s...", backoff.String())
+		debuglog.Printf("reconnecting in %s...", backoff.Truncate(100*time.Millisecond).String())
 		time.Sleep(backoff)
 
 		// calculate next backoff
