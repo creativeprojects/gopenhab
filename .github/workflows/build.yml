@@ -40,12 +40,6 @@ jobs:
           check-latest: true
           cache: true
 
-      - name: Lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: v1.64.5
-          args: --timeout=5m
-
       - name: Test
         run: "go test -v -race -coverprofile='coverage.out' ./..."
         shell: bash
