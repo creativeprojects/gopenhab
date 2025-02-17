@@ -173,7 +173,7 @@ func (c *itemStateChangedTrigger) activate(client subscriber, run func(ev event.
 		return ErrRuleAlreadyActivated
 	}
 	c.subID1 = c.subscribe(client, c.item, event.TypeItemStateChanged, run, c.match)
-	c.subID1 = c.subscribe(client, c.item, event.TypeGroupItemStateChanged, run, c.match)
+	c.subID2 = c.subscribe(client, c.item, event.TypeGroupItemStateChanged, run, c.match)
 	return nil
 }
 

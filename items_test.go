@@ -22,7 +22,6 @@ func TestCanLoadExampleItems(t *testing.T) {
 		t.Skip("no example file")
 	}
 	for _, itemsFile := range files {
-		itemsFile := itemsFile // remove after go1.22
 		if strings.HasPrefix(itemsFile.Name(), "items") && strings.HasSuffix(itemsFile.Name(), ".json") {
 			t.Run(itemsFile.Name(), func(t *testing.T) {
 				t.Parallel()

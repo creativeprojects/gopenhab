@@ -351,6 +351,38 @@ func TestGetItemState(t *testing.T) {
 	assert.NoError(t, server.ItemsErr())
 }
 
+func TestGetItemStateOnRemovedItem(t *testing.T) {
+	state := "20.1 °C"
+	server := NewServer(Config{Log: t})
+	defer server.Close()
+
+	// add item
+	require.NoError(t, server.SetItem(api.Item{
+		Name:  "TestItem",
+		Type:  "Number:Temperature",
+		State: state,
+	}))
+
+	// remove item
+	require.NoError(t, server.RemoveItem("TestItem"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL()+"/rest/items/TestItem/state", http.NoBody)
+	require.NoError(t, err)
+	resp, err := http.DefaultClient.Do(req)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+	data, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+	assert.Empty(t, data)
+	assert.NoError(t, server.EventsErr())
+	assert.NoError(t, server.ItemsErr())
+}
+
 func TestSetItemState(t *testing.T) {
 	state := "20.1 °C"
 	server := NewServer(Config{Log: t})
