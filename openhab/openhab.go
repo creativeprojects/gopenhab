@@ -138,50 +138,104 @@ func NewClient(config Config) *Client {
 // and gopenhab loaded the cache before openHAB finished its initialization.
 // For that matter you can call RefreshCache() on a OnStableConnection() event rule.
 func (c *Client) RefreshCache() error {
-	return c.items.refreshCache()
+	ctx, cancel := context.WithTimeout(context.Background(), c.config.TimeoutHTTP)
+	defer cancel()
+	return c.RefreshCacheContext(ctx)
+}
+
+// RefreshCacheContext will force a reload of all the items from openHAB.
+// You shouldn't need to call this method, as the items are loaded on demand.
+//
+// I've only experienced the need to call this method when the openHAB server was restarted,
+// and gopenhab loaded the cache before openHAB finished its initialization.
+// For that matter you can call RefreshCacheContext() on a OnStableConnection() event rule.
+func (c *Client) RefreshCacheContext(ctx context.Context) error {
+	return c.items.refreshCache(ctx)
 }
 
 // GetItem returns an openHAB item from its name.
 // The very first call of GetItem will try to load the items collection from openHAB.
 // If not found, returns an openhab.ErrorNotFound error.
 func (c *Client) GetItem(name string) (*Item, error) {
-	return c.items.getItem(name)
+	ctx, cancel := context.WithTimeout(context.Background(), c.config.TimeoutHTTP)
+	defer cancel()
+	return c.GetItemContext(ctx, name)
+}
+
+// GetItemContext returns an openHAB item from its name.
+// The very first call of GetItemContext will try to load the items collection from openHAB.
+// If not found, returns an openhab.ErrorNotFound error.
+func (c *Client) GetItemContext(ctx context.Context, name string) (*Item, error) {
+	return c.items.getItem(ctx, name)
 }
 
 // GetItemState returns an openHAB item state from its name. It's a shortcut of GetItem() => State().
 // The very first call of GetItemState will try to load the items collection from openHAB.
 func (c *Client) GetItemState(name string) (State, error) {
-	item, err := c.items.getItem(name)
+	ctx, cancel := context.WithTimeout(context.Background(), c.config.TimeoutHTTP)
+	defer cancel()
+	return c.GetItemStateContext(ctx, name)
+}
+
+// GetItemStateContext returns an openHAB item state from its name. It's a shortcut of GetItem() => State().
+// The very first call of GetItemStateContext will try to load the items collection from openHAB.
+func (c *Client) GetItemStateContext(ctx context.Context, name string) (State, error) {
+	item, err := c.items.getItem(ctx, name)
 	if err != nil {
 		return StringState(""), err
 	}
-	return item.State()
+	return item.StateContext(ctx)
 }
 
 // GetMembersOf returns a list of items member of the group
 func (c *Client) GetMembersOf(groupName string) ([]*Item, error) {
-	return c.items.getMembersOf(groupName)
+	ctx, cancel := context.WithTimeout(context.Background(), c.config.TimeoutHTTP)
+	defer cancel()
+	return c.GetMembersContext(ctx, groupName)
+}
+
+// GetMembersContext returns a list of items member of the group
+func (c *Client) GetMembersContext(ctx context.Context, groupName string) ([]*Item, error) {
+	return c.items.getMembersOf(ctx, groupName)
 }
 
 // SendCommand sends a command to an item. It's a shortcut for GetItem() => SendCommand().
 func (c *Client) SendCommand(itemName string, command State) error {
-	item, err := c.items.getItem(itemName)
+	ctx, cancel := context.WithTimeout(context.Background(), c.config.TimeoutHTTP)
+	defer cancel()
+	return c.SendCommandContext(ctx, itemName, command)
+}
+
+// SendCommandContext sends a command to an item. It's a shortcut for GetItem() => SendCommandContext().
+func (c *Client) SendCommandContext(ctx context.Context, itemName string, command State) error {
+	item, err := c.items.getItem(ctx, itemName)
 	if err != nil {
 		return err
 	}
-	return item.SendCommand(command)
+	return item.SendCommandContext(ctx, command)
 }
 
 // SendCommandWait sends a command to an item and wait until the event bus acknowledge receiving the state, or after a timeout
 // It returns true if openHAB acknowledge it's setting the desired state to the item (even if it's the same value as before).
 // It returns false in case the acknowledged value is different than the command, or after timeout.
-// It's a shortcut for GetItem() => SendCommandWait().
+// It's a shortcut for GetItem() => item.SendCommandWait().
 func (c *Client) SendCommandWait(itemName string, command State, timeout time.Duration) (bool, error) {
-	item, err := c.items.getItem(itemName)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	return c.SendCommandWaitContext(ctx, itemName, command)
+}
+
+// SendCommandWaitContext sends a command to an item and wait until the event bus acknowledge receiving the state, or after a timeout
+// It returns true if openHAB acknowledge it's setting the desired state to the item (even if it's the same value as before).
+// It returns false in case the acknowledged value is different than the command, or after timeout.
+// It's a shortcut for GetItem() => item.SendCommandWaitContext().
+func (c *Client) SendCommandWaitContext(ctx context.Context, itemName string, command State) (bool, error) {
+	item, err := c.items.getItem(ctx, itemName)
 	if err != nil {
 		return false, err
 	}
-	return item.SendCommandWait(command, timeout)
+	return item.SendCommandWaitContext(ctx, command)
 }
 
 func (c *Client) get(ctx context.Context, url, contentType string) (*http.Response, error) {
@@ -633,7 +687,10 @@ func (c *Client) waitFinishingRules() {
 
 func (c *Client) itemStateUpdated(e event.Event) {
 	if ev, ok := e.(event.ItemReceivedState); ok {
-		item, err := c.items.getItem(ev.ItemName)
+		ctx, cancel := context.WithTimeout(context.Background(), c.config.TimeoutHTTP)
+		defer cancel()
+
+		item, err := c.items.getItem(ctx, ev.ItemName)
 		if err != nil {
 			errorlog.Printf("itemStateUpdated: %s", err)
 			return

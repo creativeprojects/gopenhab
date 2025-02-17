@@ -24,13 +24,13 @@ func newItems(client *Client) *itemCollection {
 
 // getItem returns an openHAB item from its name.
 // The very first call will try to load the items collection from openHAB.
-func (items *itemCollection) getItem(name string) (*Item, error) {
+func (items *itemCollection) getItem(ctx context.Context, name string) (*Item, error) {
 	items.cacheLocker.Lock()
 	defer items.cacheLocker.Unlock()
 
 	if items.cache == nil {
 		// load them all now
-		err := items.loadCache()
+		err := items.loadCache(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -42,7 +42,7 @@ func (items *itemCollection) getItem(name string) (*Item, error) {
 	}
 	// try to call the API to get the item
 	item := newItem(items.client, name)
-	if err := item.load(); err == nil {
+	if err := item.load(ctx); err == nil {
 		items.cache[name] = item
 		return item, nil
 	}
@@ -59,13 +59,13 @@ func (items *itemCollection) removeItem(name string) {
 }
 
 // getMembersOf returns a list of items member of the group
-func (items *itemCollection) getMembersOf(groupName string) ([]*Item, error) {
+func (items *itemCollection) getMembersOf(ctx context.Context, groupName string) ([]*Item, error) {
 	items.cacheLocker.Lock()
 	defer items.cacheLocker.Unlock()
 
 	if items.cache == nil {
 		// load them all now
-		err := items.loadCache()
+		err := items.loadCache(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -82,17 +82,17 @@ func (items *itemCollection) getMembersOf(groupName string) ([]*Item, error) {
 
 // refreshCache reloads the items from openHAB and updates the cache.
 // This method is thread safe.
-func (items *itemCollection) refreshCache() error {
+func (items *itemCollection) refreshCache(ctx context.Context) error {
 	items.cacheLocker.Lock()
 	defer items.cacheLocker.Unlock()
 
-	return items.loadCache()
+	return items.loadCache(ctx)
 }
 
 // loadCache loads all items into the cache.
 // This method is NOT using the cacheLocker: it is the responsibility of the caller to do so.
-func (items *itemCollection) loadCache() error {
-	all, err := items.load()
+func (items *itemCollection) loadCache(ctx context.Context) error {
+	all, err := items.load(ctx)
 	if err != nil {
 		return err
 	}
@@ -106,10 +106,8 @@ func (items *itemCollection) loadCache() error {
 }
 
 // load all items from the API
-func (items *itemCollection) load() ([]api.Item, error) {
+func (items *itemCollection) load(ctx context.Context) ([]api.Item, error) {
 	all := make([]api.Item, 0)
-	ctx, cancel := context.WithTimeout(context.Background(), items.client.config.TimeoutHTTP)
-	defer cancel()
 	err := items.client.getJSON(ctx, "items", &all)
 	if err != nil {
 		return nil, err

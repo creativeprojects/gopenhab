@@ -48,10 +48,10 @@ func (i *Item) set(data api.Item) *Item {
 	return i
 }
 
-func (i *Item) load() error {
+// load fetches the item data from openHAB. The provided context controls the request
+// timeout and cancellation.
+func (i *Item) load(ctx context.Context) error {
 	data := api.Item{}
-	ctx, cancel := context.WithTimeout(context.Background(), i.client.config.TimeoutHTTP)
-	defer cancel()
 
 	i.client.addCounter(MetricItemLoad, 1, MetricItemName, i.name)
 	err := i.client.getJSON(ctx, itemsPath+i.name, &data)
@@ -102,13 +102,26 @@ func (i *Item) Updated() time.Time {
 // the new value might not be reflected instantly,
 // but only after openHAB sent a state changed event back.
 func (i *Item) State() (State, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), i.client.config.TimeoutHTTP)
+	defer cancel()
+
+	return i.StateContext(ctx)
+}
+
+// StateContext returns an internal cached value if available,
+// or calls the api to return a fresh value from openHAB if not
+//
+// State value is automatically refreshed from openHAB events,
+// so you should always get an accurate value.
+//
+// Please note if you just sent a state change command,
+// the new value might not be reflected instantly,
+// but only after openHAB sent a state changed event back.
+func (i *Item) StateContext(ctx context.Context) (State, error) {
 	internalState := i.getInternalState()
 	if internalState != nil {
 		return internalState, nil
 	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), i.client.config.TimeoutHTTP)
-	defer cancel()
 
 	i.client.addCounter(MetricItemLoadState, 1, MetricItemName, i.name)
 	state, err := i.client.getString(ctx, itemsPath+i.name+"/state")
@@ -122,11 +135,16 @@ func (i *Item) State() (State, error) {
 
 // SendCommand sends a command to an item
 func (i *Item) SendCommand(command State) error {
-	i.apiLocker.Lock()
-	defer i.apiLocker.Unlock()
-
 	ctx, cancel := context.WithTimeout(context.Background(), i.client.config.TimeoutHTTP)
 	defer cancel()
+
+	return i.SendCommandContext(ctx, command)
+}
+
+// SendCommandContext sends a command to an item
+func (i *Item) SendCommandContext(ctx context.Context, command State) error {
+	i.apiLocker.Lock()
+	defer i.apiLocker.Unlock()
 
 	i.client.addCounter(MetricItemSetState, 1, MetricItemName, i.name)
 	err := i.client.postString(ctx, itemsPath+i.name, command.String())
@@ -140,8 +158,18 @@ func (i *Item) SendCommand(command State) error {
 // It returns true if openHAB acknowledge it's setting the desired state to the item (even if it's the same value as before).
 // It returns false in case the acknowledged value is different than the command, or after timeout
 func (i *Item) SendCommandWait(command State, timeout time.Duration) (bool, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	return i.SendCommandWaitContext(ctx, command)
+}
+
+// SendCommandWaitContext sends a command to an item and wait until the event bus acknowledge receiving the state, or after a timeout.
+// It returns true if openHAB acknowledge it's setting the desired state to the item (even if it's the same value as before).
+// It returns false in case the acknowledged value is different than the command, or after timeout
+func (i *Item) SendCommandWaitContext(ctx context.Context, command State) (bool, error) {
 	stateChan := make(chan string, 1)
-	done := make(chan bool, 1)
+	done := make(chan struct{}, 1)
 	subID := i.client.subscribeOnce(i.Name(), event.TypeItemState, func(e event.Event) {
 		if ev, ok := e.(event.ItemReceivedState); ok {
 			select {
@@ -151,18 +179,19 @@ func (i *Item) SendCommandWait(command State, timeout time.Duration) (bool, erro
 		}
 	})
 	defer func() {
-		done <- true
+		close(done)
+		close(stateChan)
 		i.client.unsubscribe(subID)
 	}()
 
-	if err := i.SendCommand(command); err != nil {
+	if err := i.SendCommandContext(ctx, command); err != nil {
 		return false, err
 	}
 
 	select {
 	case state := <-stateChan:
 		return command.Equal(state), nil
-	case <-time.After(timeout):
+	case <-ctx.Done():
 		return false, nil
 	}
 }

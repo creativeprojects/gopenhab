@@ -5,7 +5,7 @@ linters:
     - asciicheck
     - bidichk
     - bodyclose
-    # - contextcheck
+    - contextcheck
     - errname
     - gocheckcompilerdirectives
     - gofmt

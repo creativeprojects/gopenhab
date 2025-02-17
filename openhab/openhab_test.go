@@ -404,7 +404,7 @@ func TestAddRuleOnceStarted(t *testing.T) {
 	assert.NoError(t, server.ItemsErr())
 }
 
-func TestDispathEventSaveStateFirst(t *testing.T) {
+func TestDispatchEventSaveStateFirst(t *testing.T) {
 	t.Parallel()
 	var call int32
 	wg := sync.WaitGroup{}
@@ -426,9 +426,9 @@ func TestDispathEventSaveStateFirst(t *testing.T) {
 			atomic.AddInt32(&call, 1)
 			ev, ok := e.(event.ItemReceivedState)
 			require.True(t, ok)
-			item, err := client.GetItem("item")
+			item, err := client.GetItemContext(ctx, "item")
 			require.NoError(t, err)
-			state, err := item.State()
+			state, err := item.StateContext(ctx)
 			require.NoError(t, err)
 			assert.Equal(t, state.String(), ev.State)
 		},
