@@ -126,10 +126,12 @@ func TestGetItemAPI(t *testing.T) {
 			wg.Add(1)
 			go func(i int) {
 				// the event bus is not connected so we send an event manually
+				wg.Add(1) //nolint:staticcheck
 				go func(i int) {
 					time.Sleep(time.Duration(i+1) * time.Millisecond)
 					ev := event.NewItemReceivedState("TestSwitch", "OnOff", SwitchON.String())
 					item.client.userEventBus.Publish(ev)
+					wg.Done()
 				}(i)
 				ok, err := item.SendCommandWait(SwitchON, 100*time.Millisecond)
 				assert.NoError(t, err)
@@ -153,7 +155,7 @@ func TestGetItemAPI(t *testing.T) {
 		require.NoError(t, err)
 		assert.False(t, ok)
 		// there's a problem with this test
-		// assert.GreaterOrEqual(t, time.Since(start), timeout)
+		assert.GreaterOrEqual(t, time.Since(start), timeout)
 		t.Log(time.Since(start))
 	})
 
