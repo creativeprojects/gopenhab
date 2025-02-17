@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/creativeprojects/gopenhab/api"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 //go:embed examples
@@ -22,18 +22,17 @@ func TestCanLoadExampleItems(t *testing.T) {
 		t.Skip("no example file")
 	}
 	for _, itemsFile := range files {
-		itemsFile := itemsFile // remove after go1.22
 		if strings.HasPrefix(itemsFile.Name(), "items") && strings.HasSuffix(itemsFile.Name(), ".json") {
 			t.Run(itemsFile.Name(), func(t *testing.T) {
 				t.Parallel()
 				file, err := exampleFiles.Open("examples/" + itemsFile.Name())
-				assert.NoError(t, err)
+				require.NoError(t, err)
 
 				decoder := json.NewDecoder(file)
 				decoder.DisallowUnknownFields()
 				var items []api.Item
 				err = decoder.Decode(&items)
-				assert.NoError(t, err)
+				require.NoError(t, err)
 
 				t.Logf("loaded %d items", len(items))
 			})

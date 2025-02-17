@@ -31,20 +31,18 @@ type Metric struct {
 	Tags        []string
 }
 
-var (
-	metrics = []Metric{
-		{MetricItemCacheHit, "item cache hit", MetricTypeCounter, []string{MetricItemName}},
-		{MetricItemLoad, "item load", MetricTypeCounter, []string{MetricItemName}},
-		{MetricItemLoadState, "item load state", MetricTypeCounter, []string{MetricItemName}},
-		{MetricItemSetState, "item set state", MetricTypeCounter, []string{MetricItemName}},
-		{MetricItemNotFound, "item not found", MetricTypeCounter, []string{MetricItemName}},
-		{MetricItemStateUpdated, "item state updated", MetricTypeCounter, []string{MetricItemName}},
-		{MetricItemsCacheSize, "items cache size", MetricTypeGauge, nil},
-		{MetricRuleAdded, "rule added", MetricTypeCounter, []string{MetricRuleID}},
-		{MetricRuleDeleted, "rule deleted", MetricTypeCounter, []string{MetricRuleID}},
-		{MetricRulesCount, "rules count", MetricTypeGauge, nil},
-	}
-)
+var metrics = []Metric{
+	{MetricItemCacheHit, "item cache hit", MetricTypeCounter, []string{MetricItemName}},
+	{MetricItemLoad, "item load", MetricTypeCounter, []string{MetricItemName}},
+	{MetricItemLoadState, "item load state", MetricTypeCounter, []string{MetricItemName}},
+	{MetricItemSetState, "item set state", MetricTypeCounter, []string{MetricItemName}},
+	{MetricItemNotFound, "item not found", MetricTypeCounter, []string{MetricItemName}},
+	{MetricItemStateUpdated, "item state updated", MetricTypeCounter, []string{MetricItemName}},
+	{MetricItemsCacheSize, "items cache size", MetricTypeGauge, nil},
+	{MetricRuleAdded, "rule added", MetricTypeCounter, []string{MetricRuleID}},
+	{MetricRuleDeleted, "rule deleted", MetricTypeCounter, []string{MetricRuleID}},
+	{MetricRulesCount, "rules count", MetricTypeGauge, nil},
+}
 
 // Telemetry interface to send metrics. Two metrics are available: Gauge and Counter.
 //

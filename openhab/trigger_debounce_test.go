@@ -38,9 +38,7 @@ func (t *mockTrigger) match(e event.Event) bool {
 
 func TestDebounce(t *testing.T) {
 	t.Parallel()
-	var (
-		counter uint64
-	)
+	var counter uint64
 
 	trigger := &mockTrigger{}
 	debounced := Debounce(50*time.Millisecond, trigger)
@@ -57,15 +55,16 @@ func TestDebounce(t *testing.T) {
 		time.Sleep(200 * time.Millisecond)
 	}
 
-	assert.Equal(t, 3, int(atomic.LoadUint64(&counter)))
+	assert.Equal(t, uint64(3), atomic.LoadUint64(&counter))
 }
 
 func TestDebounceConcurrentRun(t *testing.T) {
 	t.Parallel()
-	var count = 10
-	var wg sync.WaitGroup
-
-	var flag uint64
+	var (
+		count = 10
+		wg    sync.WaitGroup
+		flag  uint64
+	)
 
 	trigger := &mockTrigger{}
 	debounced := Debounce(100*time.Millisecond, trigger)
@@ -85,14 +84,12 @@ func TestDebounceConcurrentRun(t *testing.T) {
 
 	time.Sleep(500 * time.Millisecond)
 
-	assert.Equal(t, 1, int(atomic.LoadUint64(&flag)), "Flag not set")
+	assert.Equal(t, uint64(1), atomic.LoadUint64(&flag), "Flag not set")
 }
 
 func TestDebounceDelayed(t *testing.T) {
 	t.Parallel()
-	var (
-		counter uint64
-	)
+	var counter uint64
 
 	trigger := &mockTrigger{}
 	debounced := Debounce(100*time.Millisecond, trigger)
@@ -107,14 +104,12 @@ func TestDebounceDelayed(t *testing.T) {
 
 	time.Sleep(300 * time.Millisecond)
 
-	assert.Equal(t, 1, int(atomic.LoadUint64(&counter)))
+	assert.Equal(t, uint64(1), atomic.LoadUint64(&counter))
 }
 
 func TestDebounceCancelled(t *testing.T) {
 	t.Parallel()
-	var (
-		counter uint64
-	)
+	var counter uint64
 
 	trigger := &mockTrigger{}
 	debounced := Debounce(100*time.Millisecond, trigger)
@@ -130,14 +125,12 @@ func TestDebounceCancelled(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 
-	assert.Equal(t, 0, int(atomic.LoadUint64(&counter)))
+	assert.Equal(t, uint64(0), atomic.LoadUint64(&counter))
 }
 
 func TestDebounceTwoTriggers(t *testing.T) {
 	t.Parallel()
-	var (
-		counter uint64
-	)
+	var counter uint64
 
 	trigger1 := &mockTrigger{}
 	trigger2 := &mockTrigger{}
@@ -156,16 +149,16 @@ func TestDebounceTwoTriggers(t *testing.T) {
 		time.Sleep(200 * time.Millisecond)
 	}
 
-	assert.Equal(t, 3, int(atomic.LoadUint64(&counter)))
+	assert.Equal(t, uint64(3), atomic.LoadUint64(&counter))
 }
 
 func TestDebounceConcurrentRunOfThreeTriggers(t *testing.T) {
 	t.Parallel()
-	var count = 10
-	var wg sync.WaitGroup
-
-	var flag uint64
-
+	var (
+		count = 10
+		wg    sync.WaitGroup
+		flag  uint64
+	)
 	trigger1 := &mockTrigger{}
 	trigger2 := &mockTrigger{}
 	trigger3 := &mockTrigger{}
@@ -198,5 +191,5 @@ func TestDebounceConcurrentRunOfThreeTriggers(t *testing.T) {
 
 	time.Sleep(500 * time.Millisecond)
 
-	assert.Equal(t, 1, int(atomic.LoadUint64(&flag)), "Flag not set")
+	assert.Equal(t, uint64(1), atomic.LoadUint64(&flag), "Flag not set")
 }

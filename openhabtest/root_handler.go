@@ -56,5 +56,5 @@ func (h *rootHandler) sendIndex(resp http.ResponseWriter, req *http.Request) {
 	} else {
 		result = fmt.Sprintf(`{"version":"4","locale":"en_GB","measurementSystem":"SI","runtimeInfo":{"version":"3.0.4","buildString":"Release Build"},"links":[{"type":"uuid","url":"%s/uuid"}]}`, baseURL)
 	}
-	resp.Write([]byte(result))
+	_, _ = resp.Write([]byte(result))
 }

@@ -18,6 +18,7 @@ type itemsHandler struct {
 	itemsLocker sync.Mutex
 	eventBus    *eventBus
 	version     Version
+	err         error
 }
 
 func newItemsHandler(log Logger, bus *eventBus, version Version) *itemsHandler {
@@ -94,7 +95,7 @@ func (h *itemsHandler) sendItem(name string, encoder *json.Encoder, resp http.Re
 	resp.WriteHeader(http.StatusNotFound)
 }
 
-func (h *itemsHandler) receiveCommand(name string, encoder *json.Encoder, resp http.ResponseWriter, req *http.Request) {
+func (h *itemsHandler) receiveCommand(name string, _ *json.Encoder, resp http.ResponseWriter, req *http.Request) {
 	item, ok := h.getItem(name)
 	if ok {
 		state, err := io.ReadAll(req.Body)
@@ -105,7 +106,7 @@ func (h *itemsHandler) receiveCommand(name string, encoder *json.Encoder, resp h
 		oldState := item.State
 		newState := string(state)
 		item.State = newState
-		h.setItem(item)
+		h.err = errors.Join(err, h.setItem(item))
 		resp.WriteHeader(http.StatusOK)
 
 		if h.eventBus == nil {
@@ -126,17 +127,18 @@ func (h *itemsHandler) receiveCommand(name string, encoder *json.Encoder, resp h
 	resp.WriteHeader(http.StatusNotFound)
 }
 
-func (h *itemsHandler) sendItemState(name string, encoder *json.Encoder, resp http.ResponseWriter) {
+func (h *itemsHandler) sendItemState(name string, _ *json.Encoder, resp http.ResponseWriter) {
 	data, ok := h.getItem(name)
 	if ok {
-		resp.Write([]byte(data.State))
+		_, err := resp.Write([]byte(data.State))
+		h.err = errors.Join(h.err, err)
 		return
 	}
 	// item not found
 	resp.WriteHeader(http.StatusNotFound)
 }
 
-func (h *itemsHandler) receiveState(name string, encoder *json.Encoder, resp http.ResponseWriter, req *http.Request) {
+func (h *itemsHandler) receiveState(name string, _ *json.Encoder, resp http.ResponseWriter, req *http.Request) {
 	item, ok := h.getItem(name)
 	if ok {
 		state, err := io.ReadAll(req.Body)
@@ -147,7 +149,7 @@ func (h *itemsHandler) receiveState(name string, encoder *json.Encoder, resp htt
 		oldState := item.State
 		newState := string(state)
 		item.State = newState
-		h.setItem(item)
+		h.err = errors.Join(h.err, h.setItem(item))
 		resp.WriteHeader(http.StatusAccepted)
 
 		if h.eventBus == nil {

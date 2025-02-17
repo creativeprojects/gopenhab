@@ -10,14 +10,15 @@ import (
 
 // Server is a mock openHAB instance to use in tests.
 type Server struct {
-	log         Logger
-	version     Version
-	server      *httptest.Server
-	eventBus    *eventBus
-	closeLocker sync.Mutex
-	items       *itemsHandler
-	done        chan bool
-	closed      bool
+	log           Logger
+	version       Version
+	server        *httptest.Server
+	eventBus      *eventBus
+	closeLocker   sync.Mutex
+	itemsHandler  *itemsHandler
+	done          chan bool
+	closed        bool
+	eventsHandler *eventsHandler
 }
 
 // NewServer creates a new mock openHAB instance to use in tests
@@ -32,21 +33,22 @@ func NewServer(config Config) *Server {
 		// don't send the events automatically => we don't send the instance of the events bus to handlers
 		autoBus = nil
 	}
-	events := newEventsHandler(bus, done)
-	items := newItemsHandler(config.Log, autoBus, config.Version)
+	eventsHandler := newEventsHandler(bus, done)
+	itemsHandler := newItemsHandler(config.Log, autoBus, config.Version)
 	routes := []route{
-		{"events", events},
-		{"items", items},
+		{"events", eventsHandler},
+		{"items", itemsHandler},
 	}
 
 	server := httptest.NewServer(newRootHandler(config.Log, routes, config.Version))
 	return &Server{
-		log:      config.Log,
-		version:  config.Version,
-		server:   server,
-		eventBus: bus,
-		items:    items,
-		done:     done,
+		log:           config.Log,
+		version:       config.Version,
+		server:        server,
+		eventBus:      bus,
+		itemsHandler:  itemsHandler,
+		done:          done,
+		eventsHandler: eventsHandler,
 	}
 }
 
@@ -57,6 +59,20 @@ func (s *Server) URL() string {
 		panic("no instance of http server")
 	}
 	return s.server.URL
+}
+
+// EventsErr returns an error if any happened from the event endpoints.
+//
+// A non-nil error returned by EventsErr implements the Unwrap() []error method.
+func (s *Server) EventsErr() error {
+	return s.eventsHandler.err
+}
+
+// ItemsErr returns an error if any happened from the item endpoints.
+//
+// A non-nil error returned by ItemsErr implements the Unwrap() []error method.
+func (s *Server) ItemsErr() error {
+	return s.itemsHandler.err
 }
 
 // Close the mock openHAB server. The call will also close any long running request to the event bus API.
@@ -80,7 +96,7 @@ func (s *Server) Close() {
 
 // RawEvent sends a raw JSON string event to the event bus. Example of a raw event:
 //
-//     {"topic":"smarthome/items/LocalWeatherAndForecast_Current_Cloudiness/state","payload":"{\"type\":\"Quantity\",\"value\":\"20 %\"}","type":"ItemStateEvent"}
+//	{"topic":"smarthome/items/LocalWeatherAndForecast_Current_Cloudiness/state","payload":"{\"type\":\"Quantity\",\"value\":\"20 %\"}","type":"ItemStateEvent"}
 //
 // A topic parameter is needed for subscriber topic filtering, and to avoid decoding the event string unnecessarily.
 func (s *Server) RawEvent(topic, event string) {
@@ -105,10 +121,10 @@ func (s *Server) SetItem(item api.Item) error {
 	if item.Link == "" {
 		item.Link = s.URL() + "/rest/items/" + item.Name
 	}
-	return s.items.setItem(item)
+	return s.itemsHandler.setItem(item)
 }
 
 // RemoveItem removes an existing item. It doesn't return an error if the item doesn't exist.
 func (s *Server) RemoveItem(itemName string) error {
-	return s.items.removeItem(itemName)
+	return s.itemsHandler.removeItem(itemName)
 }

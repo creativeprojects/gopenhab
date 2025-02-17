@@ -28,7 +28,7 @@ func TestItemDecimalTypeWithUnit(t *testing.T) {
 }
 
 func TestGetItemAPI(t *testing.T) {
-	t.Parallel()
+	// don't run parallel (sub-tests are in order)
 	item1 := api.Item{
 		State:      "OFF",
 		Type:       "Switch",
@@ -51,8 +51,8 @@ func TestGetItemAPI(t *testing.T) {
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	defer server.Close()
 
-	server.SetItem(item1)
-	server.SetItem(item2)
+	require.NoError(t, server.SetItem(item1))
+	require.NoError(t, server.SetItem(item2))
 
 	client := NewClient(Config{
 		URL: server.URL(),
@@ -61,7 +61,7 @@ func TestGetItemAPI(t *testing.T) {
 	t.Run("TestLoadItemNotFound", func(t *testing.T) {
 		item := newItem(client, "UnknownItem")
 		err := item.load()
-		assert.ErrorIs(t, err, ErrorNotFound)
+		assert.ErrorIs(t, err, ErrNotFound)
 	})
 
 	t.Run("TestLoadItem", func(t *testing.T) {
@@ -75,7 +75,7 @@ func TestGetItemAPI(t *testing.T) {
 	t.Run("TestGetItemStateNotFound", func(t *testing.T) {
 		item := newItem(client, "UnknownItem")
 		_, err := item.State()
-		assert.ErrorIs(t, err, ErrorNotFound)
+		assert.ErrorIs(t, err, ErrNotFound)
 	})
 
 	t.Run("TestGetItemState", func(t *testing.T) {
@@ -187,6 +187,9 @@ func TestGetItemAPI(t *testing.T) {
 
 		wg.Wait()
 	})
+
+	assert.NoError(t, server.EventsErr())
+	assert.NoError(t, server.ItemsErr())
 }
 
 func newTestItem(client *Client, name, itemType, state string) *Item {
@@ -196,9 +199,10 @@ func newTestItem(client *Client, name, itemType, state string) *Item {
 	return item
 }
 
-func newTestGroupItem(client *Client, name, groupItemType, state string) *Item {
-	item := newItem(client, name)
-	// the item needs a type so it can work properly
-	item.set(api.Item{Type: groupItemType, State: state})
-	return item
-}
+// Unused for now
+// func newTestGroupItem(client *Client, name, groupItemType, state string) *Item {
+// 	item := newItem(client, name)
+// 	// the item needs a type so it can work properly
+// 	item.set(api.Item{Type: groupItemType, State: state})
+// 	return item
+// }

@@ -98,7 +98,6 @@ func TestMatchingSystemEvent(t *testing.T) {
 	}
 
 	for _, testEvent := range testEvents {
-		testEvent := testEvent // remove after go1.22
 		t.Run("", func(t *testing.T) {
 			t.Parallel()
 			assert.Equal(t, testEvent.match, testEvent.trigger.match(testEvent.e))
@@ -214,7 +213,6 @@ func TestSystemEventSubscription(t *testing.T) {
 
 	for _, testFixture := range testFixtures {
 		const subID = 11
-		testFixture := testFixture // remove after go1.22
 		t.Run("", func(t *testing.T) {
 			t.Parallel()
 			calls := 0
@@ -231,7 +229,8 @@ func TestSystemEventSubscription(t *testing.T) {
 					assert.Equal(t, testFixture.eventType, eventType, "incorrect event type")
 					subscribedCallback = callback
 					return subID
-				})
+				}).Once()
+			client.On("unsubscribe", subID).Once()
 
 			trigger := testFixture.trigger
 			err := trigger.activate(client, run, RuleData{})
@@ -241,6 +240,10 @@ func TestSystemEventSubscription(t *testing.T) {
 
 			subscribedCallback(testFixture.event)
 			assert.Equal(t, testFixture.calls, calls)
+
+			trigger.deactivate(client)
+			// should do nothing the second time
+			trigger.deactivate(client)
 		})
 	}
 }

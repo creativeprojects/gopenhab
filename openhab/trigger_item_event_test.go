@@ -6,6 +6,7 @@ import (
 	"github.com/creativeprojects/gopenhab/event"
 	"github.com/stretchr/testify/assert"
 	mock "github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMatchingItemEvent(t *testing.T) {
@@ -132,7 +133,6 @@ func TestMatchingItemEvent(t *testing.T) {
 	}
 
 	for _, testEvent := range testEvents {
-		testEvent := testEvent // remove after go1.22
 		t.Run("", func(t *testing.T) {
 			t.Parallel()
 			assert.Equal(t, testEvent.match, testEvent.trigger.match(testEvent.e))
@@ -218,7 +218,6 @@ func TestItemEventSubscription(t *testing.T) {
 
 	for _, testFixture := range testFixtures {
 		const subID = 11
-		testFixture := testFixture // remove after go1.22
 		t.Run("", func(t *testing.T) {
 			t.Parallel()
 			calls := 0
@@ -240,7 +239,7 @@ func TestItemEventSubscription(t *testing.T) {
 
 			trigger := testFixture.trigger
 			err := trigger.activate(client, run, RuleData{})
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, 0, calls)
 			assert.Equal(t, len(testFixture.eventTypes), len(subscribedCallbacks))
 

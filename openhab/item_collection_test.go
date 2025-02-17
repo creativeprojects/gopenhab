@@ -58,6 +58,8 @@ func TestCanLoadItemCreatedAfterLoading(t *testing.T) {
 
 	wg.Wait()
 	server.Close()
+	assert.NoError(t, server.EventsErr())
+	assert.NoError(t, server.ItemsErr())
 }
 
 func TestLoadingUnknownItemReturnsError(t *testing.T) {
@@ -92,4 +94,6 @@ func TestLoadingUnknownItemReturnsError(t *testing.T) {
 
 	wg.Wait()
 	server.Close()
+	assert.NoError(t, server.EventsErr())
+	assert.NoError(t, server.ItemsErr())
 }
