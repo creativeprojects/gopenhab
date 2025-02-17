@@ -48,6 +48,8 @@ func (i *Item) set(data api.Item) *Item {
 	return i
 }
 
+// load fetches the item data from openHAB. The provided context controls the request
+// timeout and cancellation.
 func (i *Item) load(ctx context.Context) error {
 	data := api.Item{}
 
@@ -167,7 +169,7 @@ func (i *Item) SendCommandWait(command State, timeout time.Duration) (bool, erro
 // It returns false in case the acknowledged value is different than the command, or after timeout
 func (i *Item) SendCommandWaitContext(ctx context.Context, command State) (bool, error) {
 	stateChan := make(chan string, 1)
-	done := make(chan bool, 1)
+	done := make(chan struct{}, 1)
 	subID := i.client.subscribeOnce(i.Name(), event.TypeItemState, func(e event.Event) {
 		if ev, ok := e.(event.ItemReceivedState); ok {
 			select {
@@ -177,7 +179,8 @@ func (i *Item) SendCommandWaitContext(ctx context.Context, command State) (bool,
 		}
 	})
 	defer func() {
-		done <- true
+		close(done)
+		close(stateChan)
 		i.client.unsubscribe(subID)
 	}()
 
