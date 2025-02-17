@@ -13,7 +13,7 @@ type subscription struct {
 type eventBus struct {
 	subs       []subscription
 	subLock    sync.Locker
-	subIdCount int
+	subIDCount int
 }
 
 func newEventBus() *eventBus {
@@ -28,23 +28,23 @@ func (b *eventBus) Subscribe(topic string, callback func(message string)) int {
 	b.subLock.Lock()
 	defer b.subLock.Unlock()
 
-	b.subIdCount++
+	b.subIDCount++
 	sub := subscription{
-		id:       b.subIdCount,
+		id:       b.subIDCount,
 		topic:    topic,
 		callback: callback,
 	}
 	b.subs = append(b.subs, sub)
-	return b.subIdCount
+	return b.subIDCount
 }
 
 // Unsubscribe keeps the order of the subscriptions.
 // For that reason it is a relatively expensive operation
-func (b *eventBus) Unsubscribe(subId int) {
+func (b *eventBus) Unsubscribe(subID int) {
 	b.subLock.Lock()
 	defer b.subLock.Unlock()
 
-	index := b.findID(subId)
+	index := b.findID(subID)
 	if index > -1 {
 		b.subs = append(b.subs[:index], b.subs[index+1:]...)
 	}

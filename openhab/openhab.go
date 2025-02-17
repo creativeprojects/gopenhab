@@ -201,7 +201,7 @@ func (c *Client) get(ctx context.Context, url, contentType string) (*http.Respon
 	if resp.StatusCode >= 400 {
 		switch resp.StatusCode {
 		case http.StatusNotFound:
-			return resp, ErrorNotFound
+			return resp, ErrNotFound
 		default:
 			return resp, errors.New(resp.Status)
 		}
@@ -259,7 +259,7 @@ func (c *Client) postString(ctx context.Context, url, value string) error {
 	if resp.StatusCode >= http.StatusBadRequest {
 		switch resp.StatusCode {
 		case http.StatusNotFound:
-			return ErrorNotFound
+			return ErrNotFound
 		default:
 			return errors.New(resp.Status)
 		}
@@ -406,8 +406,8 @@ func (c *Client) subscribeOnce(name string, eventType event.Type, callback func(
 }
 
 // subscribeSystem is a subscription to the system (synchronous) event bus
-func (c *Client) subscribeSystem(name string, eventType event.Type, callback func(e event.Event)) int {
-	return c.systemEventBus.Subscribe(name, eventType, callback)
+func (c *Client) subscribeSystem(name string, eventType event.Type, callback func(e event.Event)) {
+	c.systemEventBus.Subscribe(name, eventType, callback)
 }
 
 func (c *Client) unsubscribe(subID int) {
@@ -666,6 +666,7 @@ func (c *Client) getCron() *cron.Cron {
 	return c.cron
 }
 
+//nolint:unparam
 func (c *Client) addCounter(metricName string, metricValue int64, tagName, tagValue string) {
 	if c.telemetry == nil {
 		return

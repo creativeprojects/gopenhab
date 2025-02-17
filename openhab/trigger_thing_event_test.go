@@ -90,7 +90,6 @@ func TestMatchingThingEvent(t *testing.T) {
 	}
 
 	for _, testEvent := range testEvents {
-		testEvent := testEvent //remove after go1.22
 		t.Run("", func(t *testing.T) {
 			t.Parallel()
 			assert.Equal(t, testEvent.match, testEvent.trigger.match(testEvent.e))
@@ -157,7 +156,6 @@ func TestThingEventSubscription(t *testing.T) {
 	}
 
 	for _, testFixture := range testFixtures {
-		testFixture := testFixture //remove after go1.22
 		const subID = 11
 
 		t.Run("", func(t *testing.T) {

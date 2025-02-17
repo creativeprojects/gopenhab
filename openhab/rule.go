@@ -116,9 +116,9 @@ func (r *rule) cancel() {
 	}
 }
 
-func (t *rule) setCancelFunc(cancelFunc context.CancelFunc) {
-	t.cancelLocker.Lock()
-	defer t.cancelLocker.Unlock()
+func (r *rule) setCancelFunc(cancelFunc context.CancelFunc) {
+	r.cancelLocker.Lock()
+	defer r.cancelLocker.Unlock()
 
-	t.cancelFunc = cancelFunc
+	r.cancelFunc = cancelFunc
 }

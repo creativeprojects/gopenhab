@@ -2,6 +2,7 @@ package openhabtest
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"net/http"
 	"strings"
@@ -25,36 +26,55 @@ func TestCanReceiveNotFoundStatus(t *testing.T) {
 	defer server.Close()
 
 	for _, url := range urls {
-		resp, err := http.Get(server.URL() + url)
-		assert.NoError(t, err)
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL()+url, http.NoBody)
+		require.NoError(t, err)
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
 		defer resp.Body.Close()
 
 		assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 	}
+	assert.NoError(t, server.EventsErr())
+	assert.NoError(t, server.ItemsErr())
 }
 
 func TestCanLoadIndexV2(t *testing.T) {
 	server := NewServer(Config{Version: V2})
 	defer server.Close()
 
-	resp, err := http.Get(server.URL() + "/rest/")
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL()+"/rest/", http.NoBody)
+	require.NoError(t, err)
+	resp, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
 	defer resp.Body.Close()
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-
+	assert.NoError(t, server.EventsErr())
+	assert.NoError(t, server.ItemsErr())
 }
 
 func TestCanLoadIndexV3(t *testing.T) {
 	server := NewServer(Config{Version: V3})
 	defer server.Close()
 
-	resp, err := http.Get(server.URL() + "/rest/")
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL()+"/rest/", http.NoBody)
+	require.NoError(t, err)
+	resp, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
 	defer resp.Body.Close()
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-
+	assert.NoError(t, server.EventsErr())
+	assert.NoError(t, server.ItemsErr())
 }
 
 func TestCanReceiveRawEvents(t *testing.T) {
@@ -73,7 +93,12 @@ func TestCanReceiveRawEvents(t *testing.T) {
 	go func() {
 		defer wg.Done()
 
-		resp, err := http.Get(server.URL() + "/rest/events")
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL()+"/rest/events", http.NoBody)
+		require.NoError(t, err)
+		resp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
 		defer resp.Body.Close()
 
@@ -97,6 +122,8 @@ func TestCanReceiveRawEvents(t *testing.T) {
 	server.Close()
 
 	wg.Wait()
+	assert.NoError(t, server.EventsErr())
+	assert.NoError(t, server.ItemsErr())
 }
 
 func TestCanEncodeEvents(t *testing.T) {
@@ -127,7 +154,12 @@ func TestCanEncodeEvents(t *testing.T) {
 	go func() {
 		defer wg.Done()
 
-		resp, err := http.Get(server.URL() + "/rest/events")
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL()+"/rest/events", http.NoBody)
+		require.NoError(t, err)
+		resp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
 		defer resp.Body.Close()
 
@@ -151,82 +183,117 @@ func TestCanEncodeEvents(t *testing.T) {
 	server.Close()
 
 	wg.Wait()
+	assert.NoError(t, server.EventsErr())
+	assert.NoError(t, server.ItemsErr())
 }
 
 func TestEmptyItems(t *testing.T) {
 	server := NewServer(Config{Log: t})
 	defer server.Close()
 
-	resp, err := http.Get(server.URL() + "/rest/items")
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL()+"/rest/items", http.NoBody)
+	require.NoError(t, err)
+	resp, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
 	defer resp.Body.Close()
 
 	data, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 	assert.Equal(t, "[]\n", string(data))
+	assert.NoError(t, server.EventsErr())
+	assert.NoError(t, server.ItemsErr())
 }
 
 func TestListItem(t *testing.T) {
 	server := NewServer(Config{Log: t})
 	defer server.Close()
 
-	server.SetItem(api.Item{
+	require.NoError(t, server.SetItem(api.Item{
 		Name:  "TestItem",
 		Type:  "Switch",
 		State: "OFF",
-	})
+	}))
 
-	resp, err := http.Get(server.URL() + "/rest/items")
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL()+"/rest/items", http.NoBody)
+	require.NoError(t, err)
+	resp, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
 	defer resp.Body.Close()
 
 	data, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 	assert.Truef(t, strings.HasPrefix(string(data), `[{"name":"TestItem","label":"","link":"http://`), "unexpected JSON string: %s", string(data))
+	assert.NoError(t, server.EventsErr())
+	assert.NoError(t, server.ItemsErr())
 }
 
 func TestListGroupItem(t *testing.T) {
 	server := NewServer(Config{Log: t})
 	defer server.Close()
 
-	server.SetItem(api.Item{
+	require.NoError(t, server.SetItem(api.Item{
 		Name:      "TestItem",
 		GroupType: "Number",
 		Type:      "Group",
 		State:     "OFF",
-	})
+	}))
 
-	resp, err := http.Get(server.URL() + "/rest/items")
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL()+"/rest/items", http.NoBody)
+	require.NoError(t, err)
+	resp, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
 	defer resp.Body.Close()
 
 	data, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 	assert.Truef(t, strings.HasPrefix(string(data), `[{"name":"TestItem","label":"","link":"http://`), "unexpected JSON string: %s", string(data))
+	assert.NoError(t, server.EventsErr())
+	assert.NoError(t, server.ItemsErr())
 }
 
 func TestGetItemNotFound(t *testing.T) {
 	server := NewServer(Config{Log: t})
 	defer server.Close()
 
-	resp, err := http.Get(server.URL() + "/rest/items/NotFound")
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL()+"/rest/items/NotFound", http.NoBody)
+	require.NoError(t, err)
+	resp, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
 	defer resp.Body.Close()
 
 	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+	assert.NoError(t, server.EventsErr())
+	assert.NoError(t, server.ItemsErr())
 }
 
 func TestGetItem(t *testing.T) {
 	server := NewServer(Config{Log: t})
 	defer server.Close()
 
-	server.SetItem(api.Item{
+	require.NoError(t, server.SetItem(api.Item{
 		Name:  "TestItem",
 		Type:  "Switch",
 		State: "OFF",
-	})
+	}))
 
-	resp, err := http.Get(server.URL() + "/rest/items/TestItem")
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL()+"/rest/items/TestItem", http.NoBody)
+	require.NoError(t, err)
+	resp, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
 	defer resp.Body.Close()
 
@@ -234,17 +301,26 @@ func TestGetItem(t *testing.T) {
 	data, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 	assert.Truef(t, strings.HasPrefix(string(data), `{"name":"TestItem","label":"","link":"http://`), "unexpected JSON string: %s", string(data))
+	assert.NoError(t, server.EventsErr())
+	assert.NoError(t, server.ItemsErr())
 }
 
 func TestGetItemStateNotFound(t *testing.T) {
 	server := NewServer(Config{Log: t})
 	defer server.Close()
 
-	resp, err := http.Get(server.URL() + "/rest/items/NotFound/state")
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL()+"/rest/items/NotFound/state", http.NoBody)
+	require.NoError(t, err)
+	resp, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
 	defer resp.Body.Close()
 
 	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+	assert.NoError(t, server.EventsErr())
+	assert.NoError(t, server.ItemsErr())
 }
 
 func TestGetItemState(t *testing.T) {
@@ -252,13 +328,18 @@ func TestGetItemState(t *testing.T) {
 	server := NewServer(Config{Log: t})
 	defer server.Close()
 
-	server.SetItem(api.Item{
+	require.NoError(t, server.SetItem(api.Item{
 		Name:  "TestItem",
 		Type:  "Number:Temperature",
 		State: state,
-	})
+	}))
 
-	resp, err := http.Get(server.URL() + "/rest/items/TestItem/state")
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL()+"/rest/items/TestItem/state", http.NoBody)
+	require.NoError(t, err)
+	resp, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
 	defer resp.Body.Close()
 
@@ -266,6 +347,8 @@ func TestGetItemState(t *testing.T) {
 	data, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 	assert.Equal(t, state, string(data))
+	assert.NoError(t, server.EventsErr())
+	assert.NoError(t, server.ItemsErr())
 }
 
 func TestSetItemState(t *testing.T) {
@@ -273,17 +356,20 @@ func TestSetItemState(t *testing.T) {
 	server := NewServer(Config{Log: t})
 	defer server.Close()
 
-	server.SetItem(api.Item{
+	require.NoError(t, server.SetItem(api.Item{
 		Name:  "TestItem",
 		Type:  "Number:Temperature",
 		State: state,
-	})
+	}))
 
 	// set new state
 	state = "20.49 °C"
 	func() {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+
 		data := bytes.NewBufferString(state)
-		req, err := http.NewRequest(http.MethodPut, server.URL()+"/rest/items/TestItem/state", data)
+		req, err := http.NewRequestWithContext(ctx, http.MethodPut, server.URL()+"/rest/items/TestItem/state", data)
 		require.NoError(t, err)
 		resp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
@@ -292,7 +378,12 @@ func TestSetItemState(t *testing.T) {
 		assert.Equal(t, http.StatusAccepted, resp.StatusCode)
 	}()
 
-	resp, err := http.Get(server.URL() + "/rest/items/TestItem/state")
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL()+"/rest/items/TestItem/state", http.NoBody)
+	require.NoError(t, err)
+	resp, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
 	defer resp.Body.Close()
 
@@ -300,6 +391,8 @@ func TestSetItemState(t *testing.T) {
 	data, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 	assert.Equal(t, state, string(data))
+	assert.NoError(t, server.EventsErr())
+	assert.NoError(t, server.ItemsErr())
 }
 
 func TestSendItemCommand(t *testing.T) {
@@ -307,17 +400,20 @@ func TestSendItemCommand(t *testing.T) {
 	server := NewServer(Config{Log: t})
 	defer server.Close()
 
-	server.SetItem(api.Item{
+	require.NoError(t, server.SetItem(api.Item{
 		Name:  "TestItem",
 		Type:  "Number:Temperature",
 		State: state,
-	})
+	}))
 
 	// set new state
 	state = "20.49 °C"
 	func() {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+
 		data := bytes.NewBufferString(state)
-		req, err := http.NewRequest(http.MethodPost, server.URL()+"/rest/items/TestItem", data)
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, server.URL()+"/rest/items/TestItem", data)
 		require.NoError(t, err)
 		resp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
@@ -326,7 +422,12 @@ func TestSendItemCommand(t *testing.T) {
 		assert.Equal(t, http.StatusOK, resp.StatusCode)
 	}()
 
-	resp, err := http.Get(server.URL() + "/rest/items/TestItem/state")
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL()+"/rest/items/TestItem/state", http.NoBody)
+	require.NoError(t, err)
+	resp, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
 	defer resp.Body.Close()
 
@@ -334,6 +435,8 @@ func TestSendItemCommand(t *testing.T) {
 	data, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 	assert.Equal(t, state, string(data))
+	assert.NoError(t, server.EventsErr())
+	assert.NoError(t, server.ItemsErr())
 }
 
 func TestSendItemCommandEvents(t *testing.T) {
@@ -341,11 +444,11 @@ func TestSendItemCommandEvents(t *testing.T) {
 	server := NewServer(Config{Log: t, SendEventsFromAPI: true})
 	defer server.Close()
 
-	server.SetItem(api.Item{
+	require.NoError(t, server.SetItem(api.Item{
 		Name:  "TestItem",
 		Type:  "Number:Temperature",
 		State: state,
-	})
+	}))
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -353,7 +456,12 @@ func TestSendItemCommandEvents(t *testing.T) {
 	go func() {
 		defer wg.Done()
 
-		resp, err := http.Get(server.URL() + "/rest/events")
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL()+"/rest/events", http.NoBody)
+		require.NoError(t, err)
+		resp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
 		defer resp.Body.Close()
 
@@ -371,8 +479,11 @@ func TestSendItemCommandEvents(t *testing.T) {
 	func() {
 		time.Sleep(10 * time.Millisecond)
 
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+
 		data := bytes.NewBufferString(state)
-		req, err := http.NewRequest(http.MethodPost, server.URL()+"/rest/items/TestItem", data)
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, server.URL()+"/rest/items/TestItem", data)
 		require.NoError(t, err)
 		resp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
@@ -383,6 +494,8 @@ func TestSendItemCommandEvents(t *testing.T) {
 
 	server.Close()
 	wg.Wait()
+	assert.NoError(t, server.EventsErr())
+	assert.NoError(t, server.ItemsErr())
 }
 
 func TestSetItemStateEvents(t *testing.T) {
@@ -390,11 +503,11 @@ func TestSetItemStateEvents(t *testing.T) {
 	server := NewServer(Config{Log: t, SendEventsFromAPI: true})
 	defer server.Close()
 
-	server.SetItem(api.Item{
+	require.NoError(t, server.SetItem(api.Item{
 		Name:  "TestItem",
 		Type:  "Number:Temperature",
 		State: state,
-	})
+	}))
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -402,7 +515,12 @@ func TestSetItemStateEvents(t *testing.T) {
 	go func() {
 		defer wg.Done()
 
-		resp, err := http.Get(server.URL() + "/rest/events")
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL()+"/rest/events", http.NoBody)
+		require.NoError(t, err)
+		resp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
 		defer resp.Body.Close()
 
@@ -419,8 +537,11 @@ func TestSetItemStateEvents(t *testing.T) {
 	func() {
 		time.Sleep(10 * time.Millisecond)
 
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+
 		data := bytes.NewBufferString(state)
-		req, err := http.NewRequest(http.MethodPut, server.URL()+"/rest/items/TestItem/state", data)
+		req, err := http.NewRequestWithContext(ctx, http.MethodPut, server.URL()+"/rest/items/TestItem/state", data)
 		require.NoError(t, err)
 		resp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
@@ -431,4 +552,6 @@ func TestSetItemStateEvents(t *testing.T) {
 
 	server.Close()
 	wg.Wait()
+	assert.NoError(t, server.EventsErr())
+	assert.NoError(t, server.ItemsErr())
 }

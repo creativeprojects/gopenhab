@@ -8,7 +8,7 @@ type thingReceivedStatusInfoTrigger struct {
 	baseTrigger
 	thing  string
 	status ThingStatus
-	subId  int
+	subID  int
 }
 
 // OnThingReceivedStatusInfo triggers the rule when the thing received a status update equal to status.
@@ -25,17 +25,17 @@ func OnThingReceivedStatusInfo(thing string, status ThingStatus) *thingReceivedS
 }
 
 func (c *thingReceivedStatusInfoTrigger) activate(client subscriber, run func(ev event.Event), ruleData RuleData) error {
-	if c.subId > 0 {
+	if c.subID > 0 {
 		return ErrRuleAlreadyActivated
 	}
-	c.subId = c.subscribe(client, c.thing, event.TypeThingStatusInfo, run, c.match)
+	c.subID = c.subscribe(client, c.thing, event.TypeThingStatusInfo, run, c.match)
 	return nil
 }
 
 func (c *thingReceivedStatusInfoTrigger) deactivate(client subscriber) {
-	if c.subId > 0 {
-		client.unsubscribe(c.subId)
-		c.subId = 0
+	if c.subID > 0 {
+		client.unsubscribe(c.subID)
+		c.subID = 0
 	}
 }
 
@@ -63,7 +63,7 @@ type thingReceivedStatusInfoChangedTrigger struct {
 	thing string
 	from  ThingStatus
 	to    ThingStatus
-	subId int
+	subID int
 }
 
 // OnThingReceivedStatusInfoChanged triggers the rule when the thing status changed.
@@ -113,17 +113,17 @@ func OnThingReceivedStatusInfoChangedFromTo(thing string, from, to ThingStatus) 
 }
 
 func (c *thingReceivedStatusInfoChangedTrigger) activate(client subscriber, run func(ev event.Event), ruleData RuleData) error {
-	if c.subId > 0 {
+	if c.subID > 0 {
 		return ErrRuleAlreadyActivated
 	}
-	c.subId = c.subscribe(client, c.thing, event.TypeThingStatusInfoChanged, run, c.match)
+	c.subID = c.subscribe(client, c.thing, event.TypeThingStatusInfoChanged, run, c.match)
 	return nil
 }
 
 func (c *thingReceivedStatusInfoChangedTrigger) deactivate(client subscriber) {
-	if c.subId > 0 {
-		client.unsubscribe(c.subId)
-		c.subId = 0
+	if c.subID > 0 {
+		client.unsubscribe(c.subID)
+		c.subID = 0
 	}
 }
 

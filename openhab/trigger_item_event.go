@@ -10,7 +10,7 @@ type itemReceivedCommandTrigger struct {
 	baseTrigger
 	item  string
 	state State
-	subId int
+	subID int
 }
 
 // OnItemReceivedCommand triggers the rule when the item received a command equal to state.
@@ -26,17 +26,17 @@ func OnItemReceivedCommand(item string, state State) *itemReceivedCommandTrigger
 }
 
 func (c *itemReceivedCommandTrigger) activate(client subscriber, run func(ev event.Event), ruleData RuleData) error {
-	if c.subId > 0 {
+	if c.subID > 0 {
 		return ErrRuleAlreadyActivated
 	}
-	c.subId = c.subscribe(client, c.item, event.TypeItemCommand, run, c.match)
+	c.subID = c.subscribe(client, c.item, event.TypeItemCommand, run, c.match)
 	return nil
 }
 
 func (c *itemReceivedCommandTrigger) deactivate(client subscriber) {
-	if c.subId > 0 {
-		client.unsubscribe(c.subId)
-		c.subId = 0
+	if c.subID > 0 {
+		client.unsubscribe(c.subID)
+		c.subID = 0
 	}
 }
 
@@ -63,7 +63,7 @@ type itemReceivedStateTrigger struct {
 	baseTrigger
 	item  string
 	state State
-	subId int
+	subID int
 }
 
 // OnItemReceivedState triggers the rule when the item received an update equal to state.
@@ -79,17 +79,17 @@ func OnItemReceivedState(item string, state State) *itemReceivedStateTrigger {
 }
 
 func (c *itemReceivedStateTrigger) activate(client subscriber, run func(ev event.Event), ruleData RuleData) error {
-	if c.subId > 0 {
+	if c.subID > 0 {
 		return ErrRuleAlreadyActivated
 	}
-	c.subId = c.subscribe(client, c.item, event.TypeItemState, run, c.match)
+	c.subID = c.subscribe(client, c.item, event.TypeItemState, run, c.match)
 	return nil
 }
 
 func (c *itemReceivedStateTrigger) deactivate(client subscriber) {
-	if c.subId > 0 {
-		client.unsubscribe(c.subId)
-		c.subId = 0
+	if c.subID > 0 {
+		client.unsubscribe(c.subID)
+		c.subID = 0
 	}
 }
 
@@ -117,8 +117,8 @@ type itemStateChangedTrigger struct {
 	item   string
 	from   State
 	to     State
-	subId1 int
-	subId2 int
+	subID1 int
+	subID2 int
 }
 
 // OnItemStateChanged triggers the rule when the item received an update with a different state
@@ -169,22 +169,22 @@ func (c *itemStateChangedTrigger) activate(client subscriber, run func(ev event.
 	if run == nil {
 		return errors.New("event callback is nil")
 	}
-	if c.subId1 > 0 || c.subId2 > 0 {
+	if c.subID1 > 0 || c.subID2 > 0 {
 		return ErrRuleAlreadyActivated
 	}
-	c.subId1 = c.subscribe(client, c.item, event.TypeItemStateChanged, run, c.match)
-	c.subId1 = c.subscribe(client, c.item, event.TypeGroupItemStateChanged, run, c.match)
+	c.subID1 = c.subscribe(client, c.item, event.TypeItemStateChanged, run, c.match)
+	c.subID1 = c.subscribe(client, c.item, event.TypeGroupItemStateChanged, run, c.match)
 	return nil
 }
 
 func (c *itemStateChangedTrigger) deactivate(client subscriber) {
-	if c.subId1 > 0 {
-		client.unsubscribe(c.subId1)
-		c.subId1 = 0
+	if c.subID1 > 0 {
+		client.unsubscribe(c.subID1)
+		c.subID1 = 0
 	}
-	if c.subId2 > 0 {
-		client.unsubscribe(c.subId2)
-		c.subId2 = 0
+	if c.subID2 > 0 {
+		client.unsubscribe(c.subID2)
+		c.subID2 = 0
 	}
 }
 

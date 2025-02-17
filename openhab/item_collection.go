@@ -48,7 +48,7 @@ func (items *itemCollection) getItem(name string) (*Item, error) {
 	}
 	// item wasn't found
 	items.client.addCounter(MetricItemNotFound, 1, MetricItemName, name)
-	return nil, fmt.Errorf("item %q %w", name, ErrorNotFound)
+	return nil, fmt.Errorf("item %q %w", name, ErrNotFound)
 }
 
 func (items *itemCollection) removeItem(name string) {

@@ -1,6 +1,7 @@
 package openhabtest
 
 import (
+	"errors"
 	"net/http"
 	"sync"
 )
@@ -13,6 +14,7 @@ var (
 type eventsHandler struct {
 	eventBus *eventBus
 	done     <-chan bool
+	err      error // contains a list of errors that happened during events
 }
 
 func newEventsHandler(bus *eventBus, done <-chan bool) *eventsHandler {
@@ -25,16 +27,20 @@ func newEventsHandler(bus *eventBus, done <-chan bool) *eventsHandler {
 func (h *eventsHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	resp.Header().Add("Content-Type", "text/event-stream")
 
-	subId := h.eventBus.Subscribe("", func(message string) {
-		resp.Write(streamPrefix)
-		resp.Write([]byte(message))
-		resp.Write(streamSuffix)
+	subID := h.eventBus.Subscribe("", func(message string) {
+		var err error
+		_, err = resp.Write(streamPrefix)
+		h.err = errors.Join(h.err, err)
+		_, err = resp.Write([]byte(message))
+		h.err = errors.Join(h.err, err)
+		_, err = resp.Write(streamSuffix)
+		h.err = errors.Join(h.err, err)
 
 		if flusher, ok := resp.(http.Flusher); ok {
 			flusher.Flush()
 		}
 	})
-	defer h.eventBus.Unsubscribe(subId)
+	defer h.eventBus.Unsubscribe(subID)
 
 	<-h.done
 }
@@ -43,9 +49,13 @@ func (h *eventsHandler) AsyncServeHTTP(resp http.ResponseWriter, req *http.Reque
 	resp.Header().Add("Content-Type", "text/event-stream")
 
 	sendEvent := func(message string) {
-		resp.Write(streamPrefix)
-		resp.Write([]byte(message))
-		resp.Write(streamSuffix)
+		var err error
+		_, err = resp.Write(streamPrefix)
+		h.err = errors.Join(h.err, err)
+		_, err = resp.Write([]byte(message))
+		h.err = errors.Join(h.err, err)
+		_, err = resp.Write(streamSuffix)
+		h.err = errors.Join(h.err, err)
 		if flusher, ok := resp.(http.Flusher); ok {
 			flusher.Flush()
 		}
@@ -54,10 +64,10 @@ func (h *eventsHandler) AsyncServeHTTP(resp http.ResponseWriter, req *http.Reque
 	wg := sync.WaitGroup{}
 	wg.Wait()
 	event := make(chan string)
-	subId := h.eventBus.Subscribe("", func(message string) {
+	subID := h.eventBus.Subscribe("", func(message string) {
 		event <- message
 	})
-	defer h.eventBus.Unsubscribe(subId)
+	defer h.eventBus.Unsubscribe(subID)
 
 	for {
 		// first select: we wait for either data or the exit signal

@@ -6,7 +6,7 @@ import "github.com/creativeprojects/gopenhab/event"
 type systemEventTrigger struct {
 	baseTrigger
 	eventType event.Type
-	subId     int
+	subID     int
 }
 
 // OnConnect is a trigger activated when successfully connected (or reconnected) to openHAB.
@@ -88,14 +88,14 @@ func OnRulePanic() *systemEventTrigger {
 
 // activate subscribes to the corresponding event
 func (c *systemEventTrigger) activate(client subscriber, run func(ev event.Event), ruleData RuleData) error {
-	c.subId = c.subscribe(client, "", c.eventType, run, c.match)
+	c.subID = c.subscribe(client, "", c.eventType, run, c.match)
 	return nil
 }
 
 func (c *systemEventTrigger) deactivate(client subscriber) {
-	if c.subId > 0 {
-		client.unsubscribe(c.subId)
-		c.subId = 0
+	if c.subID > 0 {
+		client.unsubscribe(c.subID)
+		c.subID = 0
 	}
 }
 
