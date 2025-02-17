@@ -15,6 +15,9 @@ type Config struct {
 	// Client is optional. You can specify a custom *http.Client if you need, otherwise it's going to use the http.DefaultClient
 	Client *http.Client
 	// TimeoutHTTP is the maximum time allowed to send or receive commands through the openHAB API. Default is 5 seconds.
+	//
+	// This value is used when using the methods without passing a context (like GetItem()).
+	// For all methods passing a context (like GetItemContext()), the deadline is taken from the context instead.
 	TimeoutHTTP time.Duration
 	// ReconnectionInitialBackoff represents how long to wait after the first failure before retrying.
 	// If undefined, it defaults to 1 second

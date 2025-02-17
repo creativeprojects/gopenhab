@@ -1,6 +1,7 @@
 package openhab
 
 import (
+	"context"
 	"sync"
 	"testing"
 	"time"
@@ -35,7 +36,7 @@ func TestCanLoadItemCreatedAfterLoading(t *testing.T) {
 
 	time.Sleep(10 * time.Millisecond)
 	// load existing item at the time of loading
-	item1, err := client.items.getItem("item1")
+	item1, err := client.items.getItem(context.Background(), "item1")
 	require.NoError(t, err)
 	assert.NotNil(t, item1)
 	assert.Equal(t, "FIRST", item1.state.String())
@@ -49,7 +50,7 @@ func TestCanLoadItemCreatedAfterLoading(t *testing.T) {
 	require.NoError(t, err)
 
 	// load the new item
-	item2, err := client.items.getItem("item2")
+	item2, err := client.items.getItem(context.Background(), "item2")
 	require.NoError(t, err)
 	assert.NotNil(t, item2)
 	assert.Equal(t, "SECOND", item2.state.String())
@@ -86,7 +87,7 @@ func TestLoadingUnknownItemReturnsError(t *testing.T) {
 
 	time.Sleep(10 * time.Millisecond)
 	// load a non-existing item
-	item2, err := client.items.getItem("item2")
+	item2, err := client.items.getItem(context.Background(), "item2")
 	require.Error(t, err)
 	assert.Nil(t, item2)
 

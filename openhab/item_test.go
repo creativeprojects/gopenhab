@@ -1,6 +1,7 @@
 package openhab
 
 import (
+	"context"
 	"strconv"
 	"sync"
 	"testing"
@@ -60,13 +61,13 @@ func TestGetItemAPI(t *testing.T) {
 
 	t.Run("TestLoadItemNotFound", func(t *testing.T) {
 		item := newItem(client, "UnknownItem")
-		err := item.load()
+		err := item.load(context.Background())
 		assert.ErrorIs(t, err, ErrNotFound)
 	})
 
 	t.Run("TestLoadItem", func(t *testing.T) {
 		item := newItem(client, "TestSwitch")
-		err := item.load()
+		err := item.load(context.Background())
 		assert.NoError(t, err)
 		assert.Equal(t, "TestSwitch", item.Name())
 		assert.Equal(t, ItemTypeSwitch, item.Type())
@@ -141,14 +142,17 @@ func TestGetItemAPI(t *testing.T) {
 	})
 
 	t.Run("TestSendCommandTimeout", func(t *testing.T) {
+		timeout := 100 * time.Millisecond
 		item := newTestItem(client, "TestSwitch", "Switch", "OFF")
 		state, err := item.State()
 		require.NoError(t, err)
 		assert.Equal(t, SwitchOFF, state)
 
-		ok, err := item.SendCommandWait(SwitchOFF, 100*time.Millisecond)
-		assert.NoError(t, err)
+		start := time.Now()
+		ok, err := item.SendCommandWait(SwitchOFF, timeout)
+		require.NoError(t, err)
 		assert.False(t, ok)
+		assert.GreaterOrEqual(t, time.Since(start), timeout)
 	})
 
 	t.Run("TestMultipleSendCommandWait", func(t *testing.T) {
