@@ -106,6 +106,7 @@ func (r *rule) run(e event.Event) {
 	r.runner(ctx, r.client, r.ruleData, e)
 }
 
+// cancel the rule context
 func (r *rule) cancel() {
 	r.cancelLocker.Lock()
 	defer r.cancelLocker.Unlock()

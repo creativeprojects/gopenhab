@@ -169,7 +169,7 @@ func (c *Client) GetItemContext(ctx context.Context, name string) (*Item, error)
 	return c.items.getItem(ctx, name)
 }
 
-// GetItemState returns an openHAB item state from its name. It's a shortcut of GetItem() => State().
+// GetItemState returns an openHAB item state from its name. It's a shortcut of GetItem() => item.State().
 // The very first call of GetItemState will try to load the items collection from openHAB.
 func (c *Client) GetItemState(name string) (State, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), c.config.TimeoutHTTP)
@@ -177,7 +177,7 @@ func (c *Client) GetItemState(name string) (State, error) {
 	return c.GetItemStateContext(ctx, name)
 }
 
-// GetItemStateContext returns an openHAB item state from its name. It's a shortcut of GetItem() => State().
+// GetItemStateContext returns an openHAB item state from its name. It's a shortcut of GetItem() => item.State().
 // The very first call of GetItemStateContext will try to load the items collection from openHAB.
 func (c *Client) GetItemStateContext(ctx context.Context, name string) (State, error) {
 	item, err := c.items.getItem(ctx, name)
@@ -199,14 +199,14 @@ func (c *Client) GetMembersContext(ctx context.Context, groupName string) ([]*It
 	return c.items.getMembersOf(ctx, groupName)
 }
 
-// SendCommand sends a command to an item. It's a shortcut for GetItem() => SendCommand().
+// SendCommand sends a command to an item. It's a shortcut for GetItem() => item.SendCommand().
 func (c *Client) SendCommand(itemName string, command State) error {
 	ctx, cancel := context.WithTimeout(context.Background(), c.config.TimeoutHTTP)
 	defer cancel()
 	return c.SendCommandContext(ctx, itemName, command)
 }
 
-// SendCommandContext sends a command to an item. It's a shortcut for GetItem() => SendCommandContext().
+// SendCommandContext sends a command to an item. It's a shortcut for GetItem() => item.SendCommandContext().
 func (c *Client) SendCommandContext(ctx context.Context, itemName string, command State) error {
 	item, err := c.items.getItem(ctx, itemName)
 	if err != nil {
@@ -405,7 +405,7 @@ func (c *Client) dispatchRawEvent(data string) {
 func (c *Client) eventLoop() {
 	var successTimer *time.Timer
 	var successTimerMutex sync.Mutex
-	backoff := c.config.ReconnectionInitialBackoff
+	var backoff time.Duration
 
 	for {
 		c.setState(StateConnecting)
@@ -417,7 +417,7 @@ func (c *Client) eventLoop() {
 			successTimer = time.AfterFunc(c.config.StableConnectionDuration, func() {
 				successTimerMutex.Lock()
 				defer successTimerMutex.Unlock()
-				backoff = c.config.ReconnectionInitialBackoff
+				backoff = 0
 
 				if !c.isState(StateConnected) {
 					// still not connected, to we restart the timer
@@ -441,11 +441,10 @@ func (c *Client) eventLoop() {
 			successTimer.Stop()
 		}
 		successTimerMutex.Unlock()
+
+		backoff = nextBackoff(backoff, c.config)
 		debuglog.Printf("reconnecting in %s...", backoff.Truncate(100*time.Millisecond).String())
 		time.Sleep(backoff)
-
-		// calculate next backoff
-		backoff = nextBackoff(backoff, c.config)
 	}
 }
 
