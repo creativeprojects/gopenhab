@@ -154,9 +154,8 @@ func TestGetItemAPI(t *testing.T) {
 		ok, err := item.SendCommandWait(SwitchOFF, timeout)
 		require.NoError(t, err)
 		assert.False(t, ok)
-		// there's a problem with this test
-		assert.GreaterOrEqual(t, time.Since(start), timeout)
-		t.Log(time.Since(start))
+
+		assert.GreaterOrEqual(t, time.Since(start), timeout, "it should take 100ms or more to run the test")
 	})
 
 	t.Run("TestMultipleSendCommandWait", func(t *testing.T) {

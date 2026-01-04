@@ -48,28 +48,29 @@ func TestDebounce(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 3; i++ {
+		// run 10 times but will only be counted once after a 50ms without activity
 		for j := 0; j < 10; j++ {
 			trigger.callback(nil)
 		}
-
 		time.Sleep(200 * time.Millisecond)
 	}
 
+	// managed 3 full run with the help of a 200ms sleep in between
 	assert.Equal(t, uint64(3), atomic.LoadUint64(&counter))
 }
 
 func TestDebounceConcurrentRun(t *testing.T) {
 	t.Parallel()
 	var (
-		count = 10
-		wg    sync.WaitGroup
-		flag  uint64
+		count   = 10
+		wg      sync.WaitGroup
+		counter uint64
 	)
 
 	trigger := &mockTrigger{}
 	debounced := Debounce(100*time.Millisecond, trigger)
 	err := debounced.activate(nil, func(event.Event) {
-		atomic.CompareAndSwapUint64(&flag, 0, 1)
+		atomic.AddUint64(&counter, 1)
 	}, RuleData{})
 	require.NoError(t, err)
 
@@ -84,7 +85,7 @@ func TestDebounceConcurrentRun(t *testing.T) {
 
 	time.Sleep(500 * time.Millisecond)
 
-	assert.Equal(t, uint64(1), atomic.LoadUint64(&flag), "Flag not set")
+	assert.Equal(t, uint64(1), atomic.LoadUint64(&counter))
 }
 
 func TestDebounceDelayed(t *testing.T) {
@@ -112,7 +113,7 @@ func TestDebounceCancelled(t *testing.T) {
 	var counter uint64
 
 	trigger := &mockTrigger{}
-	debounced := Debounce(100*time.Millisecond, trigger)
+	debounced := Debounce(50*time.Millisecond, trigger)
 	err := debounced.activate(nil, func(event.Event) {
 		atomic.AddUint64(&counter, 1)
 	}, RuleData{})
@@ -155,16 +156,16 @@ func TestDebounceTwoTriggers(t *testing.T) {
 func TestDebounceConcurrentRunOfThreeTriggers(t *testing.T) {
 	t.Parallel()
 	var (
-		count = 10
-		wg    sync.WaitGroup
-		flag  uint64
+		count   = 10
+		wg      sync.WaitGroup
+		counter uint64
 	)
 	trigger1 := &mockTrigger{}
 	trigger2 := &mockTrigger{}
 	trigger3 := &mockTrigger{}
 	debounced := Debounce(100*time.Millisecond, trigger1, trigger2, trigger3)
 	err := debounced.activate(nil, func(event.Event) {
-		atomic.CompareAndSwapUint64(&flag, 0, 1)
+		atomic.AddUint64(&counter, 1)
 	}, RuleData{})
 	require.NoError(t, err)
 
@@ -191,5 +192,5 @@ func TestDebounceConcurrentRunOfThreeTriggers(t *testing.T) {
 
 	time.Sleep(500 * time.Millisecond)
 
-	assert.Equal(t, uint64(1), atomic.LoadUint64(&flag), "Flag not set")
+	assert.Equal(t, uint64(1), atomic.LoadUint64(&counter))
 }
