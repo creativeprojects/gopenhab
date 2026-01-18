@@ -13,6 +13,7 @@ type triggerDebounce struct {
 	after    time.Duration
 	timer    *time.Timer
 	triggers []Trigger
+	run      func(ev event.Event)
 }
 
 // Debounce will trigger the event after some time, in case the subscription is triggered multiple times in a row.
@@ -22,29 +23,32 @@ func Debounce(after time.Duration, triggers ...Trigger) *triggerDebounce {
 		lock:     &sync.Mutex{},
 		after:    after,
 		triggers: triggers,
+		run:      nil,
 	}
 }
 
 func (c *triggerDebounce) activate(client subscriber, run func(ev event.Event), ruleData RuleData) error {
-	debounced := func(ev event.Event) {
-		c.lock.Lock()
-		defer c.lock.Unlock()
-
-		if c.timer != nil {
-			c.timer.Stop()
-		}
-
-		c.timer = time.AfterFunc(c.after, func() {
-			run(ev)
-		})
-	}
+	c.run = run
 	for _, trigger := range c.triggers {
-		err := trigger.activate(client, debounced, ruleData)
+		err := trigger.activate(client, c.debounced, ruleData)
 		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func (c *triggerDebounce) debounced(ev event.Event) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	if c.timer != nil {
+		c.timer.Stop()
+	}
+
+	c.timer = time.AfterFunc(c.after, func() {
+		c.run(ev)
+	})
 }
 
 func (c *triggerDebounce) deactivate(client subscriber) {

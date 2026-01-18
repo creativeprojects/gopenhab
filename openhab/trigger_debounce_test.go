@@ -50,7 +50,7 @@ func TestDebounce(t *testing.T) {
 	for i := 0; i < 3; i++ {
 		// run 10 times but will only be counted once after a 50ms without activity
 		for j := 0; j < 10; j++ {
-			trigger.callback(nil)
+			trigger.callback(event.NewGenericEvent("Test", "Topic", "Payload"))
 		}
 		time.Sleep(200 * time.Millisecond)
 	}
@@ -78,7 +78,7 @@ func TestDebounceConcurrentRun(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			trigger.callback(nil)
+			trigger.callback(event.NewGenericEvent("Test", "Topic", "Payload"))
 		}()
 	}
 	wg.Wait()
@@ -101,7 +101,7 @@ func TestDebounceDelayed(t *testing.T) {
 
 	time.Sleep(110 * time.Millisecond)
 
-	trigger.callback(nil)
+	trigger.callback(event.NewGenericEvent("Test", "Topic", "Payload"))
 
 	time.Sleep(300 * time.Millisecond)
 
@@ -119,7 +119,7 @@ func TestDebounceCancelled(t *testing.T) {
 	}, RuleData{})
 	require.NoError(t, err)
 
-	trigger.callback(nil)
+	trigger.callback(event.NewGenericEvent("Test", "Topic", "Payload"))
 
 	time.Sleep(10 * time.Millisecond)
 	debounced.deactivate(nil)
@@ -143,8 +143,8 @@ func TestDebounceTwoTriggers(t *testing.T) {
 
 	for i := 0; i < 3; i++ {
 		for j := 0; j < 10; j++ {
-			trigger1.callback(nil)
-			trigger2.callback(nil)
+			trigger1.callback(event.NewGenericEvent("Test", "Topic", "Payload"))
+			trigger2.callback(event.NewGenericEvent("Test", "Topic", "Payload"))
 		}
 
 		time.Sleep(200 * time.Millisecond)
@@ -173,19 +173,19 @@ func TestDebounceConcurrentRunOfThreeTriggers(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			trigger1.callback(nil)
+			trigger1.callback(event.NewGenericEvent("Test", "Topic", "Payload"))
 		}()
 
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			trigger2.callback(nil)
+			trigger2.callback(event.NewGenericEvent("Test", "Topic", "Payload"))
 		}()
 
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			trigger3.callback(nil)
+			trigger3.callback(event.NewGenericEvent("Test", "Topic", "Payload"))
 		}()
 	}
 	wg.Wait()
