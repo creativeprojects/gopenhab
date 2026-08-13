@@ -47,9 +47,9 @@ func TestDebounce(t *testing.T) {
 	}, RuleData{})
 	require.NoError(t, err)
 
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		// run 10 times but will only be counted once after a 50ms without activity
-		for j := 0; j < 10; j++ {
+		for range 10 {
 			trigger.callback(event.NewGenericEvent("Test", "Topic", "Payload"))
 		}
 		time.Sleep(200 * time.Millisecond)
@@ -74,7 +74,7 @@ func TestDebounceConcurrentRun(t *testing.T) {
 	}, RuleData{})
 	require.NoError(t, err)
 
-	for i := 0; i < count; i++ {
+	for range count {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -141,8 +141,8 @@ func TestDebounceTwoTriggers(t *testing.T) {
 	}, RuleData{})
 	require.NoError(t, err)
 
-	for i := 0; i < 3; i++ {
-		for j := 0; j < 10; j++ {
+	for range 3 {
+		for range 10 {
 			trigger1.callback(event.NewGenericEvent("Test", "Topic", "Payload"))
 			trigger2.callback(event.NewGenericEvent("Test", "Topic", "Payload"))
 		}
@@ -169,7 +169,7 @@ func TestDebounceConcurrentRunOfThreeTriggers(t *testing.T) {
 	}, RuleData{})
 	require.NoError(t, err)
 
-	for i := 0; i < count; i++ {
+	for range count {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()

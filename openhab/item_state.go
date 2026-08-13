@@ -12,7 +12,7 @@ const DateTimeFormat = "2006-01-02T15:04:05.999-0700"
 
 type State interface {
 	String() string
-	Raw() interface{}
+	Raw() any
 	Equal(other string) bool
 }
 
@@ -35,7 +35,7 @@ func (s SwitchState) String() string {
 	return strings.ToUpper(string(s))
 }
 
-func (s SwitchState) Raw() interface{} {
+func (s SwitchState) Raw() any {
 	return string(s)
 }
 
@@ -55,7 +55,7 @@ func (s StringState) String() string {
 	return string(s)
 }
 
-func (s StringState) Raw() interface{} {
+func (s StringState) Raw() any {
 	return string(s)
 }
 
@@ -84,7 +84,7 @@ func (s DecimalState) String() string {
 	return fmt.Sprintf("%s %s", value, s.unit)
 }
 
-func (s DecimalState) Raw() interface{} {
+func (s DecimalState) Raw() any {
 	return s.value
 }
 
@@ -137,7 +137,7 @@ func (s DateTimeState) String() string {
 	return time.Time(s).Format(DateTimeFormat)
 }
 
-func (s DateTimeState) Raw() interface{} {
+func (s DateTimeState) Raw() any {
 	return time.Time(s)
 }
 

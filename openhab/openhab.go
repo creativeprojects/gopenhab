@@ -32,7 +32,7 @@ const (
 	eventTypeEvent      = "event"
 	eventTypeAlive      = "alive"
 	minSupportedVersion = 3
-	maxSupportedVersion = 6
+	maxSupportedVersion = 8
 )
 
 // Client for openHAB. It's using openHAB REST API internally.
@@ -279,7 +279,7 @@ func (c *Client) getString(ctx context.Context, url string) (string, error) {
 	return string(body), nil
 }
 
-func (c *Client) getJSON(ctx context.Context, url string, result interface{}) error {
+func (c *Client) getJSON(ctx context.Context, url string, result any) error {
 	resp, err := c.get(ctx, url, "application/json")
 	if resp != nil {
 		defer resp.Body.Close()

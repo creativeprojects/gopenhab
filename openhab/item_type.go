@@ -27,8 +27,8 @@ const (
 
 func getItemType(s string) (ItemType, string) {
 	// Special case of Number that can have a subtype (which is not kept anywhere, or at least for now)
-	if strings.HasPrefix(s, itemTypeNumberWithSubtype) {
-		return ItemTypeNumber, strings.TrimPrefix(s, itemTypeNumberWithSubtype)
+	if after, ok := strings.CutPrefix(s, itemTypeNumberWithSubtype); ok {
+		return ItemTypeNumber, after
 	}
 
 	switch s {

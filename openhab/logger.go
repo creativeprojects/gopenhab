@@ -4,12 +4,12 @@ import "log"
 
 // Logger interface used by gopenhab so you can bring your own logger
 type Logger interface {
-	Printf(format string, v ...interface{})
+	Printf(format string, v ...any)
 }
 
 type emptyLogger struct{}
 
-func (l emptyLogger) Printf(format string, v ...interface{}) {}
+func (l emptyLogger) Printf(format string, v ...any) {}
 
 var (
 	debuglog Logger = &emptyLogger{}

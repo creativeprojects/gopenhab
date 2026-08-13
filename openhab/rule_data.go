@@ -10,7 +10,7 @@ type RuleData struct {
 	// Description of the rule (optional)
 	Description string
 	// Context can contain anything you need to access inside the rule (database connection, etc)
-	Context interface{}
+	Context any
 	// Timeout after which the rule will be sent a cancellation through the context (optional)
 	Timeout time.Duration
 }

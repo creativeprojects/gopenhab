@@ -105,12 +105,12 @@ func TestCanReceiveRawEvents(t *testing.T) {
 		data, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)
 
-		expected := ""
+		var expected strings.Builder
 		// build expected data
 		for _, rawEvent := range rawEvents {
-			expected += "event: message\ndata: " + rawEvent + "\n\n"
+			expected.WriteString("event: message\ndata: " + rawEvent + "\n\n")
 		}
-		assert.Equal(t, expected, string(data))
+		assert.Equal(t, expected.String(), string(data))
 	}()
 
 	// send some messages
@@ -166,12 +166,12 @@ func TestCanEncodeEvents(t *testing.T) {
 		data, err := io.ReadAll(resp.Body)
 		require.NoError(t, err)
 
-		expected := ""
+		var expected strings.Builder
 		// build expected data
 		for _, ev := range events {
-			expected += "event: message\ndata: " + ev.expected + "\n\n"
+			expected.WriteString("event: message\ndata: " + ev.expected + "\n\n")
 		}
-		assert.Equal(t, expected, string(data))
+		assert.Equal(t, expected.String(), string(data))
 	}()
 
 	// send some messages

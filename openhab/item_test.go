@@ -122,7 +122,7 @@ func TestGetItemAPI(t *testing.T) {
 
 		wg := sync.WaitGroup{}
 
-		for i := 0; i < 2; i++ {
+		for i := range 2 {
 			wg.Add(1)
 			go func(i int) {
 				// the event bus is not connected so we send an event manually
@@ -174,7 +174,7 @@ func TestGetItemAPI(t *testing.T) {
 		})
 		defer timeout.Stop()
 
-		for i := 0; i < count; i++ {
+		for i := range count {
 			wg.Add(1)
 			go func(i int) {
 				newValue := initialState - float64(i)*0.1

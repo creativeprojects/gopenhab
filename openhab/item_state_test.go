@@ -27,7 +27,7 @@ func TestItemState(t *testing.T) {
 	dateTime := time.Date(2022, 3, 8, 7, 1, 0, 0, time.Local)
 	fixtures := []struct {
 		state    State
-		raw      interface{}
+		raw      any
 		value    string
 		notEqual string
 	}{

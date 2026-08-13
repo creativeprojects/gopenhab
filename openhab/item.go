@@ -2,6 +2,7 @@ package openhab
 
 import (
 	"context"
+	"slices"
 	"sync"
 	"time"
 
@@ -79,12 +80,7 @@ func (i *Item) IsGroup() bool {
 
 // IsMemberOf returns true if the item is a member of the group
 func (i *Item) IsMemberOf(groupName string) bool {
-	for _, group := range i.data.GroupNames {
-		if group == groupName {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(i.data.GroupNames, groupName)
 }
 
 // Updated returns the last time the item state was updated (doesn't necessarily mean the state was changed)
