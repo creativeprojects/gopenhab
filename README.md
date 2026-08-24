@@ -1,5 +1,6 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/creativeprojects/gopenhab.svg)](https://pkg.go.dev/github.com/creativeprojects/gopenhab)
 [![Build](https://github.com/creativeprojects/gopenhab/actions/workflows/build.yml/badge.svg)](https://github.com/creativeprojects/gopenhab/actions/workflows/build.yml)
+[![codecov](https://codecov.io/gh/creativeprojects/gopenhab/graph/badge.svg?token=wyzDjPzIO3)](https://codecov.io/gh/creativeprojects/gopenhab)
 
 # gopenHAB
 

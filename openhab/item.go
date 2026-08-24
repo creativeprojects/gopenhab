@@ -176,7 +176,6 @@ func (i *Item) SendCommandWaitContext(ctx context.Context, command State) (bool,
 	})
 	defer func() {
 		close(done)
-		close(stateChan)
 		i.client.unsubscribe(subID)
 	}()
 
