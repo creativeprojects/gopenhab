@@ -1,9 +1,5 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/creativeprojects/gopenhab.svg)](https://pkg.go.dev/github.com/creativeprojects/gopenhab)
 [![Build](https://github.com/creativeprojects/gopenhab/actions/workflows/build.yml/badge.svg)](https://github.com/creativeprojects/gopenhab/actions/workflows/build.yml)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=creativeprojects_gopenhab&metric=coverage)](https://sonarcloud.io/summary/new_code?id=creativeprojects_gopenhab)
-[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=creativeprojects_gopenhab&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=creativeprojects_gopenhab)
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=creativeprojects_gopenhab&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=creativeprojects_gopenhab)
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=creativeprojects_gopenhab&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=creativeprojects_gopenhab)
 
 # gopenHAB
 

@@ -45,7 +45,7 @@ jobs:
         shell: bash
 
       - name: Code coverage
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           env_vars: OS,GO
           files: ./coverage.out
@@ -53,35 +53,4 @@ jobs:
           fail_ci_if_error: false
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Archive code coverage results
-        uses: actions/upload-artifact@v4
-        with:
-          name: code-coverage-report-${{ matrix.os }}-${{ matrix.go_version }}
-          path: coverage.out
-
-  sonarCloudTrigger:
-    needs: build
-    name: SonarCloud Trigger
-    if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Clone Repository
-        uses: actions/checkout@v7
-        with:
-          # Disabling shallow clone is recommended for improving relevancy of reporting
-          fetch-depth: 0
-
-      - name: Download code coverage results
-        uses: actions/download-artifact@v5
-
-      - name: Display structure of downloaded files
-        run: ls -R
-
-      - name: Analyze with SonarCloud
-        uses: SonarSource/sonarqube-scan-action@v6
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
 
