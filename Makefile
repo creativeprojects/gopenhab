@@ -18,30 +18,39 @@ COVERAGE_FILE=coverage.out
 all: test build
 
 build:
-		@echo "[*] $@"
-		$(GOBUILD) -v
+	@echo "[*] $@"
+	$(GOBUILD) -v
 
 test: mocks
-		@echo "[*] $@"
-		$(GOTEST) -v $(TESTS)
+	@echo "[*] $@"
+	$(GOTEST) -v $(TESTS)
 
 coverage: mocks
-		@echo "[*] $@"
-		$(GOTEST) -coverprofile=$(COVERAGE_FILE) $(TESTS)
-		$(GOTOOL) cover -html=$(COVERAGE_FILE)
+	@echo "[*] $@"
+	$(GOTEST) -coverprofile=$(COVERAGE_FILE) $(TESTS)
+	$(GOTOOL) cover -html=$(COVERAGE_FILE)
 
 clean:
-		@echo "[*] $@"
-		$(GOCLEAN)
-		rm -f $(BINARY) $(COVERAGE_FILE)
-		@find . -type f -name "mock_*.go" -exec rm -v {} \;
+	@echo "[*] $@"
+	$(GOCLEAN)
+	rm -f $(BINARY) $(COVERAGE_FILE)
+	@find . -type f -name "mock_*.go" -exec rm -v {} \;
 
 mocks: $(MOCKS)
 
 $(MOCKERY):
-		@echo "[*] $@"
-		@go install -v github.com/vektra/mockery/v2@latest
+	@echo "[*] $@"
+	@go install -v github.com/vektra/mockery/v2@latest
 
 $(MOCKS): $(MOCKERY)
-		@echo "[*] $@"
-		@go generate ./...
+	@echo "[*] $@"
+	@go generate ./...
+
+./bin/golangci-lint:
+	@echo "[*] $@"
+	@mkdir -p ./bin
+	@curl -sSfL https://golangci-lint.run/install.sh | sh -s v2.13.1
+
+lint: ./bin/golangci-lint
+	@echo "[*] $@"
+	@./bin/golangci-lint run --timeout=5m

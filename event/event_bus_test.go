@@ -330,17 +330,17 @@ func TestSubscribeOnce(t *testing.T) {
 
 func TestSubscribeOnceAsync(t *testing.T) {
 	t.Parallel()
-	var call int32
+	var call atomic.Int32
 	eventBus := NewEventBus(true)
 
 	eventBus.SubscribeOnce("", TypeClientDisconnected, func(e Event) {
 		panic("This function should not have been called!")
 	})
 	eventBus.SubscribeOnce("", TypeClientConnected, func(e Event) {
-		atomic.AddInt32(&call, 1)
+		call.Add(1)
 	})
 	eventBus.SubscribeOnce("", TypeClientConnected, func(e Event) {
-		atomic.AddInt32(&call, 1)
+		call.Add(1)
 	})
 
 	published := eventBus.Publish(newFakeEvent("", TypeClientConnected))
@@ -350,5 +350,5 @@ func TestSubscribeOnceAsync(t *testing.T) {
 	assert.Equal(t, 0, published)
 
 	eventBus.Wait()
-	assert.Equal(t, int32(2), atomic.LoadInt32(&call))
+	assert.Equal(t, int32(2), call.Load())
 }

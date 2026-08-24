@@ -729,11 +729,9 @@ func (c *Client) addCounter(metricName string, metricValue int64, tagName, tagVa
 	}
 	defer preventPanic()
 
-	c.telemetryWg.Add(1)
-	go func() {
-		defer c.telemetryWg.Done()
+	c.telemetryWg.Go(func() {
 		c.telemetry.AddCounter(metricName, metricValue, getMap(tagName, tagValue))
-	}()
+	})
 }
 
 func (c *Client) setGauge(metricName string, metricValue int64, tagName, tagValue string) {
@@ -742,11 +740,9 @@ func (c *Client) setGauge(metricName string, metricValue int64, tagName, tagValu
 	}
 	defer preventPanic()
 
-	c.telemetryWg.Add(1)
-	go func() {
-		defer c.telemetryWg.Done()
+	c.telemetryWg.Go(func() {
 		c.telemetry.SetGauge(metricName, metricValue, getMap(tagName, tagValue))
-	}()
+	})
 }
 
 func getMap(key, value string) map[string]string {

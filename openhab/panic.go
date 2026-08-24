@@ -1,11 +1,11 @@
 package openhab
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"runtime"
 	"runtime/debug"
-	"strings"
 	"time"
 
 	"github.com/creativeprojects/gopenhab/event"
@@ -43,7 +43,7 @@ func preventRulePanic(client *Client, ruleData RuleData, e event.Event) {
 
 // getStack returns a simplified stack trace
 func getStack(skip int) string {
-	var stack strings.Builder
+	buf := new(bytes.Buffer)
 	pc := make([]uintptr, 20)        // stack of 20 traces max
 	n := runtime.Callers(skip+1, pc) // skip call to runtime.Callers
 	if n == 0 {
@@ -63,15 +63,15 @@ func getStack(skip int) string {
 			break
 		}
 
-		stack.WriteString(fmt.Sprintf("%s\n\t%s:%d\n", frame.Function, frame.File, frame.Line))
+		fmt.Fprintf(buf, "%s\n\t%s:%d\n", frame.Function, frame.File, frame.Line)
 
 		if !more {
 			break
 		}
 	}
-	if stack.String() == "" {
+	if buf.String() == "" {
 		// the stack trace is suspiciously empty, let's try another way instead
 		return string(debug.Stack())
 	}
-	return stack.String()
+	return buf.String()
 }

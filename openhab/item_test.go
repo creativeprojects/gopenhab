@@ -123,21 +123,17 @@ func TestGetItemAPI(t *testing.T) {
 		wg := sync.WaitGroup{}
 
 		for i := range 2 {
-			wg.Add(1)
-			go func(i int) {
+			wg.Go(func() {
 				// the event bus is not connected so we send an event manually
-				wg.Add(1) //nolint:staticcheck
-				go func(i int) {
+				wg.Go(func() {
 					time.Sleep(time.Duration(i+1) * time.Millisecond)
 					ev := event.NewItemReceivedState("TestSwitch", "OnOff", SwitchON.String())
 					item.client.userEventBus.Publish(ev)
-					wg.Done()
-				}(i)
+				})
 				ok, err := item.SendCommandWait(SwitchON, 100*time.Millisecond)
 				assert.NoError(t, err)
 				assert.True(t, ok)
-				wg.Done()
-			}(i)
+			})
 		}
 
 		wg.Wait()

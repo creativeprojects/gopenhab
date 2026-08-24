@@ -98,18 +98,18 @@ func main() {
 			Name: "Test rule",
 		},
 		func(ctx context.Context, client *openhab.Client, ruleData openhab.RuleData, e event.Event) {
-			item, err := client.GetItem("Back_Garden_Lighting_Switch")
+			item, err := client.GetItemContext(ctx, "Back_Garden_Lighting_Switch")
 			if err != nil {
 				log.Print(err)
 			}
 
-			_, err = item.SendCommandWait(openhab.SwitchON, 2*time.Second)
+			_, err = item.SendCommandWaitContext(ctx, openhab.SwitchON)
 			if err != nil {
 				log.Printf("sending command: %s", err)
 			}
 			time.Sleep(4 * time.Second)
 
-			_, err = item.SendCommandWait(openhab.SwitchOFF, 2*time.Second)
+			_, err = item.SendCommandWaitContext(ctx, openhab.SwitchOFF)
 			if err != nil {
 				log.Printf("sending command: %s", err)
 			}

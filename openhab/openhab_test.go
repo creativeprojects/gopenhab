@@ -134,7 +134,7 @@ func TestDeleteTwoRules(t *testing.T) {
 
 func TestStartEvent(t *testing.T) {
 	t.Parallel()
-	var call int32
+	var call atomic.Int32
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	defer server.Close()
 	client := NewClient(Config{
@@ -146,7 +146,7 @@ func TestStartEvent(t *testing.T) {
 		RuleData{},
 		func(ctx context.Context, client *Client, ruleData RuleData, e event.Event) {
 			defer wg.Done()
-			atomic.AddInt32(&call, 1)
+			call.Add(1)
 			ev, ok := e.(event.SystemEvent)
 			assert.True(t, ok)
 			assert.Equal(t, event.TypeClientStarted, ev.Type())
@@ -159,14 +159,14 @@ func TestStartEvent(t *testing.T) {
 
 	wg.Wait()
 	client.Stop()
-	assert.Equal(t, int32(1), atomic.LoadInt32(&call))
+	assert.Equal(t, int32(1), call.Load())
 	assert.NoError(t, server.EventsErr())
 	assert.NoError(t, server.ItemsErr())
 }
 
 func TestConnectEvent(t *testing.T) {
 	t.Parallel()
-	var call int32
+	var call atomic.Int32
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	defer server.Close()
 	client := NewClient(Config{
@@ -178,7 +178,7 @@ func TestConnectEvent(t *testing.T) {
 		RuleData{},
 		func(ctx context.Context, client *Client, ruleData RuleData, e event.Event) {
 			defer wg.Done()
-			atomic.AddInt32(&call, 1)
+			call.Add(1)
 			ev, ok := e.(event.SystemEvent)
 			assert.True(t, ok)
 			assert.Equal(t, event.TypeClientConnected, ev.Type())
@@ -195,14 +195,14 @@ func TestConnectEvent(t *testing.T) {
 
 	wg.Wait()
 	client.Stop()
-	assert.Equal(t, int32(1), atomic.LoadInt32(&call))
+	assert.Equal(t, int32(1), call.Load())
 	assert.NoError(t, server.EventsErr())
 	assert.NoError(t, server.ItemsErr())
 }
 
 func TestDisconnectEvent(t *testing.T) {
 	t.Parallel()
-	var call int32
+	var call atomic.Int32
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	require.NoError(t, server.SetItem(api.Item{Name: "item"}))
 
@@ -215,7 +215,7 @@ func TestDisconnectEvent(t *testing.T) {
 		RuleData{},
 		func(ctx context.Context, client *Client, ruleData RuleData, e event.Event) {
 			defer wg.Done()
-			atomic.AddInt32(&call, 1)
+			call.Add(1)
 			ev, ok := e.(event.SystemEvent)
 			assert.True(t, ok)
 			assert.Equal(t, event.TypeClientDisconnected, ev.Type())
@@ -235,14 +235,14 @@ func TestDisconnectEvent(t *testing.T) {
 
 	wg.Wait()
 	client.Stop()
-	assert.Equal(t, int32(1), atomic.LoadInt32(&call))
+	assert.Equal(t, int32(1), call.Load())
 	assert.NoError(t, server.EventsErr())
 	assert.NoError(t, server.ItemsErr())
 }
 
 func TestStopEvent(t *testing.T) {
 	t.Parallel()
-	var call int32
+	var call atomic.Int32
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	defer server.Close()
 	client := NewClient(Config{
@@ -252,18 +252,16 @@ func TestStopEvent(t *testing.T) {
 		RuleData{},
 		func(ctx context.Context, client *Client, ruleData RuleData, e event.Event) {
 			ev, ok := e.(event.SystemEvent)
-			atomic.AddInt32(&call, 1)
+			call.Add(1)
 			assert.True(t, ok)
 			assert.Equal(t, event.TypeClientStopped, ev.Type())
 		},
 		OnStop())
 
 	wg := sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		client.Start()
-	}()
+	})
 
 	// stop the server in 20ms
 	time.AfterFunc(20*time.Millisecond, func() {
@@ -271,14 +269,14 @@ func TestStopEvent(t *testing.T) {
 	})
 
 	wg.Wait()
-	assert.Equal(t, int32(1), atomic.LoadInt32(&call))
+	assert.Equal(t, int32(1), call.Load())
 	assert.NoError(t, server.EventsErr())
 	assert.NoError(t, server.ItemsErr())
 }
 
 func TestErrorEvent(t *testing.T) {
 	t.Parallel()
-	var call int32
+	var call atomic.Int32
 	client := NewClient(Config{URL: "http://localhost", TimeoutHTTP: 100 * time.Millisecond})
 
 	wg := sync.WaitGroup{}
@@ -291,7 +289,7 @@ func TestErrorEvent(t *testing.T) {
 		func(ctx context.Context, client *Client, ruleData RuleData, e event.Event) {
 			once.Do(func() {
 				defer wg.Done()
-				atomic.AddInt32(&call, 1)
+				call.Add(1)
 				ev, ok := e.(event.ErrorEvent)
 				if !ok {
 					t.Fatal("expected event to be of type ErrorEvent")
@@ -310,12 +308,12 @@ func TestErrorEvent(t *testing.T) {
 
 	wg.Wait()
 	client.Stop()
-	assert.Equal(t, int32(1), atomic.LoadInt32(&call))
+	assert.Equal(t, int32(1), call.Load())
 }
 
 func TestOnDateTimeEvent(t *testing.T) {
 	t.Parallel()
-	var call int32
+	var call atomic.Int32
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	defer server.Close()
 	client := NewClient(Config{
@@ -327,7 +325,7 @@ func TestOnDateTimeEvent(t *testing.T) {
 		RuleData{},
 		func(ctx context.Context, client *Client, ruleData RuleData, e event.Event) {
 			defer wg.Done()
-			atomic.AddInt32(&call, 1)
+			call.Add(1)
 			ev, ok := e.(event.SystemEvent)
 			assert.True(t, ok)
 			assert.Equal(t, event.TypeTimeCron, ev.Type())
@@ -340,7 +338,7 @@ func TestOnDateTimeEvent(t *testing.T) {
 
 	wg.Wait()
 	client.Stop()
-	assert.Equal(t, int32(1), atomic.LoadInt32(&call))
+	assert.Equal(t, int32(1), call.Load())
 	assert.NoError(t, server.EventsErr())
 	assert.NoError(t, server.ItemsErr())
 }
@@ -368,7 +366,7 @@ func TestDeleteDateTimeEvent(t *testing.T) {
 
 func TestAddRuleOnceStarted(t *testing.T) {
 	t.Parallel()
-	var call int32
+	var call atomic.Int32
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	defer server.Close()
 	client := NewClient(Config{
@@ -376,11 +374,9 @@ func TestAddRuleOnceStarted(t *testing.T) {
 	})
 
 	wg := sync.WaitGroup{}
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		client.Start()
-	}()
+	})
 
 	time.Sleep(10 * time.Millisecond)
 	client.AddRule(
@@ -389,7 +385,7 @@ func TestAddRuleOnceStarted(t *testing.T) {
 			ev, ok := e.(event.SystemEvent)
 			assert.True(t, ok)
 			assert.Equal(t, event.TypeClientStopped, ev.Type())
-			atomic.AddInt32(&call, 1)
+			call.Add(1)
 		},
 		OnStop())
 
@@ -399,14 +395,14 @@ func TestAddRuleOnceStarted(t *testing.T) {
 	})
 
 	wg.Wait()
-	assert.Equal(t, int32(1), atomic.LoadInt32(&call))
+	assert.Equal(t, int32(1), call.Load())
 	assert.NoError(t, server.EventsErr())
 	assert.NoError(t, server.ItemsErr())
 }
 
 func TestDispatchEventSaveStateFirst(t *testing.T) {
 	t.Parallel()
-	var call int32
+	var call atomic.Int32
 	wg := sync.WaitGroup{}
 	server := openhabtest.NewServer(openhabtest.Config{SendEventsFromAPI: true, Log: t})
 	defer server.Close()
@@ -423,7 +419,7 @@ func TestDispatchEventSaveStateFirst(t *testing.T) {
 		RuleData{},
 		func(ctx context.Context, client *Client, ruleData RuleData, e event.Event) {
 			defer wg.Done()
-			atomic.AddInt32(&call, 1)
+			call.Add(1)
 			ev, ok := e.(event.ItemReceivedState)
 			require.True(t, ok)
 			item, err := client.GetItemContext(ctx, "item")
@@ -447,13 +443,13 @@ func TestDispatchEventSaveStateFirst(t *testing.T) {
 	server.Event(event.NewItemReceivedState("item", "String", "THIRD"))
 	wg.Wait()
 	client.Stop()
-	assert.Equal(t, int32(2), atomic.LoadInt32(&call))
+	assert.Equal(t, int32(2), call.Load())
 	assert.NoError(t, server.EventsErr())
 	assert.NoError(t, server.ItemsErr())
 }
 
 func TestCancelEvent(t *testing.T) {
-	var call int32
+	var call atomic.Int32
 	t.Parallel()
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	defer server.Close()
@@ -467,7 +463,7 @@ func TestCancelEvent(t *testing.T) {
 		func(ctx context.Context, client *Client, ruleData RuleData, e event.Event) {
 			defer wg.Done()
 			<-ctx.Done()
-			atomic.AddInt32(&call, 1)
+			call.Add(1)
 		},
 		OnStart())
 
@@ -481,14 +477,14 @@ func TestCancelEvent(t *testing.T) {
 
 	wg.Wait()
 	client.Stop()
-	assert.Equal(t, int32(1), atomic.LoadInt32(&call))
+	assert.Equal(t, int32(1), call.Load())
 	assert.NoError(t, server.EventsErr())
 	assert.NoError(t, server.ItemsErr())
 }
 
 func TestTimeoutEvent(t *testing.T) {
 	t.Parallel()
-	var call int32
+	var call atomic.Int32
 	server := openhabtest.NewServer(openhabtest.Config{Log: t})
 	defer server.Close()
 	client := NewClient(Config{
@@ -503,7 +499,7 @@ func TestTimeoutEvent(t *testing.T) {
 		func(ctx context.Context, client *Client, ruleData RuleData, e event.Event) {
 			defer wg.Done()
 			<-ctx.Done()
-			atomic.AddInt32(&call, 1)
+			call.Add(1)
 		},
 		OnStart())
 
@@ -513,7 +509,7 @@ func TestTimeoutEvent(t *testing.T) {
 
 	wg.Wait()
 	client.Stop()
-	assert.Equal(t, int32(1), atomic.LoadInt32(&call))
+	assert.Equal(t, int32(1), call.Load())
 	assert.NoError(t, server.EventsErr())
 	assert.NoError(t, server.ItemsErr())
 }

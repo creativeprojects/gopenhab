@@ -38,12 +38,12 @@ func (t *mockTrigger) match(e event.Event) bool {
 
 func TestDebounce(t *testing.T) {
 	t.Parallel()
-	var counter uint64
+	var counter atomic.Uint64
 
 	trigger := &mockTrigger{}
 	debounced := Debounce(50*time.Millisecond, trigger)
 	err := debounced.activate(nil, func(event.Event) {
-		atomic.AddUint64(&counter, 1)
+		counter.Add(1)
 	}, RuleData{})
 	require.NoError(t, err)
 
@@ -56,7 +56,7 @@ func TestDebounce(t *testing.T) {
 	}
 
 	// managed 3 full run with the help of a 200ms sleep in between
-	assert.Equal(t, uint64(3), atomic.LoadUint64(&counter))
+	assert.Equal(t, uint64(3), counter.Load())
 }
 
 func TestDebounceConcurrentRun(t *testing.T) {
@@ -64,38 +64,36 @@ func TestDebounceConcurrentRun(t *testing.T) {
 	var (
 		count   = 10
 		wg      sync.WaitGroup
-		counter uint64
+		counter atomic.Uint64
 	)
 
 	trigger := &mockTrigger{}
 	debounced := Debounce(100*time.Millisecond, trigger)
 	err := debounced.activate(nil, func(event.Event) {
-		atomic.AddUint64(&counter, 1)
+		counter.Add(1)
 	}, RuleData{})
 	require.NoError(t, err)
 
 	for range count {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			trigger.callback(event.NewGenericEvent("Test", "Topic", "Payload"))
-		}()
+		})
 	}
 	wg.Wait()
 
 	time.Sleep(500 * time.Millisecond)
 
-	assert.Equal(t, uint64(1), atomic.LoadUint64(&counter))
+	assert.Equal(t, uint64(1), counter.Load())
 }
 
 func TestDebounceDelayed(t *testing.T) {
 	t.Parallel()
-	var counter uint64
+	var counter atomic.Uint64
 
 	trigger := &mockTrigger{}
 	debounced := Debounce(100*time.Millisecond, trigger)
 	err := debounced.activate(nil, func(event.Event) {
-		atomic.AddUint64(&counter, 1)
+		counter.Add(1)
 	}, RuleData{})
 	require.NoError(t, err)
 
@@ -105,17 +103,17 @@ func TestDebounceDelayed(t *testing.T) {
 
 	time.Sleep(300 * time.Millisecond)
 
-	assert.Equal(t, uint64(1), atomic.LoadUint64(&counter))
+	assert.Equal(t, uint64(1), counter.Load())
 }
 
 func TestDebounceCancelled(t *testing.T) {
 	t.Parallel()
-	var counter uint64
+	var counter atomic.Uint64
 
 	trigger := &mockTrigger{}
 	debounced := Debounce(50*time.Millisecond, trigger)
 	err := debounced.activate(nil, func(event.Event) {
-		atomic.AddUint64(&counter, 1)
+		counter.Add(1)
 	}, RuleData{})
 	require.NoError(t, err)
 
@@ -126,18 +124,18 @@ func TestDebounceCancelled(t *testing.T) {
 
 	time.Sleep(100 * time.Millisecond)
 
-	assert.Equal(t, uint64(0), atomic.LoadUint64(&counter))
+	assert.Equal(t, uint64(0), counter.Load())
 }
 
 func TestDebounceTwoTriggers(t *testing.T) {
 	t.Parallel()
-	var counter uint64
+	var counter atomic.Uint64
 
 	trigger1 := &mockTrigger{}
 	trigger2 := &mockTrigger{}
 	debounced := Debounce(50*time.Millisecond, trigger1, trigger2)
 	err := debounced.activate(nil, func(event.Event) {
-		atomic.AddUint64(&counter, 1)
+		counter.Add(1)
 	}, RuleData{})
 	require.NoError(t, err)
 
@@ -150,7 +148,7 @@ func TestDebounceTwoTriggers(t *testing.T) {
 		time.Sleep(200 * time.Millisecond)
 	}
 
-	assert.Equal(t, uint64(3), atomic.LoadUint64(&counter))
+	assert.Equal(t, uint64(3), counter.Load())
 }
 
 func TestDebounceConcurrentRunOfThreeTriggers(t *testing.T) {
@@ -158,39 +156,33 @@ func TestDebounceConcurrentRunOfThreeTriggers(t *testing.T) {
 	var (
 		count   = 10
 		wg      sync.WaitGroup
-		counter uint64
+		counter atomic.Uint64
 	)
 	trigger1 := &mockTrigger{}
 	trigger2 := &mockTrigger{}
 	trigger3 := &mockTrigger{}
 	debounced := Debounce(100*time.Millisecond, trigger1, trigger2, trigger3)
 	err := debounced.activate(nil, func(event.Event) {
-		atomic.AddUint64(&counter, 1)
+		counter.Add(1)
 	}, RuleData{})
 	require.NoError(t, err)
 
 	for range count {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			trigger1.callback(event.NewGenericEvent("Test", "Topic", "Payload"))
-		}()
+		})
 
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			trigger2.callback(event.NewGenericEvent("Test", "Topic", "Payload"))
-		}()
+		})
 
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			trigger3.callback(event.NewGenericEvent("Test", "Topic", "Payload"))
-		}()
+		})
 	}
 	wg.Wait()
 
 	time.Sleep(500 * time.Millisecond)
 
-	assert.Equal(t, uint64(1), atomic.LoadUint64(&counter))
+	assert.Equal(t, uint64(1), counter.Load())
 }

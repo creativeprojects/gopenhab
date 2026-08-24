@@ -1,4 +1,4 @@
-# full list of linters available: https://golangci-lint.run/usage/linters/
+version: "2"
 linters:
   enable:
     - asasalint
@@ -8,9 +8,6 @@ linters:
     - contextcheck
     - errname
     - gocheckcompilerdirectives
-    - gofmt
-    - gofumpt
-    - goimports
     - gosec
     - maintidx
     - misspell
@@ -21,15 +18,35 @@ linters:
     - reassign
     - sloglint
     - spancheck
-    - stylecheck
-    # - testifylint
+    - staticcheck
     - thelper
     - tparallel
     - unconvert
     - unparam
     - usestdlibvars
-
-linters-settings:
-  gosec:
-    excludes:
-      - G404 # Insecure random number source (rand)
+  settings:
+    gosec:
+      excludes:
+        - G404
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+    - gofumpt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

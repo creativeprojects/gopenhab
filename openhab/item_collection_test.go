@@ -28,11 +28,9 @@ func TestCanLoadItemCreatedAfterLoading(t *testing.T) {
 
 	client := NewClient(Config{URL: server.URL()})
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		client.Start()
-	}()
+	})
 
 	time.Sleep(10 * time.Millisecond)
 	// load existing item at the time of loading
@@ -79,11 +77,9 @@ func TestLoadingUnknownItemReturnsError(t *testing.T) {
 
 	client := NewClient(Config{URL: server.URL()})
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		client.Start()
-	}()
+	})
 
 	time.Sleep(10 * time.Millisecond)
 	// load a non-existing item

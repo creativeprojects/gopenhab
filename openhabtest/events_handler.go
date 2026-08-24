@@ -31,7 +31,7 @@ func (h *eventsHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		var err error
 		_, err = resp.Write(streamPrefix)
 		h.err = errors.Join(h.err, err)
-		_, err = resp.Write([]byte(message))
+		_, err = resp.Write([]byte(message)) //nolint:gosec
 		h.err = errors.Join(h.err, err)
 		_, err = resp.Write(streamSuffix)
 		h.err = errors.Join(h.err, err)
@@ -52,7 +52,7 @@ func (h *eventsHandler) AsyncServeHTTP(resp http.ResponseWriter, req *http.Reque
 		var err error
 		_, err = resp.Write(streamPrefix)
 		h.err = errors.Join(h.err, err)
-		_, err = resp.Write([]byte(message))
+		_, err = resp.Write([]byte(message)) //nolint:gosec
 		h.err = errors.Join(h.err, err)
 		_, err = resp.Write(streamSuffix)
 		h.err = errors.Join(h.err, err)

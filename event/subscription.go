@@ -11,5 +11,5 @@ type subscription struct {
 }
 
 func (s subscription) String() string {
-	return fmt.Sprintf("id=%d; name=%q, eventType=%q, once=%t", s.id, s.name, s.eventType, s.once)
+	return fmt.Sprintf("id=%d; name=%q, eventType=%d, once=%t", s.id, s.name, s.eventType, s.once)
 }

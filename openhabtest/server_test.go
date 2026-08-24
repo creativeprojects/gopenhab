@@ -89,10 +89,7 @@ func TestCanReceiveRawEvents(t *testing.T) {
 	wg := sync.WaitGroup{}
 
 	// request and read from the client
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-
+	wg.Go(func() {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
 
@@ -111,7 +108,7 @@ func TestCanReceiveRawEvents(t *testing.T) {
 			expected.WriteString("event: message\ndata: " + rawEvent + "\n\n")
 		}
 		assert.Equal(t, expected.String(), string(data))
-	}()
+	})
 
 	// send some messages
 	for _, rawEvent := range rawEvents {
@@ -150,10 +147,7 @@ func TestCanEncodeEvents(t *testing.T) {
 	wg := sync.WaitGroup{}
 
 	// request and read from the client
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-
+	wg.Go(func() {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
 
@@ -172,7 +166,7 @@ func TestCanEncodeEvents(t *testing.T) {
 			expected.WriteString("event: message\ndata: " + ev.expected + "\n\n")
 		}
 		assert.Equal(t, expected.String(), string(data))
-	}()
+	})
 
 	// send some messages
 	for _, ev := range events {
@@ -483,11 +477,8 @@ func TestSendItemCommandEvents(t *testing.T) {
 	}))
 
 	wg := sync.WaitGroup{}
-	wg.Add(1)
 	// read events
-	go func() {
-		defer wg.Done()
-
+	wg.Go(func() {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
 
@@ -504,7 +495,7 @@ func TestSendItemCommandEvents(t *testing.T) {
 		assert.Contains(t, string(data), `{"topic":"smarthome/items/TestItem/command","payload":"{\"type\":\"Test\",\"value\":\"20.49 °C\"}","type":"ItemCommandEvent"}`)
 		assert.Contains(t, string(data), `{"topic":"smarthome/items/TestItem/state","payload":"{\"type\":\"Test\",\"value\":\"20.49 °C\"}","type":"ItemStateEvent"}`)
 		assert.Contains(t, string(data), `{"topic":"smarthome/items/TestItem/statechanged","payload":"{\"type\":\"Test\",\"value\":\"20.49 °C\",\"oldType\":\"Test\",\"oldValue\":\"20.1 °C\"}","type":"ItemStateChangedEvent"}`)
-	}()
+	})
 
 	// set new state
 	state = "20.49 °C"
@@ -542,11 +533,8 @@ func TestSetItemStateEvents(t *testing.T) {
 	}))
 
 	wg := sync.WaitGroup{}
-	wg.Add(1)
 	// read events
-	go func() {
-		defer wg.Done()
-
+	wg.Go(func() {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
 
@@ -562,7 +550,7 @@ func TestSetItemStateEvents(t *testing.T) {
 		// check both events were sent
 		assert.Contains(t, string(data), `{"topic":"smarthome/items/TestItem/state","payload":"{\"type\":\"Test\",\"value\":\"20.49 °C\"}","type":"ItemStateEvent"}`)
 		assert.Contains(t, string(data), `{"topic":"smarthome/items/TestItem/statechanged","payload":"{\"type\":\"Test\",\"value\":\"20.49 °C\",\"oldType\":\"Test\",\"oldValue\":\"20.1 °C\"}","type":"ItemStateChangedEvent"}`)
-	}()
+	})
 
 	// set new state
 	state = "20.49 °C"
